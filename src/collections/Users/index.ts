@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { adminOnly } from '../../access/adminOnly'
 import { authenticated } from '../../access/authenticated'
 
 export const Users: CollectionConfig = {
@@ -7,12 +8,12 @@ export const Users: CollectionConfig = {
   access: {
     admin: authenticated,
     create: authenticated,
-    delete: authenticated,
+    delete: adminOnly,
     read: authenticated,
     update: authenticated,
   },
   admin: {
-    defaultColumns: ['name', 'email'],
+    defaultColumns: ['name', 'email', 'roles'],
     useAsTitle: 'name',
   },
   auth: true,
@@ -20,6 +21,24 @@ export const Users: CollectionConfig = {
     {
       name: 'name',
       type: 'text',
+    },
+    {
+      name: 'roles',
+      type: 'select',
+      options: [
+        { label: 'User', value: 'user' },
+        { label: 'Editor', value: 'editor' },
+        { label: 'Admin', value: 'admin' },
+      ],
+      defaultValue: 'user',
+      required: true,
+      saveToJWT: true,
+      access: {
+        update: ({ req: { user } }) => {
+          const roles = (user as any)?.roles
+          return roles === 'admin'
+        },
+      },
     },
   ],
   timestamps: true,

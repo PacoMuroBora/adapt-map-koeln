@@ -7,6 +7,7 @@ A German-language, mobile-first web application for anonymous heat-related issue
 This application enables users to submit anonymous reports about heat-related issues at their location via QR code or direct link. After completing a 10-question questionnaire, users receive baseline results and can optionally request AI-generated recommendations. All submissions are aggregated and visualized in a public heatmap at the postal code level.
 
 **Key Features:**
+
 - 📱 Mobile-first design optimized for phones and tablets
 - 📍 GPS and manual address location capture with geocoding
 - 📝 Dynamic 10-question questionnaire managed in Payload CMS
@@ -37,6 +38,7 @@ This application enables users to submit anonymous reports about heat-related is
 ### Development Setup
 
 1. **Clone and install dependencies:**
+
    ```bash
    git clone <repository-url>
    cd AdaptMapKoeln
@@ -44,11 +46,13 @@ This application enables users to submit anonymous reports about heat-related is
    ```
 
 2. **Configure environment variables:**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Required environment variables:
+
    ```env
    DATABASE_URI=mongodb+srv://...
    PAYLOAD_SECRET=your-secret-key
@@ -58,6 +62,7 @@ This application enables users to submit anonymous reports about heat-related is
    ```
 
 3. **Start development server:**
+
    ```bash
    pnpm dev
    ```
@@ -105,13 +110,17 @@ src/
 ### Collections
 
 #### Users
+
 Authentication-enabled collection with role-based access control:
+
 - **Roles**: `user`, `editor`, `admin`
 - **Editors**: Can manage questions, content, and knowledge base (but not scoring weights)
 - **Admins**: Full system access including scoring weights, users, and exports
 
 #### Questions
+
 Question definitions managed by editors:
+
 - Unique `key` identifier
 - German title and description (`title_de`, `description_de`)
 - Question types: `singleChoice`, `multiChoice`, `dropdown`, `slider`
@@ -119,14 +128,18 @@ Question definitions managed by editors:
 - Admin-only scoring configuration (`adminScoring`)
 
 #### Questionnaires
+
 Questionnaire versions with exactly 10 active questions:
+
 - Version tracking
 - `isCurrent` flag (only one can be current)
 - Relationship to Questions collection
 - Draft/published status
 
 #### Submissions
+
 Anonymous user submissions:
+
 - Location data (lat/lng, postal_code, city)
 - Personal non-identifying fields
 - Questionnaire version reference
@@ -136,7 +149,9 @@ Anonymous user submissions:
 - AI recommendation fields (generated on-demand)
 
 #### KnowledgeBaseItems
+
 Knowledge base for RAG (Retrieval-Augmented Generation):
+
 - German title and content
 - Tags and categories
 - Status (draft/published)
@@ -145,10 +160,13 @@ Knowledge base for RAG (Retrieval-Augmented Generation):
 ### Globals
 
 #### siteSettings
+
 General site configuration and settings.
 
 #### legalContent
+
 Legal pages content managed by editors:
+
 - Impressum
 - Privacy Policy (Datenschutzerklärung)
 - Terms and Conditions (AGB)
@@ -171,12 +189,14 @@ Two methods for location capture:
 2. **Manual Address Input**: German address format (Straße, Hausnummer, PLZ, Stadt)
 
 Both methods use self-hosted OSM-based geocoding services:
+
 - **Nominatim**: Reverse geocoding (coordinates → postal code)
 - **Photon**: Forward geocoding (address → coordinates)
 
 ### Questionnaire Engine
 
 Dynamic questionnaire system that:
+
 - Fetches current questionnaire from Payload CMS
 - Validates exactly 10 active questions exist
 - Renders one question per screen
@@ -186,6 +206,7 @@ Dynamic questionnaire system that:
 ### Scoring System
 
 Admin-configurable scoring system:
+
 - Per-question weights
 - Per-option score mapping (for choice questions)
 - Slider normalization rules
@@ -195,6 +216,7 @@ Admin-configurable scoring system:
 ### AI Recommendations
 
 On-demand AI recommendations via n8n:
+
 - Triggered by user CTA button after submission
 - Uses RAG (Retrieval-Augmented Generation) from knowledge base
 - Generates German recommendations
@@ -204,6 +226,7 @@ On-demand AI recommendations via n8n:
 ### Public Heatmap
 
 Interactive heatmap visualization:
+
 - Aggregated data at postal code level
 - GeoJSON API endpoint with caching
 - MapLibre GL JS with react-map-gl
@@ -213,6 +236,7 @@ Interactive heatmap visualization:
 ### Admin Tools
 
 Admin-only features:
+
 - CSV export of submissions (with filtering)
 - Basic dashboard with statistics
 - Scoring weights management UI
@@ -256,6 +280,7 @@ docker-compose up
 ```
 
 This starts:
+
 - Nominatim on port 8080
 - Photon on port 2322
 
@@ -327,6 +352,7 @@ This project is configured for deployment on:
 - **MongoDB Atlas**: Database with Vector Search
 
 See deployment configuration in:
+
 - `fly.toml` - Fly.io configuration
 - `Dockerfile` - Container configuration
 - `next.config.js` - Next.js production optimizations
@@ -355,11 +381,13 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ## Project Management
 
 This project uses Task Master AI for task management. See:
+
 - `.taskmaster/docs/prd.txt` - Product Requirements Document
 - `.taskmaster/docs/cursor-rules-mapping.md` - Cursor rules to tasks mapping
 - `.taskmaster/tasks/tasks.json` - Task definitions
 
 View tasks:
+
 ```bash
 # Get all tasks
 # Use task-master-ai MCP tools or check .taskmaster/tasks/tasks.json

@@ -5,12 +5,19 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
+import { KnowledgeBaseItems } from './collections/KnowledgeBaseItems'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
+import { Questions } from './collections/Questions'
+import { Questionnaires } from './collections/Questionnaires'
+import { Submissions } from './collections/Submissions'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
+import { LegalContent } from './globals/LegalContent'
+import { SiteSettings } from './globals/SiteSettings'
+import { UICopy } from './globals/UICopy'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -60,9 +67,19 @@ export default buildConfig({
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
-  collections: [Pages, Posts, Media, Categories, Users],
+  collections: [
+    Pages,
+    Posts,
+    Media,
+    Categories,
+    Users,
+    Questions,
+    Questionnaires,
+    Submissions,
+    KnowledgeBaseItems,
+  ],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer],
+  globals: [Header, Footer, SiteSettings, LegalContent, UICopy],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

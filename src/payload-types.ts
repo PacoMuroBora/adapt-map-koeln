@@ -72,6 +72,10 @@ export interface Config {
     media: Media;
     categories: Category;
     users: User;
+    questions: Question;
+    questionnaires: Questionnaire;
+    submissions: Submission;
+    'knowledge-base-items': KnowledgeBaseItem;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -94,6 +98,10 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    questions: QuestionsSelect<false> | QuestionsSelect<true>;
+    questionnaires: QuestionnairesSelect<false> | QuestionnairesSelect<true>;
+    submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
+    'knowledge-base-items': KnowledgeBaseItemsSelect<false> | KnowledgeBaseItemsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -112,10 +120,16 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    'site-settings': SiteSetting;
+    'legal-content': LegalContent;
+    'ui-copy': UiCopy;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'legal-content': LegalContentSelect<false> | LegalContentSelect<true>;
+    'ui-copy': UiCopySelect<false> | UiCopySelect<true>;
   };
   locale: null;
   user: User & {
@@ -419,6 +433,7 @@ export interface Category {
 export interface User {
   id: string;
   name?: string | null;
+  roles: 'user' | 'editor' | 'admin';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -781,6 +796,354 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questions".
+ */
+export interface Question {
+  id: string;
+  /**
+   * Unique identifier for the question (e.g., "q1", "heat_comfort")
+   */
+  key: string;
+  /**
+   * Question title in German
+   */
+  title_de: string;
+  /**
+   * Optional description or help text in German
+   */
+  description_de?: string | null;
+  /**
+   * Type of question input
+   */
+  type: 'singleChoice' | 'multiChoice' | 'dropdown' | 'slider';
+  /**
+   * Available options for choice/dropdown questions
+   */
+  options?:
+    | {
+        value: string;
+        label: string;
+        /**
+         * Score value for this option (used in adminScoring)
+         */
+        score?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Configuration for slider questions
+   */
+  sliderConfig?: {
+    min: number;
+    max: number;
+    step: number;
+    /**
+     * Unit label (e.g., "°C", "%")
+     */
+    unit?: string | null;
+  };
+  /**
+   * Whether this question must be answered
+   */
+  required?: boolean | null;
+  /**
+   * Category for grouping questions (e.g., "comfort", "health", "infrastructure")
+   */
+  category?: string | null;
+  /**
+   * Fields editable by editors (not admins only)
+   */
+  editorFields?: {
+    /**
+     * Order in which this question appears
+     */
+    displayOrder?: number | null;
+    /**
+     * Additional help text for users
+     */
+    helpText?: string | null;
+  };
+  /**
+   * Scoring configuration (admin only)
+   */
+  adminScoring: {
+    /**
+     * Weight multiplier for this question in problem index calculation
+     */
+    weight: number;
+    /**
+     * Score mappings for each option
+     */
+    optionScores?:
+      | {
+          optionValue: string;
+          /**
+           * Score value (0-100) for this option
+           */
+          score: number;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * How to map slider values to scores
+     */
+    sliderMapping?: {
+      normalization?: ('linear' | 'logarithmic' | 'custom') | null;
+      /**
+       * Score when slider is at minimum
+       */
+      minScore?: number | null;
+      /**
+       * Score when slider is at maximum
+       */
+      maxScore?: number | null;
+    };
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questionnaires".
+ */
+export interface Questionnaire {
+  id: string;
+  /**
+   * Version identifier (e.g., "v1.0", "2024-01")
+   */
+  version: string;
+  /**
+   * Mark this as the current active questionnaire
+   */
+  isCurrent?: boolean | null;
+  /**
+   * Exactly 10 questions must be selected
+   */
+  questions: (string | Question)[];
+  status: 'draft' | 'active' | 'archived';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "submissions".
+ */
+export interface Submission {
+  id: string;
+  metadata: {
+    timestamp: string;
+    /**
+     * User agent string from browser
+     */
+    user_agent?: string | null;
+    /**
+     * Version of consent form accepted
+     */
+    consent_version?: string | null;
+  };
+  location: {
+    /**
+     * Latitude
+     */
+    lat: number;
+    /**
+     * Longitude
+     */
+    lng: number;
+    /**
+     * Postal code (PLZ)
+     */
+    postal_code: string;
+    /**
+     * City name
+     */
+    city?: string | null;
+  };
+  /**
+   * Optional personal information
+   */
+  personalFields?: {
+    /**
+     * Age range or specific age
+     */
+    age?: number | null;
+    gender?: ('male' | 'female' | 'diverse' | 'prefer_not_to_say') | null;
+    /**
+     * Number of people in household
+     */
+    householdSize?: number | null;
+  };
+  questionnaireVersion: string | Questionnaire;
+  /**
+   * Answers keyed by question key
+   */
+  answers:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Calculated problem index (0-100)
+   */
+  problem_index: number;
+  /**
+   * Sub-scores by category
+   */
+  sub_scores?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Free text input from user
+   */
+  user_text?: string | null;
+  /**
+   * AI-generated recommendations
+   */
+  aiFields?: {
+    /**
+     * AI-generated summary in German
+     */
+    ai_summary_de?: string | null;
+    /**
+     * AI-generated recommendations array
+     */
+    ai_recommendations_de?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    /**
+     * IDs of referenced knowledge base items
+     */
+    ai_referenced_kb_ids?:
+      | {
+          kb_id?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Metadata about the AI model used
+     */
+    ai_model_metadata?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    /**
+     * When AI recommendations were generated
+     */
+    ai_generated_at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "knowledge-base-items".
+ */
+export interface KnowledgeBaseItem {
+  id: string;
+  /**
+   * Title in German
+   */
+  title_de: string;
+  /**
+   * Content in German
+   */
+  content_de: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Tags for categorization and search
+   */
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Category for grouping items
+   */
+  category?: ('health' | 'infrastructure' | 'comfort' | 'resources' | 'other') | null;
+  /**
+   * Contact information for this item
+   */
+  contact?: {
+    /**
+     * Contact person or organization name
+     */
+    name?: string | null;
+    /**
+     * Contact email
+     */
+    email?: string | null;
+    /**
+     * Contact phone number
+     */
+    phone?: string | null;
+    /**
+     * Contact website URL
+     */
+    website?: string | null;
+  };
+  status: 'draft' | 'published' | 'archived';
+  /**
+   * Metadata for vector search embeddings
+   */
+  embeddingMetadata?: {
+    /**
+     * ID of the embedding in vector database
+     */
+    embedding_id?: string | null;
+    /**
+     * Embedding model used
+     */
+    model?: string | null;
+    /**
+     * Number of dimensions in embedding vector
+     */
+    dimensions?: number | null;
+    /**
+     * When embedding was last synced
+     */
+    last_synced?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -988,6 +1351,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: string | User;
+      } | null)
+    | ({
+        relationTo: 'questions';
+        value: string | Question;
+      } | null)
+    | ({
+        relationTo: 'questionnaires';
+        value: string | Questionnaire;
+      } | null)
+    | ({
+        relationTo: 'submissions';
+        value: string | Submission;
+      } | null)
+    | ({
+        relationTo: 'knowledge-base-items';
+        value: string | KnowledgeBaseItem;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1337,6 +1716,7 @@ export interface CategoriesSelect<T extends boolean = true> {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  roles?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1353,6 +1733,156 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questions_select".
+ */
+export interface QuestionsSelect<T extends boolean = true> {
+  key?: T;
+  title_de?: T;
+  description_de?: T;
+  type?: T;
+  options?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        score?: T;
+        id?: T;
+      };
+  sliderConfig?:
+    | T
+    | {
+        min?: T;
+        max?: T;
+        step?: T;
+        unit?: T;
+      };
+  required?: T;
+  category?: T;
+  editorFields?:
+    | T
+    | {
+        displayOrder?: T;
+        helpText?: T;
+      };
+  adminScoring?:
+    | T
+    | {
+        weight?: T;
+        optionScores?:
+          | T
+          | {
+              optionValue?: T;
+              score?: T;
+              id?: T;
+            };
+        sliderMapping?:
+          | T
+          | {
+              normalization?: T;
+              minScore?: T;
+              maxScore?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questionnaires_select".
+ */
+export interface QuestionnairesSelect<T extends boolean = true> {
+  version?: T;
+  isCurrent?: T;
+  questions?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "submissions_select".
+ */
+export interface SubmissionsSelect<T extends boolean = true> {
+  metadata?:
+    | T
+    | {
+        timestamp?: T;
+        user_agent?: T;
+        consent_version?: T;
+      };
+  location?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+        postal_code?: T;
+        city?: T;
+      };
+  personalFields?:
+    | T
+    | {
+        age?: T;
+        gender?: T;
+        householdSize?: T;
+      };
+  questionnaireVersion?: T;
+  answers?: T;
+  problem_index?: T;
+  sub_scores?: T;
+  user_text?: T;
+  aiFields?:
+    | T
+    | {
+        ai_summary_de?: T;
+        ai_recommendations_de?: T;
+        ai_referenced_kb_ids?:
+          | T
+          | {
+              kb_id?: T;
+              id?: T;
+            };
+        ai_model_metadata?: T;
+        ai_generated_at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "knowledge-base-items_select".
+ */
+export interface KnowledgeBaseItemsSelect<T extends boolean = true> {
+  title_de?: T;
+  content_de?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  category?: T;
+  contact?:
+    | T
+    | {
+        name?: T;
+        email?: T;
+        phone?: T;
+        website?: T;
+      };
+  status?: T;
+  embeddingMetadata?:
+    | T
+    | {
+        embedding_id?: T;
+        model?: T;
+        dimensions?: T;
+        last_synced?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1689,6 +2219,143 @@ export interface Footer {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: string;
+  /**
+   * Site name/title
+   */
+  siteName: string;
+  /**
+   * Site description
+   */
+  siteDescription?: string | null;
+  /**
+   * Main contact email
+   */
+  contactEmail?: string | null;
+  /**
+   * Default questionnaire to use if no current questionnaire is set
+   */
+  defaultQuestionnaire?: (string | null) | Questionnaire;
+  /**
+   * Default map center coordinates
+   */
+  mapCenter?: {
+    lat?: number | null;
+    lng?: number | null;
+    zoom?: number | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-content".
+ */
+export interface LegalContent {
+  id: string;
+  /**
+   * Impressum / Legal notice
+   */
+  impressum: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Privacy policy / Datenschutzerklärung
+   */
+  privacyPolicy: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Terms and conditions / AGB
+   */
+  termsAndConditions: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-copy".
+ */
+export interface UiCopy {
+  id: string;
+  /**
+   * Landing page text
+   */
+  landingPage: {
+    title: string;
+    description?: string | null;
+    ctaButton?: string | null;
+  };
+  /**
+   * Consent screen text
+   */
+  consent: {
+    title: string;
+    message: string;
+    acceptButton?: string | null;
+    declineButton?: string | null;
+  };
+  /**
+   * Questionnaire flow text
+   */
+  questionnaire?: {
+    nextButton?: string | null;
+    previousButton?: string | null;
+    submitButton?: string | null;
+  };
+  /**
+   * Results page text
+   */
+  results?: {
+    title?: string | null;
+    aiRecommendationCta?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
@@ -1728,6 +2395,75 @@ export interface FooterSelect<T extends boolean = true> {
               label?: T;
             };
         id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  siteDescription?: T;
+  contactEmail?: T;
+  defaultQuestionnaire?: T;
+  mapCenter?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+        zoom?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-content_select".
+ */
+export interface LegalContentSelect<T extends boolean = true> {
+  impressum?: T;
+  privacyPolicy?: T;
+  termsAndConditions?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-copy_select".
+ */
+export interface UiCopySelect<T extends boolean = true> {
+  landingPage?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        ctaButton?: T;
+      };
+  consent?:
+    | T
+    | {
+        title?: T;
+        message?: T;
+        acceptButton?: T;
+        declineButton?: T;
+      };
+  questionnaire?:
+    | T
+    | {
+        nextButton?: T;
+        previousButton?: T;
+        submitButton?: T;
+      };
+  results?:
+    | T
+    | {
+        title?: T;
+        aiRecommendationCta?: T;
       };
   updatedAt?: T;
   createdAt?: T;
