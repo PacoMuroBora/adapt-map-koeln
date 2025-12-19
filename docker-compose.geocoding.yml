@@ -1,0 +1,78 @@
+version: '3.8'
+
+# Docker Compose configuration for geocoding services
+# Deploy this on Hostinger VPS for production geocoding services
+# 
+# Usage:
+#   docker-compose -f docker-compose.geocoding.yml up -d
+#   docker-compose -f docker-compose.geocoding.yml logs -f
+
+services:
+  nominatim:
+    image: mediagis/nominatim:4.2
+    container_name: nominatim
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - nominatim-data:/var/lib/postgresql/14/main
+      - nominatim-flatnode:/nominatim/flatnode
+    environment:
+      # Download Germany OSM data on first run
+      # For Cologne/NRW region, use: https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf
+      - PBF_URL=https://download.geofabrik.de/europe/germany-latest.osm.pbf
+      - REPLICATION_URL=https://download.geofabrik.de/europe/germany-updates/
+      - IMPORT_WIKIPEDIA=false
+      - IMPORT_US_POSTCODES=false
+      # IMPORTANT: Change this password in production!
+      - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 2h
+    # Resource limits - adjust based on your VPS capacity
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+        reservations:
+          memory: 4G
+    networks:
+      - geocoding-network
+
+  photon:
+    image: komoot/photon:latest
+    container_name: photon
+    restart: unless-stopped
+    ports:
+      - "2322:2322"
+    environment:
+      # Photon can use Nominatim's database or run standalone
+      - NOMINATIM_HOST=nominatim
+      - NOMINATIM_PORT=5432
+      - NOMINATIM_DB=nominatim
+      - NOMINATIM_USER=nominatim
+      - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production}
+    depends_on:
+      nominatim:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2322/api?q=test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - geocoding-network
+
+volumes:
+  nominatim-data:
+    driver: local
+  nominatim-flatnode:
+    driver: local
+
+networks:
+  geocoding-network:
+    driver: bridge
+

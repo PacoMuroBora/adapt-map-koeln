@@ -91,8 +91,169 @@
         "testStrategy": "1. Test responsive design across multiple device sizes (mobile, tablet, desktop)\n2. Verify that all pages render correctly and navigation works as expected\n3. Test accessibility using tools like Lighthouse and axe\n4. Verify that the UI components match the design specifications\n5. Test performance metrics like First Contentful Paint and Time to Interactive\n6. Conduct cross-browser testing on Chrome, Safari, and Firefox",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up React Context for submission flow state management",
+            "description": "Create a React Context provider to manage the submission flow state across all pages in the user journey.",
+            "dependencies": [],
+            "details": "Implement a SubmissionContext using React Context API to store user data throughout the journey including location, personal info, questionnaire answers, and current step. Create types for the submission state and provide methods to update each section of data.",
+            "status": "in-progress",
+            "testStrategy": "Test context state persistence across page navigation, verify state updates work correctly, and test initial state setup",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-19T12:15:03.625Z"
+          },
+          {
+            "id": 2,
+            "title": "Create landing page with German content integration",
+            "description": "Implement the main landing page that serves as the entry point for users, displaying project information in German.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create app/page.tsx with mobile-first responsive design using Tailwind CSS. Include project title, description, and call-to-action button linking to consent page. Integrate with Payload CMS Globals for dynamic content management of German text.",
+            "status": "pending",
+            "testStrategy": "Test responsive layout on mobile/tablet/desktop, verify German content displays correctly, and test navigation to consent page",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement consent screen with cookie consent integration",
+            "description": "Create the consent page where users agree to data collection and cookie usage before proceeding with the survey.",
+            "dependencies": [
+              1
+            ],
+            "details": "Build app/consent/page.tsx with consent form, privacy policy links, and cookie banner integration. Include checkboxes for different consent types and validation. Store consent status in submission context and localStorage for cookie preferences.",
+            "status": "pending",
+            "testStrategy": "Test consent validation, verify cookie banner functionality, test navigation flow with and without consent, and verify localStorage persistence",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Create location capture page with GPS and manual input",
+            "description": "Implement the location capture functionality allowing users to share GPS location or manually enter their address.",
+            "dependencies": [
+              1
+            ],
+            "details": "Build app/location/page.tsx with two input methods: GPS geolocation API integration and manual address form (Straße, Hausnummer, PLZ, Stadt). Include error handling for denied permissions and offline states. Store location data in submission context.",
+            "status": "pending",
+            "testStrategy": "Test GPS functionality on mobile devices, test manual address input validation, verify error handling for location services, and test data storage in context",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Build personal information form page",
+            "description": "Create the personal information collection page for demographic data required for the survey analysis.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement app/personal/page.tsx with form fields for age, gender, household size, and other demographic information. Use shadcn/ui form components with proper validation. Ensure mobile-first responsive design and store data in submission context.",
+            "status": "pending",
+            "testStrategy": "Test form validation, verify responsive design on mobile devices, test data persistence in context, and verify accessibility compliance",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Implement dynamic questionnaire engine",
+            "description": "Create a dynamic questionnaire system that displays one question per screen for the 10 survey questions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Build app/questionnaire/[step]/page.tsx with dynamic routing for question steps. Create question components for different answer types (multiple choice, scale, etc.). Include progress indicator and navigation between questions. Store answers in submission context.",
+            "status": "pending",
+            "testStrategy": "Test question navigation flow, verify different question types render correctly, test progress tracking, and verify answer storage in context",
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Create free text input page",
+            "description": "Implement the free text input page where users can provide additional comments or feedback.",
+            "dependencies": [
+              1
+            ],
+            "details": "Build app/feedback/page.tsx with a large textarea for user comments. Include character count, optional field validation, and mobile-optimized input experience. Store text input in submission context with proper sanitization.",
+            "status": "pending",
+            "testStrategy": "Test textarea functionality on mobile devices, verify character counting, test input sanitization, and verify data storage in context",
+            "parentId": "undefined"
+          },
+          {
+            "id": 8,
+            "title": "Build results overview page with problem index display",
+            "description": "Create the results page that shows users their calculated problem index and summary of their responses.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement app/results/page.tsx displaying the calculated problem index score, visual indicators (charts/progress bars), and summary of user responses. Include responsive design for mobile viewing and prepare for integration with scoring API.",
+            "status": "pending",
+            "testStrategy": "Test results display with mock data, verify responsive charts/indicators, test summary information accuracy, and verify mobile layout",
+            "parentId": "undefined"
+          },
+          {
+            "id": 9,
+            "title": "Create AI recommendation CTA component",
+            "description": "Implement the call-to-action component that encourages users to get AI-powered recommendations based on their results.",
+            "dependencies": [
+              8
+            ],
+            "details": "Build a reusable CTA component for AI recommendations, including compelling copy, button styling with shadcn/ui, and integration points for future AI service connection. Make it prominent on results page with mobile-optimized design.",
+            "status": "pending",
+            "testStrategy": "Test CTA visibility and positioning, verify button interactions, test responsive design, and verify integration with results page",
+            "parentId": "undefined"
+          },
+          {
+            "id": 10,
+            "title": "Implement heatmap view page structure",
+            "description": "Create the basic structure for the heatmap view page that will later integrate with MapLibre for geographic data visualization.",
+            "dependencies": [
+              1
+            ],
+            "details": "Build app/heatmap/page.tsx with placeholder structure for map integration. Include mobile-first responsive container, loading states, and basic UI elements. Prepare data structure for geographic visualization integration in future tasks.",
+            "status": "pending",
+            "testStrategy": "Test page structure and responsive layout, verify placeholder content displays correctly, and test navigation to heatmap page",
+            "parentId": "undefined"
+          },
+          {
+            "id": 11,
+            "title": "Verify mobile-first responsive design across all pages",
+            "description": "Conduct comprehensive testing and optimization of responsive design across all implemented pages and components.",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "details": "Test all pages on various screen sizes (320px mobile to desktop), verify Tailwind responsive utilities work correctly, optimize touch targets for mobile, and ensure consistent spacing and typography across devices. Fix any responsive issues found.",
+            "status": "pending",
+            "testStrategy": "Test on real devices and browser dev tools, verify touch targets meet accessibility standards, test landscape/portrait orientations, and use Lighthouse for mobile performance",
+            "parentId": "undefined"
+          },
+          {
+            "id": 12,
+            "title": "Implement navigation flow and routing between pages",
+            "description": "Set up the complete navigation system and routing logic to connect all pages in the proper user journey sequence.",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "details": "Implement navigation logic with Next.js App Router, create navigation guards to prevent skipping steps, add back/forward navigation where appropriate, and ensure proper URL structure. Include progress tracking and breadcrumb navigation for user orientation.",
+            "status": "pending",
+            "testStrategy": "Test complete user journey flow, verify navigation guards work correctly, test browser back/forward buttons, and verify URL structure and routing logic",
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-12-19T12:15:03.625Z"
       },
       {
         "id": "3",
@@ -214,7 +375,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-19T11:24:50.062Z",
+      "lastModified": "2025-12-19T12:15:03.626Z",
       "taskCount": 10,
       "completedCount": 1,
       "tags": [

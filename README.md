@@ -273,6 +273,8 @@ DATABASE_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryW
 
 ### Geocoding Services Setup
 
+#### Local Development
+
 For local development, set up self-hosted geocoding services using Docker:
 
 ```bash
@@ -284,7 +286,25 @@ This starts:
 - Nominatim on port 8080
 - Photon on port 2322
 
-See `docker-compose.yml` for configuration details.
+#### Production (Hostinger VPS)
+
+For production deployment on Hostinger VPS, use the dedicated geocoding services:
+
+```bash
+# Upload docker-compose.geocoding.yml to your VPS
+# Then run:
+docker-compose -f docker-compose.geocoding.yml up -d
+```
+
+**📖 Full setup guide**: See [`docs/geocoding-services-setup.md`](docs/geocoding-services-setup.md) for complete instructions including:
+
+- Docker installation
+- Service configuration
+- Nginx reverse proxy setup
+- SSL certificate setup
+- Maintenance and troubleshooting
+
+**Quick setup script**: Use `scripts/setup-geocoding-hostinger.sh` for automated setup on Hostinger VPS.
 
 ### Type Generation
 
