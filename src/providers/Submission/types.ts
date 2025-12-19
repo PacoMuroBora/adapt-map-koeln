@@ -60,6 +60,7 @@ export interface SubmissionContextType {
   updateAnswers: (answers: Record<string, any>) => void
   updateUserText: (text: string) => void
   updateCurrentStep: (step: SubmissionState['currentStep']) => void
+  updateQuestionnaireVersion: (version: string) => void
   updateResults: (data: {
     submissionId: string
     problemIndex: number

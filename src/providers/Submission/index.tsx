@@ -21,8 +21,9 @@ const initialContext: SubmissionContextType = {
   updateAnswer: () => null,
   updateAnswers: () => null,
   updateUserText: () => null,
-  updateCurrentStep: () => null,
-  updateResults: () => null,
+    updateCurrentStep: () => null,
+    updateQuestionnaireVersion: () => null,
+    updateResults: () => null,
   updateAIResults: () => null,
   reset: () => null,
 }
@@ -110,6 +111,10 @@ export const SubmissionProvider = ({ children }: { children: React.ReactNode }) 
     setState((prev) => ({ ...prev, currentStep: step }))
   }, [])
 
+  const updateQuestionnaireVersion = useCallback((version: string) => {
+    setState((prev) => ({ ...prev, questionnaireVersion: version }))
+  }, [])
+
   const updateResults = useCallback(
     (data: { submissionId: string; problemIndex: number; subScores?: Record<string, number> }) => {
       setState((prev) => ({
@@ -150,6 +155,7 @@ export const SubmissionProvider = ({ children }: { children: React.ReactNode }) 
     updateAnswers,
     updateUserText,
     updateCurrentStep,
+    updateQuestionnaireVersion,
     updateResults,
     updateAIResults,
     reset,
