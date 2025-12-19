@@ -273,6 +273,14 @@ DATABASE_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryW
 
 ### Geocoding Services Setup
 
+**What are these services?** See [`docs/GEOCODING-SERVICES-EXPLAINED.md`](docs/GEOCODING-SERVICES-EXPLAINED.md) for a simple explanation.
+
+**Quick summary:**
+
+- **Nominatim**: Converts GPS coordinates → postal code/address (reverse geocoding)
+- **Photon**: Converts address → GPS coordinates (forward geocoding)
+- **Why self-host**: No rate limits, better performance, privacy
+
 #### Local Development
 
 For local development, set up self-hosted geocoding services using Docker:

@@ -1,36 +1,88 @@
-# Geocoding Services Setup Guide
+# Geocoding Services Setup Guide for Hostinger VPS
 
-This guide explains how to set up and deploy self-hosted geocoding services (Nominatim and Photon) on Hostinger VPS for the AdaptMapKoeln project.
+**A beginner-friendly guide to setting up self-hosted geocoding services**
 
-## Overview
+**💡 Have Hostinger Dashboard YAML Editor?** If you've already set up n8n, Traefik, Redis via the Hostinger dashboard, check out the **much easier method**: [`docs/HOSTINGER-DASHBOARD-SETUP.md`](HOSTINGER-DASHBOARD-SETUP.md)
 
-We use two open-source geocoding services:
+## 📋 What is This?
 
-1. **Nominatim** - Reverse geocoding (coordinates → postal code + city)
-2. **Photon** - Forward geocoding (address → coordinates)
+This guide helps you set up two services on your Hostinger VPS (Virtual Private Server):
 
-Both services are based on OpenStreetMap (OSM) data and run in Docker containers.
+1. **Nominatim** - Converts GPS coordinates (like `50.9375, 6.9603`) into addresses and postal codes
+2. **Photon** - Converts addresses (like "Köln") into GPS coordinates
 
-## Why Self-Host?
+These services are needed for the AdaptMap Köln app to work with location data. We're hosting them ourselves instead of using public APIs because:
+- ✅ No rate limits (public services limit you to 1 request per second)
+- ✅ More reliable (no dependency on external services)
+- ✅ Faster (data is stored locally)
+- ✅ Free and open-source
 
-- **No rate limits** - Public Nominatim has a 1 request/second limit
-- **Reliability** - No dependency on external services
-- **Performance** - Faster response times with local data
-- **Cost** - Free and open-source
+## 🎯 What You'll Need
 
-## Prerequisites
+Before starting, make sure you have:
 
-- Hostinger VPS with Docker and Docker Compose installed
-- Minimum 4GB RAM (8GB recommended for Nominatim)
-- At least 20GB free disk space (for OSM data)
-- SSH access to the VPS
+- ✅ A Hostinger VPS (Virtual Private Server) with root or sudo access
+- ✅ SSH access to your VPS (you can connect via terminal/command line)
+- ✅ A domain or subdomain (e.g., `geocoding.yourdomain.com`) - optional but recommended
+- ✅ Basic command line knowledge (we'll guide you through everything)
 
-## Step 1: Install Docker and Docker Compose
+**Recommended VPS specs:**
+- **Minimum**: 4GB RAM, 20GB disk space, 2 CPU cores (~€5-10/month)
+- **Recommended**: 8GB RAM, 50GB disk space, 4 CPU cores (~€15-20/month)
 
-If not already installed on your Hostinger VPS:
+---
+
+## 🚀 Step-by-Step Setup
+
+### Step 1: Connect to Your Hostinger VPS
+
+**What this does:** Opens a connection to your server so you can run commands.
+
+1. Open your terminal/command prompt (on Windows: PowerShell or Git Bash)
+2. Connect via SSH:
+   ```bash
+   ssh root@your-vps-ip-address
+   # Or if you have a username:
+   ssh username@your-vps-ip-address
+   ```
+3. Enter your password when prompted
+
+**💡 Tip:** If you're using Windows, you can use PuTTY or the built-in SSH client.
+
+---
+
+### Step 2: Install Docker and Docker Compose
+
+**What this does:** Docker is like a container system that packages software with everything it needs to run. Docker Compose helps manage multiple containers together.
+
+**Why we need it:** Our geocoding services run in Docker containers, which makes setup and management much easier.
+
+#### Option A: Use the Automated Script (Easiest)
 
 ```bash
-# Update system
+# Download the setup script
+cd ~
+wget https://raw.githubusercontent.com/your-repo/AdaptMapKoeln/main/scripts/setup-geocoding-hostinger.sh
+
+# Make it executable
+chmod +x setup-geocoding-hostinger.sh
+
+# Run it
+./setup-geocoding-hostinger.sh
+```
+
+The script will:
+- Check if Docker is installed
+- Install Docker if needed
+- Install Docker Compose if needed
+- Guide you through the rest
+
+#### Option B: Manual Installation
+
+If you prefer to do it manually:
+
+```bash
+# Update your system packages
 sudo apt update && sudo apt upgrade -y
 
 # Install Docker
@@ -41,148 +93,292 @@ sudo sh get-docker.sh
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-# Verify installation
+# Verify installation (should show version numbers)
 docker --version
 docker-compose --version
 
-# Add your user to docker group (optional, to run without sudo)
+# Add your user to docker group (so you don't need sudo for docker commands)
 sudo usermod -aG docker $USER
-# Log out and back in for this to take effect
 ```
 
-## Step 2: Upload Docker Compose File
+**⚠️ Important:** After adding yourself to the docker group, you need to log out and log back in for it to take effect.
 
-Upload the `docker-compose.geocoding.yml` file from this repository to your Hostinger VPS:
+**✅ Check:** Run `docker ps` - if it shows a list (even if empty), Docker is working!
+
+---
+
+### Step 3: Upload the Docker Compose File
+
+**What this does:** Gets the configuration file that tells Docker how to run our services.
+
+**Option A: Using Git (Recommended)**
 
 ```bash
-# On your local machine
-scp docker-compose.geocoding.yml user@your-hostinger-vps:~/geocoding-services/
-
-# Or clone the repository on the VPS
+# Navigate to your home directory
 cd ~
-git clone <your-repo-url>
+
+# Clone the repository (replace with your actual repo URL)
+git clone https://github.com/your-username/AdaptMapKoeln.git
+
+# Navigate to the project
 cd AdaptMapKoeln
+
+# Copy the docker-compose file to a dedicated directory
+mkdir -p ~/geocoding-services
+cp docker-compose.geocoding.yml ~/geocoding-services/
+cd ~/geocoding-services
 ```
 
-## Step 3: Create Environment File
+**Option B: Using SCP (from your local machine)**
 
-Create a `.env` file for sensitive configuration:
+On your local computer (not the VPS):
 
 ```bash
-cd ~/geocoding-services  # or ~/AdaptMapKoeln
+# Replace 'user' and 'your-vps-ip' with your actual details
+scp docker-compose.geocoding.yml user@your-vps-ip:~/geocoding-services/
+```
+
+**Option C: Manual Upload**
+
+1. Create the directory on your VPS:
+   ```bash
+   mkdir -p ~/geocoding-services
+   cd ~/geocoding-services
+   ```
+
+2. Create the file:
+   ```bash
+   nano docker-compose.geocoding.yml
+   ```
+
+3. Copy and paste the contents from `docker-compose.geocoding.yml` in this repository
+4. Save: Press `Ctrl+X`, then `Y`, then `Enter`
+
+**✅ Check:** Run `ls -la docker-compose.geocoding.yml` - you should see the file listed.
+
+---
+
+### Step 4: Create Environment File
+
+**What this does:** Creates a file with your password for the database. This keeps sensitive information separate from the main config.
+
+```bash
+# Make sure you're in the right directory
+cd ~/geocoding-services
+
+# Create the .env file
 nano .env
 ```
 
-Add the following (change the password!):
+Add this content (replace `your_secure_password_here` with a strong password):
 
 ```env
-# Nominatim database password
-NOMINATIM_PASSWORD=your_secure_password_here_change_this
-
-# Optional: Use a smaller region for faster import
-# PBF_URL=https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf
+NOMINATIM_PASSWORD=your_secure_password_here
 ```
 
-**Important**: 
-- Use a strong, unique password
-- Don't commit this file to git (it should be in `.gitignore`)
+**💡 Password Tips:**
+- Use at least 16 characters
+- Mix letters, numbers, and symbols
+- Don't use this password anywhere else
+- Save it somewhere safe (password manager)
 
-## Step 4: Initial Setup and Data Import
+Save the file: Press `Ctrl+X`, then `Y`, then `Enter`.
 
-The first run will download and import OSM data. This can take several hours:
+**✅ Check:** Run `cat .env` - you should see your password (be careful, it will be visible!).
+
+---
+
+### Step 5: Choose Your Region (Important!)
+
+**What this does:** Decides which geographic area's data to download. Smaller regions = faster setup.
+
+**Option A: Just Cologne/NRW (Fastest - Recommended for Testing)**
+
+Edit the docker-compose file:
+```bash
+nano docker-compose.geocoding.yml
+```
+
+Find this line:
+```yaml
+- PBF_URL=https://download.geofabrik.de/europe/germany-latest.osm.pbf
+```
+
+Change it to:
+```yaml
+- PBF_URL=https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf
+```
+
+**Benefits:**
+- ✅ Faster import (1-2 hours instead of 4-8 hours)
+- ✅ Less disk space needed (~10GB instead of ~30GB)
+- ✅ Less RAM needed (4GB instead of 8GB)
+- ✅ Perfect for Cologne/Köln area
+
+**Option B: All of Germany (More Complete)**
+
+Keep the default setting. This will:
+- Take 4-8 hours to import
+- Need ~30GB disk space
+- Need 8GB+ RAM
+- Cover all of Germany
+
+**💡 Recommendation:** Start with Option A (NRW only) to test. You can always switch to full Germany later.
+
+---
+
+### Step 6: Start the Services (The Big One!)
+
+**What this does:** Downloads OpenStreetMap data and sets up the geocoding services. This is the longest step.
 
 ```bash
-# Navigate to project directory
-cd ~/geocoding-services  # or wherever you placed the docker-compose file
+# Make sure you're in the right directory
+cd ~/geocoding-services
 
-# Start services (this will begin data import)
+# Start the services (the -d flag runs them in the background)
 docker-compose -f docker-compose.geocoding.yml up -d
-
-# Monitor progress
-docker-compose -f docker-compose.geocoding.yml logs -f nominatim
-
-# Check import status (in another terminal)
-docker exec nominatim curl http://localhost:8080/status
 ```
 
-**Expected timeline:**
-- Germany full dataset: 4-8 hours (depending on VPS performance)
-- North Rhine-Westphalia only: 1-2 hours
-- Initial import is a one-time process
+**What happens next:**
+1. Docker downloads the container images (5-10 minutes)
+2. Nominatim downloads the OSM data file (depends on your internet speed)
+3. Nominatim imports the data into a database (1-8 hours depending on region)
+4. Photon starts indexing (30 minutes - 1 hour)
 
-**Note**: You can edit `docker-compose.geocoding.yml` to use a smaller region (e.g., NRW) for faster initial setup.
+**⏱️ Timeline:**
+- NRW region: 1-2 hours total
+- All of Germany: 4-8 hours total
 
-## Step 5: Verify Services
+**📊 Monitor Progress:**
 
-Once import is complete, test the services:
-
+Open a new terminal/SSH session and run:
 ```bash
-# Test Nominatim reverse geocoding (Cologne coordinates)
-curl "http://localhost:8080/reverse?format=json&lat=50.9375&lon=6.9603"
+# Watch the logs in real-time
+docker-compose -f docker-compose.geocoding.yml logs -f nominatim
+```
 
-# Test Photon forward geocoding
+**What to look for:**
+- ✅ "Downloading..." - Data is being downloaded
+- ✅ "Importing..." - Data is being imported
+- ✅ "Nominatim is ready" or "ready to accept requests" - **Success!**
+
+**💡 Tip:** You can close the terminal - the services will keep running in the background. Check back in a few hours.
+
+**✅ Check if it's working:**
+```bash
+# Check container status
+docker-compose -f docker-compose.geocoding.yml ps
+
+# You should see both "nominatim" and "photon" with status "Up"
+```
+
+---
+
+### Step 7: Test the Services
+
+**What this does:** Verifies that everything is working correctly.
+
+**Test Nominatim (Reverse Geocoding):**
+```bash
+# Test with Cologne coordinates
+curl "http://localhost:8080/reverse?format=json&lat=50.9375&lon=6.9603"
+```
+
+**Expected response:** You should see JSON with address information including postal code and city.
+
+**Test Photon (Forward Geocoding):**
+```bash
+# Test with a search query
 curl "http://localhost:2322/api?q=Köln&limit=5"
 ```
 
-Expected response from Nominatim:
-```json
-{
-  "place_id": 123456,
-  "licence": "...",
-  "osm_type": "node",
-  "osm_id": 123456,
-  "lat": "50.9375",
-  "lon": "6.9603",
-  "display_name": "Cologne, North Rhine-Westphalia, Germany",
-  "address": {
-    "city": "Cologne",
-    "state": "North Rhine-Westphalia",
-    "postcode": "50667",
-    "country": "Germany",
-    "country_code": "de"
-  }
-}
-```
+**Expected response:** You should see JSON with coordinates and location data.
 
-## Step 6: Configure Firewall
+**✅ If both tests work:** Congratulations! Your services are running! 🎉
 
-Allow access to the services:
+---
+
+### Step 8: Configure Firewall (Security)
+
+**What this does:** Opens the necessary ports so your Next.js app can access the services.
 
 ```bash
-# If using UFW
-sudo ufw allow 8080/tcp  # Nominatim
-sudo ufw allow 2322/tcp  # Photon
+# Check if UFW (firewall) is installed
+sudo ufw --version
 
-# If using iptables
-sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 2322 -j ACCEPT
+# If not installed, install it
+sudo apt install ufw -y
 
-# Save iptables rules (Ubuntu/Debian)
-sudo netfilter-persistent save
+# Allow SSH (important - don't skip this!)
+sudo ufw allow 22/tcp
+
+# Allow Nominatim
+sudo ufw allow 8080/tcp
+
+# Allow Photon
+sudo ufw allow 2322/tcp
+
+# Enable firewall
+sudo ufw enable
+
+# Check status
+sudo ufw status
 ```
 
-## Step 7: Set Up Reverse Proxy with SSL (Recommended)
+**✅ Check:** You should see rules for ports 22, 8080, and 2322.
 
-For production, use Nginx as a reverse proxy with SSL for secure access.
+---
 
-### Install Nginx and Certbot
+### Step 9: Set Up Reverse Proxy with SSL (Production - Recommended)
+
+**What this does:** 
+- Makes services accessible via HTTPS (secure)
+- Allows you to use a domain name instead of IP address
+- Adds security and professional setup
+
+**Why we need it:** 
+- Your Next.js app needs to call these services over HTTPS
+- SSL certificates provide encryption
+- Domain names are easier to manage than IP addresses
+
+#### 9.1: Install Nginx and Certbot
 
 ```bash
-sudo apt install nginx certbot python3-certbot-nginx
+# Install Nginx (web server that will act as reverse proxy)
+sudo apt install nginx -y
+
+# Install Certbot (for free SSL certificates from Let's Encrypt)
+sudo apt install certbot python3-certbot-nginx -y
+
+# Check Nginx is running
+sudo systemctl status nginx
 ```
 
-### Create Nginx Configuration
+#### 9.2: Point Your Domain to Your VPS
 
-Create `/etc/nginx/sites-available/geocoding`:
+**Before continuing:** Make sure your domain (e.g., `geocoding.yourdomain.com`) points to your VPS IP address.
+
+**How to check:**
+```bash
+# On your local machine
+ping geocoding.yourdomain.com
+# Should show your VPS IP address
+```
+
+#### 9.3: Create Nginx Configuration
+
+```bash
+# Create configuration file
+sudo nano /etc/nginx/sites-available/geocoding
+```
+
+Paste this configuration (replace `geocoding.yourdomain.com` with your actual domain):
 
 ```nginx
-# Rate limiting zone (add to /etc/nginx/nginx.conf http block)
-# limit_req_zone $binary_remote_addr zone=geocoding:10m rate=10r/s;
-
 # Nominatim reverse proxy
 server {
     listen 80;
-    server_name geocoding.yourdomain.com;  # Change to your domain
+    server_name geocoding.yourdomain.com;
 
     # Nominatim endpoint
     location /nominatim/ {
@@ -191,9 +387,6 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # Add rate limiting (uncomment after adding zone to nginx.conf)
-        # limit_req zone=geocoding burst=10 nodelay;
         
         # Increase timeouts for geocoding requests
         proxy_connect_timeout 60s;
@@ -208,306 +401,272 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # Add rate limiting
-        # limit_req zone=geocoding burst=20 nodelay;
     }
 }
 ```
 
-### Enable Rate Limiting
+Save: `Ctrl+X`, then `Y`, then `Enter`.
 
-Edit `/etc/nginx/nginx.conf` and add inside the `http` block:
-
-```nginx
-http {
-    # Rate limiting for geocoding services
-    limit_req_zone $binary_remote_addr zone=geocoding:10m rate=10r/s;
-    
-    # ... rest of config
-}
-```
-
-### Enable Site and Get SSL Certificate
+#### 9.4: Enable the Site
 
 ```bash
-# Enable site
+# Create symbolic link to enable the site
 sudo ln -s /etc/nginx/sites-available/geocoding /etc/nginx/sites-enabled/
+
+# Test Nginx configuration
 sudo nginx -t
 
-# If test passes, reload nginx
+# If test passes, reload Nginx
 sudo systemctl reload nginx
+```
 
-# Get SSL certificate (replace with your domain)
+#### 9.5: Get SSL Certificate
+
+```bash
+# Get free SSL certificate (replace with your domain)
 sudo certbot --nginx -d geocoding.yourdomain.com
 
-# Certbot will automatically configure HTTPS
+# Follow the prompts:
+# - Enter your email address
+# - Agree to terms
+# - Choose whether to redirect HTTP to HTTPS (recommended: Yes)
 ```
 
-## Step 8: Update Next.js Environment Variables
+**✅ Check:** Visit `https://geocoding.yourdomain.com/nominatim/status` in your browser - you should see a status response!
 
-In your Next.js app (on Vercel or Fly.io), add these environment variables:
+---
 
-### For Vercel
+### Step 10: Update Your Next.js App Environment Variables
 
-Go to Project Settings → Environment Variables:
+**What this does:** Tells your Next.js app where to find the geocoding services.
 
-```env
-# Production
+#### For Vercel:
+
+1. Go to your Vercel project dashboard
+2. Navigate to **Settings** → **Environment Variables**
+3. Add these variables:
+
+```
 NEXT_PUBLIC_GEOCODING_URL=https://geocoding.yourdomain.com/nominatim
 NEXT_PUBLIC_PHOTON_URL=https://geocoding.yourdomain.com/photon
-
-# Development (optional, for local testing)
-NEXT_PUBLIC_GEOCODING_URL=http://localhost:8080
-NEXT_PUBLIC_PHOTON_URL=http://localhost:2322
 ```
 
-### For Fly.io
+4. Select **Production** (and optionally **Preview** and **Development**)
+5. Click **Save**
+6. Redeploy your app
 
-Add to `fly.toml` or use `fly secrets`:
+#### For Fly.io:
 
 ```bash
+# Set environment variables
 fly secrets set NEXT_PUBLIC_GEOCODING_URL=https://geocoding.yourdomain.com/nominatim
 fly secrets set NEXT_PUBLIC_PHOTON_URL=https://geocoding.yourdomain.com/photon
+
+# Restart your app
+fly apps restart your-app-name
 ```
 
-## Step 9: Update Data (Optional)
+---
 
-To keep OSM data up-to-date, set up a cron job:
+## 🎉 You're Done!
 
-```bash
-# Edit crontab
-crontab -e
+Your geocoding services are now running! Here's what you've accomplished:
 
-# Add weekly update (runs every Sunday at 2 AM)
-0 2 * * 0 cd ~/geocoding-services && docker-compose -f docker-compose.geocoding.yml exec nominatim nominatim replication --once
-```
+✅ Self-hosted Nominatim (reverse geocoding)  
+✅ Self-hosted Photon (forward geocoding)  
+✅ Secure HTTPS access via domain  
+✅ Ready for production use  
 
-## API Endpoint Implementation
+---
 
-Your Next.js API routes should call these services. See the implementation examples in the main documentation.
-
-## Maintenance Commands
+## 📚 Useful Commands Reference
 
 ### Check Service Status
-
 ```bash
-# Check if containers are running
 docker-compose -f docker-compose.geocoding.yml ps
+```
 
-# Check logs
+### View Logs
+```bash
+# All services
+docker-compose -f docker-compose.geocoding.yml logs -f
+
+# Just Nominatim
 docker-compose -f docker-compose.geocoding.yml logs -f nominatim
-docker-compose -f docker-compose.geocoding.yml logs -f photon
 
-# Check resource usage
-docker stats nominatim photon
+# Just Photon
+docker-compose -f docker-compose.geocoding.yml logs -f photon
 ```
 
 ### Restart Services
-
 ```bash
-# Restart all services
 docker-compose -f docker-compose.geocoding.yml restart
-
-# Restart specific service
-docker-compose -f docker-compose.geocoding.yml restart nominatim
-```
-
-### Update Services
-
-```bash
-# Pull latest images
-docker-compose -f docker-compose.geocoding.yml pull
-
-# Recreate containers with new images
-docker-compose -f docker-compose.geocoding.yml up -d --force-recreate
 ```
 
 ### Stop Services
-
 ```bash
-# Stop services (keeps data)
 docker-compose -f docker-compose.geocoding.yml stop
-
-# Stop and remove containers (keeps volumes/data)
-docker-compose -f docker-compose.geocoding.yml down
-
-# Remove everything including volumes (WARNING: deletes data!)
-docker-compose -f docker-compose.geocoding.yml down -v
 ```
-
-### Backup Data
-
-```bash
-# Backup Nominatim database
-docker exec nominatim pg_dump -U nominatim nominatim > backup_$(date +%Y%m%d).sql
-
-# Or backup volumes
-docker run --rm \
-  -v geocoding-services_nominatim-data:/data \
-  -v $(pwd):/backup \
-  alpine tar czf /backup/nominatim-backup-$(date +%Y%m%d).tar.gz /data
-```
-
-## Troubleshooting
-
-### Service Won't Start
-
-```bash
-# Check logs
-docker-compose -f docker-compose.geocoding.yml logs nominatim
-
-# Check disk space
-df -h
-
-# Check memory
-free -h
-
-# Check if ports are in use
-sudo netstat -tulpn | grep -E '8080|2322'
-```
-
-### Import Taking Too Long
-
-- Use a smaller region (edit `PBF_URL` in `docker-compose.geocoding.yml`):
-  ```yaml
-  - PBF_URL=https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf
-  ```
-- Increase VPS resources (RAM/CPU)
-- Check if import is actually progressing: `docker-compose logs -f nominatim`
-
-### Out of Memory Errors
-
-- Reduce Nominatim memory limits in `docker-compose.geocoding.yml`:
-  ```yaml
-  deploy:
-    resources:
-      limits:
-        memory: 4G  # Reduce from 6G
-  ```
-- Use a smaller OSM region
-- Upgrade VPS RAM
-
-### Connection Refused
-
-- Check if services are running: `docker-compose -f docker-compose.geocoding.yml ps`
-- Check firewall rules: `sudo ufw status`
-- Verify ports are accessible: `curl http://localhost:8080/status`
-- Check container logs: `docker-compose -f docker-compose.geocoding.yml logs`
-
-### Data Not Updating
-
-- Check replication status: 
-  ```bash
-  docker exec nominatim nominatim replication --status
-  ```
-- Manually trigger update: 
-  ```bash
-  docker exec nominatim nominatim replication --once
-  ```
-
-### High Memory Usage
-
-- Nominatim can use 4-8GB RAM depending on dataset size
-- Monitor with: `docker stats nominatim`
-- Consider using a smaller region if memory is limited
-
-## Resource Requirements
-
-### Minimum (for small region like NRW)
-- **RAM**: 4GB
-- **Disk**: 20GB
-- **CPU**: 2 cores
-- **Cost**: ~€5-10/month
-
-### Recommended (for all of Germany)
-- **RAM**: 8GB
-- **Disk**: 50GB
-- **CPU**: 4 cores
-- **Cost**: ~€15-20/month
-
-### Optimal
-- **RAM**: 16GB
-- **Disk**: 100GB
-- **CPU**: 4+ cores
-- **Cost**: ~€30-40/month
-
-## Security Considerations
-
-1. **Change default passwords** in `.env` file
-2. **Use HTTPS** with reverse proxy (Nginx + Let's Encrypt)
-3. **Implement rate limiting** in Nginx
-4. **Restrict access** to specific IPs if possible (in Nginx config)
-5. **Keep services updated** regularly
-6. **Monitor logs** for suspicious activity
-7. **Use firewall** to restrict access to necessary ports only
-
-### Restricting Access by IP (Optional)
-
-If you only want your Next.js app to access the services, add to Nginx config:
-
-```nginx
-location /nominatim/ {
-    # Allow only specific IPs (your Vercel/Fly.io IPs)
-    allow 76.76.21.0/24;  # Example: Vercel IP range
-    deny all;
-    
-    proxy_pass http://localhost:8080/;
-    # ... rest of config
-}
-```
-
-## Quick Reference
 
 ### Start Services
 ```bash
 docker-compose -f docker-compose.geocoding.yml up -d
 ```
 
-### View Logs
+### Check Resource Usage
 ```bash
-docker-compose -f docker-compose.geocoding.yml logs -f
+docker stats nominatim photon
 ```
 
-### Stop Services
+---
+
+## 🔧 Troubleshooting
+
+### Problem: Services won't start
+
+**Check logs:**
 ```bash
-docker-compose -f docker-compose.geocoding.yml stop
+docker-compose -f docker-compose.geocoding.yml logs
 ```
 
-### Restart Services
+**Common issues:**
+- **Out of disk space:** `df -h` - need at least 20GB free
+- **Out of memory:** `free -h` - need at least 4GB RAM
+- **Ports already in use:** `sudo netstat -tulpn | grep -E '8080|2322'`
+
+### Problem: Import taking forever
+
+**This is normal!** Initial import can take:
+- NRW region: 1-2 hours
+- All Germany: 4-8 hours
+
+**Check if it's actually working:**
 ```bash
-docker-compose -f docker-compose.geocoding.yml restart
+docker-compose -f docker-compose.geocoding.yml logs -f nominatim
 ```
 
-### Check Status
+Look for progress messages. If you see errors, check the troubleshooting section below.
+
+### Problem: "Connection refused" when testing
+
+**Check services are running:**
 ```bash
 docker-compose -f docker-compose.geocoding.yml ps
 ```
 
-## Next Steps
+**Check firewall:**
+```bash
+sudo ufw status
+```
 
-1. ✅ Set up Docker and Docker Compose on Hostinger VPS
-2. ✅ Upload `docker-compose.geocoding.yml` to VPS
-3. ✅ Create `.env` file with secure password
-4. ✅ Start services and wait for initial data import
-5. ✅ Configure Nginx reverse proxy with SSL
-6. ✅ Update Next.js environment variables
-7. ✅ Test API endpoints
-8. ✅ Set up monitoring and backups
+**Test locally first:**
+```bash
+curl http://localhost:8080/status
+```
 
-## Additional Resources
+### Problem: Out of memory errors
 
-- [Nominatim Documentation](https://nominatim.org/release-docs/latest/)
-- [Photon Documentation](https://github.com/komoot/photon)
-- [OSM Data Downloads](https://download.geofabrik.de/)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Nginx Reverse Proxy Guide](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/)
+**Solution 1:** Use a smaller region (edit `docker-compose.geocoding.yml`):
+```yaml
+- PBF_URL=https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf
+```
 
-## Support
+**Solution 2:** Reduce memory limits in `docker-compose.geocoding.yml`:
+```yaml
+deploy:
+  resources:
+    limits:
+      memory: 4G  # Reduce from 6G
+```
 
-For issues specific to this setup:
-- Check Docker logs: `docker-compose -f docker-compose.geocoding.yml logs`
-- Check service health: `docker-compose -f docker-compose.geocoding.yml ps`
-- Monitor resource usage: `docker stats`
+**Solution 3:** Upgrade your VPS to more RAM
 
-For Nominatim/Photon specific issues, refer to their official documentation.
+### Problem: SSL certificate won't generate
+
+**Check domain points to VPS:**
+```bash
+# On your local machine
+nslookup geocoding.yourdomain.com
+```
+
+**Check Nginx is running:**
+```bash
+sudo systemctl status nginx
+```
+
+**Check firewall allows port 80:**
+```bash
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+```
+
+---
+
+## 🔄 Keeping Data Updated
+
+OSM data changes regularly. To keep your data fresh:
+
+```bash
+# Set up weekly updates (runs every Sunday at 2 AM)
+crontab -e
+
+# Add this line:
+0 2 * * 0 cd ~/geocoding-services && docker-compose -f docker-compose.geocoding.yml exec nominatim nominatim replication --once
+```
+
+---
+
+## 💾 Backup Your Data
+
+**Backup Nominatim database:**
+```bash
+docker exec nominatim pg_dump -U nominatim nominatim > backup_$(date +%Y%m%d).sql
+```
+
+**Restore from backup:**
+```bash
+# Stop services first
+docker-compose -f docker-compose.geocoding.yml stop
+
+# Restore (this is more complex - see Docker volume backup docs)
+```
+
+---
+
+## 📊 Resource Requirements Summary
+
+| Region | RAM | Disk | CPU | Import Time | Cost/Month |
+|--------|-----|------|-----|-------------|------------|
+| NRW only | 4GB | 20GB | 2 cores | 1-2 hours | €5-10 |
+| All Germany | 8GB | 50GB | 4 cores | 4-8 hours | €15-20 |
+| Optimal | 16GB | 100GB | 4+ cores | 2-4 hours | €30-40 |
+
+---
+
+## 🆘 Need Help?
+
+1. **Check the logs:** `docker-compose -f docker-compose.geocoding.yml logs`
+2. **Check service status:** `docker-compose -f docker-compose.geocoding.yml ps`
+3. **Check resources:** `docker stats` and `df -h` and `free -h`
+4. **Review this guide** - most common issues are covered above
+
+---
+
+## ✅ Setup Checklist
+
+- [ ] Connected to VPS via SSH
+- [ ] Installed Docker and Docker Compose
+- [ ] Uploaded `docker-compose.geocoding.yml`
+- [ ] Created `.env` file with secure password
+- [ ] Chosen region (NRW or all Germany)
+- [ ] Started services and waited for import
+- [ ] Tested services locally
+- [ ] Configured firewall
+- [ ] Set up Nginx reverse proxy
+- [ ] Obtained SSL certificate
+- [ ] Updated Next.js environment variables
+- [ ] Tested from Next.js app
+
+---
+
+**🎊 Congratulations!** You've successfully set up production-ready geocoding services!
