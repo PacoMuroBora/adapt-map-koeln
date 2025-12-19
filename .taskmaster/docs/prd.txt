@@ -1,0 +1,685 @@
+Product Requirements Document
+
+Project: QR-to-Web Heat Reporting App + Public Heatmap + On-demand AI Recommendations
+PRD Version: v1.0
+Document language: English (product UI + AI outputs: German)
+Primary platform: Mobile-first web app (works on phones + tablets)
+
+1) Executive summary
+
+We are building a German-language, mobile-first web app that people can open via QR code/link to submit an anonymous report about heat-related issues at a location. After submitting a short questionnaire and optional free text, users receive a results screen and can optionally trigger an on-demand AI recommendation via a CTA button. Aggregated data is visualized in a public heatmap using postal-code–level aggregation.
+
+Editors maintain the questionnaire and UI content in Payload CMS. Admins manage scoring weights, users/permissions, and full system configuration. AI and RAG workflows run via n8n, fed from a Payload-managed knowledge base.
+
+2) Goals and success metrics
+Goals
+
+Street-ready data capture: QR → submission in a smooth, short flow.
+
+High-quality structured dataset: consistent 10-question questionnaire + location → postal code.
+
+Public insight visualization: a heatmap that is easy to understand and performant on mobile.
+
+Low-maintenance content operations: editors can change questions and UI texts without developers.
+
+On-demand AI assistance: recommendations generated only when the user taps the CTA.
+
+Success metrics (MVP targets)
+
+Completion rate (start → successful submit): ≥ 60%
+
+Median time to complete: ≤ 3 minutes
+
+% submissions with valid postal code: ≥ 90%
+
+Heatmap API p95 (cached): < 500ms
+
+Result screen AI CTA success rate (when clicked): ≥ 95% (retries allowed)
+
+3) Stakeholders and roles
+Stakeholders
+
+Client/project team (content + field testing)
+
+Development team (frontend/backend)
+
+Design team (Figma + design system)
+
+Ops/hosting (Fly.io + Hostinger)
+
+Roles (RBAC)
+
+User (participant)
+
+Uses the app, submits responses, views heatmap and results.
+
+Editor
+
+Manages UI content + defines the 10 questions (and their text/options/order).
+
+Manages knowledge base items used for RAG.
+
+Cannot change scoring weights.
+
+Admin
+
+Full access: users/permissions, all collections/globals, scoring weights, exports, configuration.
+
+4) Scope
+In scope (MVP)
+
+QR/link entry to web app
+
+Consent + privacy explanation gate
+
+Location capture:
+
+GPS (browser geolocation) OR manual address input
+
+Open-source geocoding + reverse geocoding → postal code
+
+Personal non-identifying fields (e.g., age group, housing situation; configurable)
+
+Questionnaire:
+
+Exactly 10 active questions per "current questionnaire version"
+
+Question types: single choice, multi choice, dropdown, slider (plus optional text if needed)
+
+Optional free text field
+
+Result page:
+
+baseline result summary (rule-based / scoring-based)
+
+CTA "KI-Empfehlung erhalten" shown after successful submit
+
+AI recommendation generated on demand
+
+Heatmap page:
+
+public map with aggregated entries at postal code level
+
+user location marker
+
+Payload Admin interface:
+
+manage questions, content, knowledge base
+
+export submissions (CSV)
+
+Out of scope (initially)
+
+Text moderation / abuse detection workflows
+
+Participant accounts/login
+
+Complex analytics dashboards (beyond basic counts)
+
+Native mobile apps (iOS/Android)
+
+5) User journey
+Primary flow (participant)
+
+QR-Code/Link opens web app
+
+Landing screen (project claim + "Los geht's")
+
+Datenschutz & Einwilligung (consent)
+
+Standort:
+
+"Standort automatisch bestimmen" (GPS) OR
+
+"Adresse manuell eingeben"
+
+Persönliche Angaben (non-identifying)
+
+Fragebogen (10 questions, one per screen)
+
+Freitext (optional)
+
+Ergebnisübersicht (baseline insights)
+
+CTA appears: "KI-Empfehlung erhalten"
+
+Heatmap öffnen (public heatmap, own marker)
+
+Editor flow (content ops)
+
+Update legal texts / cookie banner copy via Globals
+
+Create/edit/publish questions and questionnaire version
+
+Maintain knowledge base entries (RAG corpus)
+
+Admin flow
+
+Configure scoring weights
+
+Manage users/permissions
+
+Export submissions
+
+Configure integrations (webhooks to n8n, geocoding provider endpoints, etc.)
+
+6) User stories
+Participant
+
+As a user, I can open the survey from a QR code on my phone.
+
+As a user, I can read and accept the privacy consent before continuing.
+
+As a user, I can share my location automatically or enter it manually.
+
+As a user, I can answer 10 short questions quickly.
+
+As a user, I can optionally add extra context in a free text field.
+
+As a user, I can see a results summary after submitting.
+
+As a user, I can request AI recommendations by tapping a button after submitting.
+
+As a user, I can view a public heatmap and see my location marked.
+
+Editor
+
+As an editor, I can define and maintain the 10 active questions without code changes.
+
+As an editor, I can reorder questions and update answer options.
+
+As an editor, I can edit UI texts (landing, consent, tooltips) and legal pages in Payload.
+
+As an editor, I can manage the knowledge base items that AI uses for recommendations.
+
+Admin
+
+As an admin, I can configure scoring weights and how the "problem index" is calculated.
+
+As an admin, I can manage users and role permissions.
+
+As an admin, I can export submissions and system data.
+
+As an admin, I can view and troubleshoot AI integration logs (optional).
+
+7) Functional requirements
+7.1 Onboarding & consent
+
+Show landing screen with project claim and CTA.
+
+Show consent screen:
+
+clear explanation of what is stored
+
+explicit consent required to proceed
+
+Store: consent version + timestamp in submission metadata.
+
+7.2 Location capture and postal code derivation
+
+Support GPS geolocation (with fallback and error handling).
+
+Support manual address input:
+
+Straße, Hausnummer, PLZ, Stadt (as per wireframes)
+
+Use open-source geocoding:
+
+Reverse geocoding: lat/lng → postal code + city
+
+Geocoding: address → lat/lng + normalized postal code/city
+
+Error states:
+
+geocoding failed
+
+user denied location permission
+
+offline
+
+Best-practice open-source approach
+
+Use a self-hosted OSM-based geocoding stack to avoid rate limits and ensure reliability for field usage:
+
+Reverse geocoding: Nominatim (self-hosted)
+
+Optional address search / forward geocoding: Photon (self-hosted) or Nominatim forward search
+(Exact choice can be finalized during implementation; both are open-source and widely used, but hosting is important for stability.)
+
+7.3 Questionnaire (Payload-driven)
+
+Fetch the "current questionnaire" definition from Payload.
+
+Enforce exactly 10 active questions for the current version:
+
+If not met, show a friendly maintenance message.
+
+Render one question per screen.
+
+Answer types supported:
+
+singleChoice, multiChoice, dropdown, slider
+
+Store answers as JSON by question key (stable identifiers).
+
+7.4 Scoring and "problem index"
+
+Each question can optionally contribute to a numeric score.
+
+Admins can define and edit:
+
+per-question weight
+
+per-option score mapping (for choices)
+
+slider normalization rules
+
+Store derived metrics on submission:
+
+problem_index (0–1 or 0–100; pick one and standardize)
+
+optional sub-scores per category (if useful later)
+
+7.5 Free text (optional)
+
+Optional textarea with max length limit.
+
+Stored as-is (no moderation for MVP).
+
+7.6 Result screen (baseline + AI CTA)
+
+Immediately after submit, show baseline results:
+
+short summary (rule/scoring-based)
+
+key issue bullets based on questionnaire mapping
+
+Show CTA after submit: "KI-Empfehlung erhalten"
+
+only triggers AI when clicked
+
+show loading animation/state
+
+show retry on failure
+
+Store AI output back into the submission record for auditability and avoiding repeated calls.
+
+7.7 AI recommendations with RAG (n8n)
+
+n8n provides an endpoint (called by the web app) that:
+
+retrieves relevant knowledge base items (RAG)
+
+generates German recommendations and structured output
+
+Output format (example)
+
+ai_summary_de
+
+ai_recommendations_de[] (title + description + priority)
+
+ai_referenced_kb_ids[] (optional)
+
+ai_model_metadata (optional)
+
+7.8 Knowledge base managed in Payload
+
+Knowledge base items are authored/maintained in Payload by editors/admins.
+
+n8n "feeds from it" via:
+
+webhook on create/update/publish (preferred), or
+
+scheduled sync pull
+
+Vector storage:
+
+recommended: MongoDB Atlas Vector Search (fits existing stack)
+
+7.9 Public heatmap
+
+MapLibre GL JS (via react-map-gl)
+
+Heatmap layer fed from GET /api/heatmap returning GeoJSON
+
+Aggregation defaults to postal code:
+
+each entry represents a postal code centroid (or representative point)
+
+properties include:
+
+count
+
+average_problem_index
+
+Show user marker and legend.
+
+7.10 Legal pages and cookie banner
+
+Payload Globals store:
+
+About/Impressum
+
+Privacy policy
+
+Terms and conditions
+
+Cookie banner content and link targets
+
+Frontend renders these pages from Globals.
+
+Cookie behavior depends on whether analytics are enabled (can be "necessary only" initially).
+
+7.11 Admin tools & export
+
+CSV export of submissions (admin-only).
+
+Basic dashboard (optional MVP):
+
+total submissions
+
+distribution by postal code
+
+averages over time
+
+8) Data model (Payload)
+Collections
+
+Users (Payload auth)
+
+role: user/editor/admin
+
+Question
+
+key (unique)
+
+title_de, description_de
+
+type
+
+options[] (for choice types)
+
+sliderConfig (min/max/step)
+
+required
+
+category
+
+editorFields (texts, options, display)
+
+adminScoring (admin-only: weights/mappings)
+
+Questionnaire
+
+version
+
+isCurrent (only one true)
+
+questions[] (relationship to Question; must be 10)
+
+status (draft/published)
+
+Submission
+
+metadata: timestamp, user_agent, consent_version
+
+location:
+
+lat/lng
+
+postal_code, city
+
+(optional) entered address fields (only if you decide it's necessary)
+
+personal fields (configurable)
+
+questionnaireVersion
+
+answers (JSON keyed by question key)
+
+problem_index + optional sub-scores
+
+free text: user_text
+
+AI fields:
+
+ai_summary_de
+
+ai_recommendations_de (JSON)
+
+ai_generated_at
+
+KnowledgeBaseItem
+
+title_de
+
+content_de
+
+tags[], category
+
+contact (optional)
+
+status draft/published
+
+optional embedding metadata (lastEmbeddedAt, embeddingStatus)
+
+Globals
+
+siteSettings
+
+legalContent
+
+optional uiCopy
+
+9) API requirements
+Public
+
+POST /api/submit
+
+validates payload, stores submission, returns submission id + baseline result
+
+GET /api/heatmap
+
+returns GeoJSON aggregated by postal code
+
+GET /api/legal/:page (or fetched via Payload directly)
+
+Internal / server-to-server
+
+POST /api/geocode (address → coordinates)
+
+POST /api/reverse-geocode (coordinates → postal code)
+
+POST /api/ai/recommendation (proxy to n8n; stores result in submission)
+
+n8n endpoints
+
+POST /n8n/ai/recommendation
+
+POST /n8n/kb/sync (webhook trigger) or scheduled fetch from Payload
+
+10) Non-functional requirements
+Performance
+
+Mobile-first, low bandwidth tolerant.
+
+Heatmap endpoint cached (server cache or Redis optional).
+
+AI calls are on-demand; results persisted to avoid repeat costs.
+
+Security
+
+RBAC enforced in Payload + API routes.
+
+Rate limiting on submit + AI endpoints.
+
+Admin endpoints protected.
+
+Privacy
+
+Anonymous submissions.
+
+Store submissions forever (as decided).
+
+Consider minimizing stored address fields (postal code is the default aggregation).
+
+Reliability
+
+Graceful handling of:
+
+offline state
+
+geocoding failure
+
+AI service unavailability (retry)
+
+11) Tech stack
+
+Design: Figma (+ Cursor via MCP)
+
+Frontend: Next.js, Tailwind, shadcn/ui
+
+CMS/Backend: Payload CMS
+
+Database: MongoDB Atlas (including Vector Search if chosen)
+
+AI workflows: n8n on Hostinger (RAG + recommendation endpoint)
+
+Hosting: Fly.io (main web app), Hostinger (n8n)
+
+Maps: MapLibre GL JS + react-map-gl, native heatmap layer
+
+Geocoding: self-hosted open-source OSM-based stack (Nominatim ± Photon)
+
+12) Delivery plan (phases)
+Phase 1 – Concept & design
+
+Final user flow + wireframes
+
+Branding basics
+
+Define content model in Payload (questions, legal, KB)
+
+Define questionnaire UX and baseline result logic
+
+Phase 2 – Development
+
+Payload setup + RBAC + collections/globals
+
+Frontend implementation of full flow
+
+Geocoding integration
+
+Heatmap API + map UI
+
+n8n AI endpoint + KB sync (RAG scaffolding)
+
+Phase 3 – Test phase
+
+Street/tablet testing
+
+Bug fixing + UX refinements
+
+Performance + stability improvements
+
+Phase 4 – Wrap-up
+
+Final prototype + heatmap with real data
+
+Export + handover docs
+
+Demo flow (QR ready)
+
+13) Task breakdown (epics)
+Epic A — Payload foundation & RBAC
+
+Implement roles: user/editor/admin
+
+Collections: Question, Questionnaire, Submission, KnowledgeBaseItem
+
+Globals: legalContent, siteSettings
+
+Access control:
+
+editors can manage questions/content/KB
+
+admins can manage scoring + users
+
+Epic B — Questionnaire engine
+
+Fetch current questionnaire
+
+Render 10 questions dynamically
+
+Validate required answers
+
+Store answers JSON
+
+Enforce exactly 10 active questions
+
+Epic C — Submission + baseline results
+
+Submit endpoint
+
+Compute problem index based on admin scoring weights
+
+Baseline insights mapping (German)
+
+Epic D — Geocoding integration (open-source)
+
+Implement geocode + reverse geocode endpoints
+
+Self-host geocoding services (deployment plan)
+
+Robust error handling + retries
+
+Epic E — Heatmap
+
+Aggregation by postal code
+
+GeoJSON API + caching
+
+MapLibre UI + heatmap layer + legend + user marker
+
+Epic F — AI recommendation (on demand)
+
+Result screen CTA
+
+n8n endpoint for recommendation
+
+Payload KB sync → vector store → retrieval
+
+Store AI output in Submission
+
+Epic G — Legal/cookies pages
+
+Globals setup
+
+Frontend pages + cookie banner logic
+
+Epic H — QA & pilot readiness
+
+Device testing
+
+Offline/error screens
+
+Export validation
+
+Production hardening
+
+14) Acceptance criteria (MVP essentials)
+
+A user can complete the full flow and submit successfully on mobile.
+
+The questionnaire is rendered entirely from Payload and supports 10 questions.
+
+Editors can change question text/options/order without code changes.
+
+Admin-only scoring controls affect computed problem index.
+
+The heatmap page loads and displays aggregated postal code data.
+
+AI recommendations are generated only when CTA is clicked, in German, and saved to the submission.
+
+Legal pages and cookie banner are editable via Payload Globals.
+
