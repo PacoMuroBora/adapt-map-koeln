@@ -49,12 +49,43 @@ export default function QuestionClient({
     }
   }, [state.questionnaireVersion, questionnaireVersion, updateQuestionnaireVersion])
 
+  // Initialize slider with default value if required and not set
+  useEffect(() => {
+    if (
+      question.type === 'slider' &&
+      question.required &&
+      (answer === null || answer === undefined)
+    ) {
+      const sliderConfig = question.sliderConfig as any
+      const min = sliderConfig?.min || 0
+      setAnswer(min)
+    }
+  }, [question.type, question.required, question.sliderConfig])
+
   const progress = (stepNumber / totalSteps) * 100
 
   const handleNext = () => {
-    if (question.required && !answer) {
-      setError('Bitte beantworten Sie diese Frage.')
-      return
+    // Validate required questions
+    if (question.required) {
+      if (question.type === 'multiChoice') {
+        // For multiChoice, check if at least one option is selected
+        if (!answer || !Array.isArray(answer) || answer.length === 0) {
+          setError('Bitte wählen Sie mindestens eine Option aus.')
+          return
+        }
+      } else if (question.type === 'slider') {
+        // For slider, check if value is set (not null/undefined)
+        if (answer === null || answer === undefined) {
+          setError('Bitte wählen Sie einen Wert aus.')
+          return
+        }
+      } else {
+        // For singleChoice and dropdown, check if answer exists
+        if (!answer || answer === '') {
+          setError('Bitte beantworten Sie diese Frage.')
+          return
+        }
+      }
     }
 
     updateAnswer(question.key, answer)
@@ -157,15 +188,21 @@ export default function QuestionClient({
         const max = sliderConfig?.max || 100
         const step = sliderConfig?.step || 1
         const unit = sliderConfig?.unit || ''
-        const sliderValue = answer !== null && answer !== undefined ? answer : min
+        const sliderValue =
+          answer !== null && answer !== undefined ? answer : min
 
         return (
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="slider">Wert: {sliderValue}{unit}</Label>
+                <Label htmlFor="slider">
+                  Wert: {sliderValue}
+                  {unit}
+                </Label>
                 <span className="text-sm text-muted-foreground">
-                  {min}{unit} - {max}{unit}
+                  {min}
+                  {unit} - {max}
+                  {unit}
                 </span>
               </div>
               <input
@@ -183,8 +220,14 @@ export default function QuestionClient({
               />
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{min}{unit}</span>
-              <span>{max}{unit}</span>
+              <span>
+                {min}
+                {unit}
+              </span>
+              <span>
+                {max}
+                {unit}
+              </span>
             </div>
           </div>
         )

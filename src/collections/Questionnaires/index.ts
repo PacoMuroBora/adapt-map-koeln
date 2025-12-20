@@ -40,10 +40,8 @@ export const Questionnaires: CollectionConfig = {
       relationTo: 'questions',
       hasMany: true,
       required: true,
-      minRows: 10,
-      maxRows: 10,
       admin: {
-        description: 'Exactly 10 questions must be selected',
+        description: 'Select questions for this questionnaire',
       },
     },
     {
@@ -59,19 +57,6 @@ export const Questionnaires: CollectionConfig = {
     },
   ],
   hooks: {
-    beforeValidate: [
-      async ({ data, operation }) => {
-        if ((operation === 'create' || operation === 'update') && data) {
-          // Ensure questions is an array
-          const questions = Array.isArray(data.questions) ? data.questions : []
-          
-          if (questions.length !== 10) {
-            throw new Error('Questionnaire must have exactly 10 questions')
-          }
-        }
-        return data
-      },
-    ],
     beforeChange: [
       async ({ data, req, operation, originalDoc }) => {
         // If setting isCurrent to true, unset all other questionnaires

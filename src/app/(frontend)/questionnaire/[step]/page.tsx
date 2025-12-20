@@ -19,7 +19,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
   const { step } = await paramsPromise
   const stepNumber = parseInt(step, 10)
 
-  if (isNaN(stepNumber) || stepNumber < 1 || stepNumber > 10) {
+  if (isNaN(stepNumber) || stepNumber < 1) {
     notFound()
   }
 
@@ -52,8 +52,8 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
 
   const questionnaire = questionnaires.docs[0] as Questionnaire
 
-  // Ensure we have exactly 10 questions
-  if (!questionnaire.questions || questionnaire.questions.length !== 10) {
+  // Ensure we have at least one question
+  if (!questionnaire.questions || questionnaire.questions.length === 0) {
     return (
       <div className="container mx-auto max-w-2xl px-4 py-8 md:py-16">
         <div className="rounded-lg border bg-card p-6 text-center">
@@ -66,9 +66,35 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     )
   }
 
-  const currentQuestion = Array.isArray(questionnaire.questions)
-    ? questionnaire.questions[stepNumber - 1]
-    : null
+  // Sort questions by displayOrder if available, otherwise keep original order
+  const questions = Array.isArray(questionnaire.questions)
+    ? [...questionnaire.questions].sort((a, b) => {
+        if (typeof a === 'string' || typeof b === 'string') return 0
+        const aOrder =
+          a.editorFields?.displayOrder !== undefined &&
+          a.editorFields.displayOrder !== null
+            ? a.editorFields.displayOrder
+            : 999
+        const bOrder =
+          b.editorFields?.displayOrder !== undefined &&
+          b.editorFields.displayOrder !== null
+            ? b.editorFields.displayOrder
+            : 999
+        return aOrder - bOrder
+      })
+    : []
+
+  const totalSteps = questions.length
+
+  // Validate step number is within range
+  if (stepNumber > totalSteps) {
+    notFound()
+  }
+
+  const currentQuestion =
+    questions[stepNumber - 1] && typeof questions[stepNumber - 1] !== 'string'
+      ? questions[stepNumber - 1]
+      : null
 
   if (!currentQuestion || typeof currentQuestion === 'string') {
     notFound()
@@ -81,7 +107,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     <QuestionClient
       question={currentQuestion}
       stepNumber={stepNumber}
-      totalSteps={10}
+      totalSteps={totalSteps}
       questionnaireVersion={questionnaire.version || questionnaire.id}
       nextButtonText={uiCopy?.questionnaire?.nextButton || 'Weiter'}
       previousButtonText={uiCopy?.questionnaire?.previousButton || 'Zurück'}

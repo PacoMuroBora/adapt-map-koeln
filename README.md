@@ -4,13 +4,13 @@ A German-language, mobile-first web application for anonymous heat-related issue
 
 ## Overview
 
-This application enables users to submit anonymous reports about heat-related issues at their location via QR code or direct link. After completing a 10-question questionnaire, users receive baseline results and can optionally request AI-generated recommendations. All submissions are aggregated and visualized in a public heatmap at the postal code level.
+This application enables users to submit anonymous reports about heat-related issues at their location via QR code or direct link. After completing a questionnaire, users receive baseline results and can optionally request AI-generated recommendations. All submissions are aggregated and visualized in a public heatmap at the postal code level.
 
 **Key Features:**
 
 - 📱 Mobile-first design optimized for phones and tablets
 - 📍 GPS and manual address location capture with geocoding
-- 📝 Dynamic 10-question questionnaire managed in Payload CMS
+- 📝 Dynamic questionnaire managed in Payload CMS
 - 🤖 On-demand AI recommendations (German) via n8n RAG workflow
 - 🗺️ Public heatmap visualization with postal code aggregation
 - 👥 Role-based access control (User, Editor, Admin)
@@ -129,7 +129,7 @@ Question definitions managed by editors:
 
 #### Questionnaires
 
-Questionnaire versions with exactly 10 active questions:
+Questionnaire versions with configurable questions:
 
 - Version tracking
 - `isCurrent` flag (only one can be current)
@@ -198,7 +198,7 @@ Both methods use self-hosted OSM-based geocoding services:
 Dynamic questionnaire system that:
 
 - Fetches current questionnaire from Payload CMS
-- Validates exactly 10 active questions exist
+- Validates at least one active question exists
 - Renders one question per screen
 - Supports all question types with validation
 - Stores answers as JSON keyed by question key
