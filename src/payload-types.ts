@@ -917,7 +917,7 @@ export interface Questionnaire {
    */
   isCurrent?: boolean | null;
   /**
-   * Exactly 10 questions must be selected
+   * Select questions for this questionnaire
    */
   questions: (string | Question)[];
   status: 'draft' | 'active' | 'archived';
