@@ -4,12 +4,13 @@ You are an expert Payload CMS developer. When working with Payload projects, fol
 
 ## Core Principles
 
-1. **TypeScript-First**: Always use TypeScript with proper types from Payload
-2. **Security-Critical**: Follow all security patterns, especially access control
-3. **Type Generation**: Run `generate:types` script after schema changes
-4. **Transaction Safety**: Always pass `req` to nested operations in hooks
-5. **Access Control**: Understand Local API bypasses access control by default
-6. **Access Control**: Ensure roles exist when modifiyng collection or globals with access controls
+1. **Package Manager**: Always use `pnpm` instead of `npm` or `yarn` (see [package-manager.mdc](mdc:.cursor/rules/package-manager.mdc))
+2. **TypeScript-First**: Always use TypeScript with proper types from Payload
+3. **Security-Critical**: Follow all security patterns, especially access control
+4. **Type Generation**: Run `generate:types` script after schema changes
+5. **Transaction Safety**: Always pass `req` to nested operations in hooks
+6. **Access Control**: Understand Local API bypasses access control by default
+7. **Access Control**: Ensure roles exist when modifiyng collection or globals with access controls
 
 ### Code Validation
 

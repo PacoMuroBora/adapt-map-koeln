@@ -11,21 +11,88 @@ const MAX_LENGTH = 2000
 
 export default function FeedbackPage() {
   const router = useRouter()
-  const { state, updateUserText, updateCurrentStep } = useSubmission()
+  const { state, updateUserText, updateCurrentStep, updateResults } = useSubmission()
   const [text, setText] = useState(state.userText || '')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const remaining = MAX_LENGTH - text.length
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    updateUserText(text)
-    updateCurrentStep('results')
-    router.push('/results')
+  const submitToAPI = async () => {
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      // Validate required data
+      if (!state.location || !state.location.lat || !state.location.lng || !state.location.postal_code) {
+        throw new Error('Standort fehlt. Bitte kehren Sie zur Standortseite zurück.')
+      }
+
+      if (!state.questionnaireVersion) {
+        throw new Error('Fragebogen-Version fehlt. Bitte starten Sie die Umfrage neu.')
+      }
+
+      if (!state.answers || Object.keys(state.answers).length === 0) {
+        throw new Error('Keine Antworten gefunden. Bitte beantworten Sie die Fragen.')
+      }
+
+      // Prepare submission payload
+      const payload = {
+        location: {
+          lat: state.location.lat,
+          lng: state.location.lng,
+          postal_code: state.location.postal_code,
+          city: state.location.city || undefined,
+        },
+        questionnaireVersion: state.questionnaireVersion,
+        answers: state.answers,
+        consentVersion: state.consent?.consentVersion || '1.0',
+        personalFields: state.personalFields || undefined,
+        freeText: text || undefined,
+      }
+
+      const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Fehler beim Speichern der Antworten')
+      }
+
+      const data = await response.json()
+
+      // Update state with results
+      updateResults({
+        submissionId: data.submissionId,
+        problemIndex: data.problemIndex,
+        subScores: data.subScores,
+      })
+
+      // Update user text
+      updateUserText(text)
+      updateCurrentStep('results')
+
+      // Redirect to results
+      router.push('/results')
+    } catch (err) {
+      console.error('Submission error:', err)
+      setError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten')
+      setIsSubmitting(false)
+    }
   }
 
-  const handleSkip = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await submitToAPI()
+  }
+
+  const handleSkip = async () => {
     updateUserText('')
-    updateCurrentStep('results')
-    router.push('/results')
+    await submitToAPI()
   }
 
   return (
@@ -39,6 +106,12 @@ export default function FeedbackPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="feedback">Ihre Kommentare (optional)</Label>
             <Textarea
@@ -69,11 +142,17 @@ export default function FeedbackPage() {
               Zurück
             </Button>
             <div className="flex gap-4 sm:ml-auto">
-              <Button type="button" variant="ghost" onClick={handleSkip} className="w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleSkip}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto"
+              >
                 Überspringen
               </Button>
-              <Button type="submit" className="w-full sm:w-auto">
-                Weiter
+              <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+                {isSubmitting ? 'Wird gespeichert...' : 'Weiter'}
               </Button>
             </div>
           </div>

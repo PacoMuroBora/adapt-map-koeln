@@ -1,0 +1,97 @@
+---
+description: Always use pnpm instead of npm or yarn for package management
+globs:
+alwaysApply: true
+---
+
+# Package Manager: Always Use pnpm
+
+This project uses **pnpm** as the package manager. Always use `pnpm` commands instead of `npm` or `yarn`.
+
+## Rule
+
+**ALWAYS use `pnpm` for all package management operations.**
+
+## Commands
+
+### ✅ Correct (Use pnpm)
+
+```bash
+# Install dependencies
+pnpm install
+pnpm i
+
+# Add a package
+pnpm add package-name
+pnpm add -D package-name  # dev dependency
+
+# Remove a package
+pnpm remove package-name
+
+# Run scripts
+pnpm run build
+pnpm run dev
+pnpm build  # shorthand (run can be omitted)
+
+# Execute binaries
+pnpm exec prettier
+pnpm dlx create-next-app
+```
+
+### ❌ Incorrect (Do NOT use npm or yarn)
+
+```bash
+# ❌ WRONG
+npm install
+npm run build
+npm add package-name
+yarn install
+yarn add package-name
+```
+
+## Why pnpm?
+
+- **Faster**: Uses hard links and symlinks for efficient disk usage
+- **Strict**: Better dependency resolution and prevents phantom dependencies
+- **Monorepo support**: Better workspace support
+- **Lock file**: Uses `pnpm-lock.yaml` (not `package-lock.json` or `yarn.lock`)
+
+## Project Configuration
+
+- Lock file: `pnpm-lock.yaml`
+- Package manager specified in `package.json` engines: `"pnpm": "^9 || ^10"`
+- Scripts in `package.json` use `pnpm` internally where needed
+
+## Terminal Commands
+
+When running terminal commands in this project:
+
+```bash
+# ✅ Correct
+pnpm run build
+pnpm run format
+pnpm run lint
+
+# ❌ Wrong
+npm run build
+npm run format
+yarn build
+```
+
+## Docker/CI/CD
+
+The Dockerfile supports multiple package managers but the project is configured for pnpm. Always use pnpm in CI/CD pipelines.
+
+## When Writing Code Examples
+
+In documentation, comments, or examples:
+
+```bash
+# ✅ Correct
+pnpm install
+pnpm add @types/node
+
+# ❌ Wrong
+npm install
+yarn add @types/node
+```

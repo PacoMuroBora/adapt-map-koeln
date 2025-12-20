@@ -55,3 +55,4 @@ Before implementing any task:
 - [ ] Check if task involves endpoints → Apply authentication check pattern
 - [ ] Review relevant rule files before coding
 
+

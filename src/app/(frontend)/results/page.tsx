@@ -15,12 +15,10 @@ export default function ResultsPage() {
 
   useEffect(() => {
     // If no submission data, redirect to start
-    if (!state.submissionId && !state.problemIndex) {
-      // In a real app, we'd submit the data here
-      // For now, we'll just show the results page structure
-      updateCurrentStep('results')
+    if (!state.submissionId && (state.problemIndex === null || state.problemIndex === undefined)) {
+      router.push('/')
     }
-  }, [state, updateCurrentStep])
+  }, [state, router, updateCurrentStep])
 
   const problemIndex = state.problemIndex ?? 0
   const severity =
