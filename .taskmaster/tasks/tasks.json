@@ -326,7 +326,109 @@
         "priority": "medium",
         "dependencies": ["2", "5"],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install MapLibre GL JS and react-map-gl dependencies",
+            "description": "Install and configure MapLibre GL JS (v3.x) and react-map-gl (v7.x) packages for map rendering.",
+            "dependencies": [],
+            "details": "Install maplibre-gl and react-map-gl packages using pnpm. Configure Next.js to handle MapLibre CSS imports. Set up TypeScript types if needed. Verify installation with a simple test component.",
+            "status": "done",
+            "testStrategy": "Verify packages are installed correctly, check TypeScript types are available, and test basic map rendering in a test component",
+            "parentId": "6",
+            "updatedAt": "2025-12-20T12:00:00.000Z"
+          },
+          {
+            "id": 2,
+            "title": "Create GET /api/heatmap endpoint with data aggregation",
+            "description": "Implement the API endpoint that aggregates submission data by postal code and returns GeoJSON format.",
+            "dependencies": [],
+            "details": "Reference .cursor/rules/endpoints.md for GET endpoint patterns, .cursor/rules/queries.md for aggregation queries. Create app/api/heatmap/route.ts that: aggregates submissions by postal_code, calculates average_problem_index per postal code, converts to GeoJSON FeatureCollection format, uses representative coordinates from submissions. Use Payload Local API with proper access control (overrideAccess: false if needed). Handle edge cases (no submissions, missing postal codes).",
+            "status": "done",
+            "testStrategy": "Test API with various datasets, verify GeoJSON format is valid, test with empty submissions, verify aggregation calculations are correct",
+            "parentId": "6"
+          },
+          {
+            "id": 3,
+            "title": "Implement server-side caching for heatmap data",
+            "description": "Add caching mechanism to improve performance of the heatmap API endpoint.",
+            "dependencies": [2],
+            "details": "Implement in-memory caching with configurable cache duration (default 5 minutes). Use Node.js Map or simple object for cache storage. Add cache invalidation logic. Consider Redis for production (optional, can be future enhancement). Add cache headers to API response. Document cache behavior.",
+            "status": "done",
+            "testStrategy": "Test cache hit/miss scenarios, verify cache expiration works correctly, test cache invalidation, measure performance improvement",
+            "parentId": "6"
+          },
+          {
+            "id": 4,
+            "title": "Create HeatmapMap component with MapLibre integration",
+            "description": "Build the main map component using react-map-gl to display the heatmap visualization.",
+            "dependencies": [1, 2],
+            "details": "Create a reusable HeatmapMap component (or integrate directly into heatmap page). Configure MapLibre with appropriate map style (CartoDB Positron or similar). Set up initial view state (default to Cologne area: lat 50.9375, lng 6.9603, zoom 6). Implement loading and error states. Ensure component is client-side ('use client' directive).",
+            "status": "done",
+            "testStrategy": "Test map renders correctly, verify initial view state, test loading states, verify error handling",
+            "parentId": "6"
+          },
+          {
+            "id": 5,
+            "title": "Implement heatmap layer with GeoJSON data",
+            "description": "Add the heatmap layer visualization using MapLibre's heatmap layer type with proper styling.",
+            "dependencies": [4],
+            "details": "Configure heatmap layer with proper paint properties: heatmap-weight based on average_problem_index, heatmap-intensity based on zoom level, heatmap-color gradient (blue to red), heatmap-radius based on zoom, heatmap-opacity based on zoom. Fetch GeoJSON data from /api/heatmap endpoint. Connect Source and Layer components from react-map-gl. Handle data updates and re-rendering.",
+            "status": "done",
+            "testStrategy": "Test heatmap visualization with sample data, verify color gradient displays correctly, test zoom interactions affect heatmap appearance, verify data updates trigger re-render",
+            "parentId": "6"
+          },
+          {
+            "id": 6,
+            "title": "Add user location marker to map",
+            "description": "Display the user's location marker on the map if location data is available from submission context.",
+            "dependencies": [4],
+            "details": "Get user location from SubmissionContext (state.location). Add Marker component from react-map-gl. Style marker appropriately (red pin or custom icon). Position marker at user's coordinates. Handle case where location is not available. Ensure marker is visible and doesn't interfere with heatmap visualization.",
+            "status": "done",
+            "testStrategy": "Test marker displays with location data, verify marker position is correct, test without location data, verify marker styling",
+            "parentId": "6"
+          },
+          {
+            "id": 7,
+            "title": "Implement legend component for heatmap",
+            "description": "Create a legend component explaining the heatmap color coding (low/medium/high problem index).",
+            "dependencies": [5],
+            "details": "Design legend with color indicators matching heatmap gradient. Include German labels (Niedrig/Mittel/Hoch). Position legend appropriately (bottom-left corner, mobile-friendly). Style with Tailwind CSS to match app design. Make legend responsive for mobile devices. Ensure legend is accessible and readable.",
+            "status": "done",
+            "testStrategy": "Test legend displays correctly, verify colors match heatmap, test responsive design on mobile, verify German text is correct",
+            "parentId": "6"
+          },
+          {
+            "id": 8,
+            "title": "Optimize map for mobile devices and performance",
+            "description": "Ensure the heatmap works well on mobile devices with proper touch controls and performance optimization.",
+            "dependencies": [4, 5, 6, 7],
+            "details": "Test and optimize touch interactions (pan, zoom, pinch). Ensure map controls are mobile-friendly. Optimize rendering performance (consider data limits, debounce updates). Test on various mobile devices and screen sizes. Add proper loading states for slow connections. Optimize bundle size if needed. Test with limited data to ensure performance.",
+            "status": "done",
+            "testStrategy": "Test on real mobile devices, verify touch interactions work correctly, test performance with large datasets, verify loading states, test on slow connections",
+            "parentId": "6"
+          },
+          {
+            "id": 9,
+            "title": "Integrate HeatmapMap component into heatmap page",
+            "description": "Replace the placeholder content in the heatmap page with the fully functional map component.",
+            "dependencies": [4, 5, 6, 7],
+            "details": "Update src/app/(frontend)/heatmap/page.tsx to use the HeatmapMap component. Remove placeholder content. Ensure proper integration with SubmissionContext for user location. Maintain existing page structure and styling. Test navigation flow to heatmap page.",
+            "status": "done",
+            "testStrategy": "Test complete heatmap page integration, verify navigation works, test with and without user location, verify page layout and styling",
+            "parentId": "6"
+          },
+          {
+            "id": 10,
+            "title": "Comprehensive testing and edge case handling",
+            "description": "Test the complete heatmap implementation with various scenarios and handle edge cases.",
+            "dependencies": [9],
+            "details": "Test with empty submissions dataset, test with single submission, test with many submissions, test with missing postal codes, test API error handling, test network failures, test with different postal code distributions, verify GeoJSON validation, test map interactions (zoom, pan, etc.), verify legend accuracy, test mobile responsiveness.",
+            "status": "pending",
+            "testStrategy": "Run comprehensive test suite covering all scenarios, verify edge cases are handled gracefully, test error states, verify performance meets requirements",
+            "parentId": "6"
+          }
+        ]
       },
       {
         "id": "7",

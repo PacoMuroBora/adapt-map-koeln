@@ -2,25 +2,14 @@
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { HeatmapMap } from '@/components/HeatmapMap'
 import { useSubmission } from '@/providers/Submission'
-import { Loader2, MapPin } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 export default function HeatmapPage() {
   const { state } = useSubmission()
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    // This will be replaced with actual map integration in task 6
-    // For now, just simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [])
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 md:py-16">
@@ -34,31 +23,7 @@ export default function HeatmapPage() {
         </div>
 
         <Card className="relative h-[600px] w-full overflow-hidden">
-          {isLoading ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-muted-foreground" />
-                <p className="text-muted-foreground">Heatmap wird geladen...</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <p className="mb-4 text-destructive">{error}</p>
-                <Button onClick={() => window.location.reload()}>Erneut versuchen</Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center bg-muted">
-              <div className="text-center">
-                <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="mb-2 text-lg font-medium">Karte wird hier angezeigt</p>
-                <p className="text-sm text-muted-foreground">
-                  Die MapLibre-Integration wird in Aufgabe 6 implementiert.
-                </p>
-              </div>
-            </div>
-          )}
+          <HeatmapMap userLocation={state.location} className="h-full w-full" />
         </Card>
 
         {state.location && (

@@ -1,0 +1,381 @@
+# Tech Stack Best Practices and Dependency Management
+
+This document outlines best practices, deprecations, compatibility notes, and important information for all dependencies in the project.
+
+## Core Framework
+
+### Next.js 15.4.10
+
+- **Status**: Current (latest: 16.1.0 available, but staying on 15.x for stability)
+- **Best Practices**:
+  - Use App Router (not Pages Router) for all new routes
+  - Server Components by default, use `'use client'` only when needed
+  - Use `generateStaticParams` for dynamic routes when possible
+  - Leverage `revalidate` for ISR (Incremental Static Regeneration)
+- **Notes**:
+  - Next.js 16 is available but may have breaking changes
+  - Current version is stable and production-ready
+  - `NODE_OPTIONS=--no-deprecation` used in scripts to suppress deprecation warnings
+
+### React 19.2.1
+
+- **Status**: Latest stable
+- **Best Practices**:
+  - Use Server Components by default
+  - Client Components only for interactivity (state, effects, event handlers)
+  - Prefer `async` Server Components over `useEffect` for data fetching
+- **Compatibility Notes**:
+  - ⚠️ Some packages show peer dependency warnings (lucide-react, react-hook-form) but work fine
+  - React 19 is backward compatible with React 18 APIs
+  - New features: `useFormStatus`, `useFormState`, `useOptimistic`
+
+### TypeScript 5.7.3
+
+- **Status**: Current (latest: 5.9.3 available)
+- **Best Practices**:
+  - Use strict mode (enabled in tsconfig.json)
+  - Prefer `interface` for object shapes, `type` for unions/intersections
+  - Use `satisfies` operator for type-safe constants
+- **Notes**: Minor updates available but current version is stable
+
+## Payload CMS 3.68.5
+
+### Payload Core
+
+- **Status**: Current (latest: 3.69.0 available)
+- **Best Practices**:
+  - Always use `overrideAccess: false` when passing `user` to Local API
+  - Always pass `req` to nested operations in hooks for transaction safety
+  - Use context flags to prevent infinite hook loops
+  - Run `generate:types` after schema changes
+- **Version Policy**: Keep all `@payloadcms/*` packages at the same version
+- **Critical Security**: See `.cursor/rules/security-critical.mdc`
+
+### Payload Plugins
+
+All plugins at version 3.68.5:
+
+- `@payloadcms/plugin-form-builder` - Form building (installed but using custom collections)
+- `@payloadcms/plugin-nested-docs` - Nested document structure
+- `@payloadcms/plugin-redirects` - URL redirects
+- `@payloadcms/plugin-search` - Full-text search
+- `@payloadcms/plugin-seo` - SEO metadata
+
+### Database
+
+- `@payloadcms/db-mongodb` 3.68.5 - MongoDB adapter
+- **Best Practices**:
+  - Use indexes on frequently queried fields
+  - Enable transactions (requires replica set)
+  - Use `select` to limit returned fields
+  - Set `maxDepth` on relationships
+
+## UI Libraries
+
+### Tailwind CSS 3.4.3
+
+- **Status**: Current (latest: 4.1.18 available, but 4.x is major version)
+- **Best Practices**:
+  - Use mobile-first responsive design
+  - Leverage CSS variables for theming
+  - Use `@apply` sparingly (prefer utility classes)
+- **Notes**:
+  - Tailwind 4.x is available but is a major rewrite - stay on 3.x for now
+  - Current version is stable and well-supported
+
+### Radix UI
+
+- **Status**: All packages current
+- **Packages**: `@radix-ui/react-checkbox`, `@radix-ui/react-label`, `@radix-ui/react-select`, `@radix-ui/react-slot`
+- **Best Practices**:
+  - Accessible by default
+  - Use with shadcn/ui components
+  - Customize via CSS variables
+
+### shadcn/ui
+
+- **Status**: Using via `components.json`
+- **Best Practices**:
+  - Components are copied to project (not installed as package)
+  - Customize in `src/components/ui/`
+  - Use `cn()` utility for conditional classes
+
+### Lucide React 0.378.0
+
+- **Status**: Outdated (latest: 0.562.0 available)
+- **Compatibility**: ⚠️ Shows peer dependency warning for React 19, but works fine
+- **Best Practices**:
+  - Use named imports: `import { Icon } from 'lucide-react'`
+  - Icons are tree-shakeable
+- **Action**: Consider updating to latest version
+
+## Form Management
+
+### React Hook Form 7.45.4
+
+- **Status**: Outdated (latest: 7.69.0 available)
+- **Compatibility**: ⚠️ Shows peer dependency warning for React 19, but works fine
+- **Best Practices**:
+  - Use `useForm` hook with TypeScript generics
+  - Leverage `Controller` for complex inputs
+  - Use `resolver` with validation libraries (zod, yup)
+- **Action**: Update to latest 7.x version
+
+## Map Libraries
+
+### MapLibre GL JS 5.15.0
+
+- **Status**: Latest stable (v5.x, not v3.x as originally planned)
+- **Best Practices**:
+  - Import CSS: `import 'maplibre-gl/dist/maplibre-gl.css'`
+  - Use in Client Components only (`'use client'`)
+  - Configure map style via `mapStyle` prop
+  - Use `Source` and `Layer` components from react-map-gl
+- **TypeScript**: Built-in types (no @types package needed)
+- **Notes**:
+  - v5.x is the current major version (v3.x is outdated)
+  - Provides its own TypeScript definitions
+
+### React Map GL 8.1.0
+
+- **Status**: Latest stable (v8.x, not v7.x as originally planned)
+- **Best Practices**:
+  - **CRITICAL**: Import from specific subpath, not root:
+    - For MapLibre: `import Map from 'react-map-gl/maplibre'`
+    - For Mapbox: `import Map from 'react-map-gl/mapbox'`
+  - Use `Source` and `Layer` from the same subpath: `import { Source, Layer, Marker } from 'react-map-gl/maplibre'`
+  - Use `Map` component as wrapper
+  - Use `Source` and `Layer` for data visualization
+  - Use `Marker` for point markers
+  - Manage view state with `useState` or `useMap` hook
+- **Compatibility**: Works with MapLibre GL JS 5.x
+- **Breaking Change**: v8.x requires subpath imports (`.maplibre` or `.mapbox`) - root imports no longer work
+- **Notes**: v8.x is the current major version
+
+## Styling & Utilities
+
+### Tailwind Merge 2.6.0
+
+- **Status**: Outdated (latest: 3.4.0 available)
+- **Best Practices**:
+  - Use `cn()` utility for conditional classes
+  - Combines `clsx` and `tailwind-merge`
+- **Action**: Consider updating to v3.x (check breaking changes)
+
+### Class Variance Authority 0.7.0
+
+- **Status**: Current
+- **Best Practices**: Used with shadcn/ui for variant-based styling
+
+### Geist Font 1.3.0
+
+- **Status**: Current
+- **Best Practices**:
+  - Use `GeistSans` and `GeistMono` from `geist/font`
+  - Configure in root layout
+
+## Development Tools
+
+### ESLint 9.16.0
+
+- **Status**: Latest
+- **Config**: `eslint-config-next` 15.4.7
+- **Best Practices**:
+  - Use Next.js config for framework-specific rules
+  - Run `pnpm lint:fix` before commits
+
+### Prettier 3.4.2
+
+- **Status**: Current
+- **Best Practices**:
+  - Format on save (IDE config)
+  - Run `pnpm format` before commits
+
+### Vitest 3.2.3
+
+- **Status**: Outdated (latest: 4.0.16 available)
+- **Best Practices**:
+  - Use for unit/integration tests
+  - Configure in `vitest.config.mts`
+- **Action**: Consider updating to v4.x (check migration guide)
+
+### Playwright 1.56.1
+
+- **Status**: Outdated (latest: 1.57.0 available)
+- **Best Practices**:
+  - Use for E2E tests
+  - Run with `pnpm test:e2e`
+- **Action**: Minor update available
+
+## Build Tools
+
+### Sharp 0.34.2
+
+- **Status**: Outdated (latest: 0.34.5 available)
+- **Best Practices**:
+  - Used by Next.js for image optimization
+  - Native binary, must match platform
+- **Action**: Minor patch update available
+
+### Cross-env 7.0.3
+
+- **Status**: Outdated (latest: 10.1.0 available)
+- **Best Practices**: Used for cross-platform environment variables
+- **Action**: Major version update available (check breaking changes)
+
+### Dotenv 16.4.7
+
+- **Status**: Outdated (latest: 17.2.3 available)
+- **Best Practices**: Load environment variables
+- **Action**: Major version update available (check breaking changes)
+
+## Deprecated Dependencies
+
+### ⚠️ Known Deprecations
+
+1. **@types/maplibre-gl**:
+   - **Status**: Removed (was deprecated stub)
+   - **Reason**: maplibre-gl provides its own TypeScript definitions
+   - **Action**: ✅ Already removed
+
+2. **Subdependencies**:
+   - `glob@7.2.3` - Deprecated (used by transitive dependencies)
+   - `inflight@1.0.6` - Deprecated (used by transitive dependencies)
+   - **Action**: Monitor for updates to parent packages
+
+## Peer Dependency Warnings
+
+### Current Warnings (Non-blocking)
+
+1. **Vite 7.3.0** expects `@types/node@^20.19.0 || >=22.12.0`
+   - Current: `@types/node@22.5.4`
+   - **Status**: ⚠️ Minor version mismatch, but compatible
+   - **Action**: Consider updating to latest @types/node
+
+2. **Lucide React** expects `react@^16.5.1 || ^17.0.0 || ^18.0.0`
+   - Current: `react@19.2.1`
+   - **Status**: ⚠️ Works fine with React 19 (backward compatible)
+   - **Action**: Wait for lucide-react to update peer deps
+
+3. **React Hook Form** expects `react@^16.8.0 || ^17 || ^18`
+   - Current: `react@19.2.1`
+   - **Status**: ⚠️ Works fine with React 19 (backward compatible)
+   - **Action**: Wait for react-hook-form to update peer deps
+
+## Dependency Update Strategy
+
+### When to Update
+
+1. **Security patches**: Update immediately
+2. **Patch versions**: Update monthly
+3. **Minor versions**: Update quarterly (test thoroughly)
+4. **Major versions**: Evaluate carefully, test extensively
+
+### Update Process
+
+1. Check changelog for breaking changes
+2. Update one package at a time
+3. Run tests: `pnpm test`
+4. Check for TypeScript errors: `tsc --noEmit`
+5. Test manually in development
+6. Commit with clear message
+
+### Version Pinning Strategy
+
+- **Exact versions** (`3.68.5`): Payload CMS packages (keep in sync)
+- **Caret ranges** (`^1.2.3`): Most dependencies (allow minor/patch)
+- **Tilde ranges** (`~1.2.3`): Only if patch-only updates needed
+
+## Package Manager
+
+### pnpm 9.x or 10.x
+
+- **Status**: Required (see `engines` in package.json)
+- **Best Practices**:
+  - Always use `pnpm` (never `npm` or `yarn`)
+  - Use `pnpm install` for fresh installs
+  - Use `pnpm add <package>` to add dependencies
+  - Lock file: `pnpm-lock.yaml` (commit to git)
+
+## Node.js Version
+
+### Node.js ^18.20.2 || >=20.9.0
+
+- **Status**: Required (see `engines` in package.json)
+- **Best Practices**:
+  - Use Node.js 20.x LTS for production
+  - Node.js 18.x is supported but EOL soon
+  - Use `.nvmrc` or similar for version management
+
+## Adding New Dependencies
+
+### Checklist
+
+1. ✅ Check if package is maintained (GitHub stars, recent commits)
+2. ✅ Check for TypeScript support (built-in or @types package)
+3. ✅ Check compatibility with React 19 and Next.js 15
+4. ✅ Check bundle size impact
+5. ✅ Check license compatibility
+6. ✅ Read documentation and best practices
+7. ✅ Test in development before committing
+8. ✅ Update this file with notes
+
+### Example: Adding MapLibre (Completed)
+
+```bash
+# Install
+pnpm add maplibre-gl react-map-gl
+
+# Verify
+pnpm list maplibre-gl react-map-gl
+
+# Check types (maplibre-gl has built-in types)
+# No @types package needed (and deprecated if exists)
+```
+
+## Monitoring Dependencies
+
+### Regular Tasks
+
+1. **Weekly**: Check `pnpm outdated` for updates
+2. **Monthly**: Review security advisories (`pnpm audit`)
+3. **Quarterly**: Review major version updates
+4. **Annually**: Audit all dependencies for necessity
+
+### Tools
+
+- `pnpm outdated` - Check for updates
+- `pnpm audit` - Security vulnerabilities
+- `pnpm list` - View installed packages
+- `pnpm why <package>` - Why is a package installed
+
+## Notes for Specific Libraries
+
+### Next.js
+
+- Use `next/image` for images (not `<img>`)
+- Use `next/link` for navigation (not `<a>`)
+- Server Components can't use browser APIs
+- Client Components must have `'use client'` directive
+
+### Payload CMS
+
+- Always use Local API with proper access control
+- Pass `req` in hooks for transaction safety
+- Run `generate:types` after schema changes
+- Use `overrideAccess: false` when passing user
+
+### MapLibre
+
+- Must be Client Component (`'use client'`)
+- Import CSS: `import 'maplibre-gl/dist/maplibre-gl.css'`
+- Use react-map-gl components (not direct MapLibre API)
+- Configure map style via environment or config
+
+## Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Payload CMS Documentation](https://payloadcms.com/docs)
+- [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/)
+- [React Map GL Documentation](https://visgl.github.io/react-map-gl/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
