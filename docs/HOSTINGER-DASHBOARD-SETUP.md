@@ -6,6 +6,8 @@ Since you've already set up n8n, Traefik, and Redis via the Hostinger dashboard,
 
 This guide shows how to integrate Nominatim and Photon with your existing Traefik, n8n, Redis, and RedisInsight services.
 
+**💡 Hosting Everything on One VPS?** If you have 8GB RAM VPS, see [`docs/VPS-RESOURCE-ANALYSIS.md`](VPS-RESOURCE-ANALYSIS.md) for optimization strategies to fit all services (including Next.js app) on one server.
+
 ---
 
 ## Quick Setup Steps
