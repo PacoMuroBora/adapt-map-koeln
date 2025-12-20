@@ -22,10 +22,7 @@ export async function GET() {
     })
 
     if (!questionnaires.docs.length) {
-      return NextResponse.json(
-        { error: 'No active questionnaire found' },
-        { status: 404 },
-      )
+      return NextResponse.json({ error: 'No active questionnaire found' }, { status: 404 })
     }
 
     const questionnaire = questionnaires.docs[0]
@@ -39,21 +36,17 @@ export async function GET() {
     }
 
     // Sort questions by displayOrder if available
-    const questions = Array.isArray(questionnaire.questions)
-      ? [...questionnaire.questions]
-      : []
+    const questions = Array.isArray(questionnaire.questions) ? [...questionnaire.questions] : []
 
     // Sort by displayOrder if available, otherwise keep original order
     questions.sort((a, b) => {
       if (typeof a === 'string' || typeof b === 'string') return 0
       const aOrder =
-        a.editorFields?.displayOrder !== undefined &&
-        a.editorFields.displayOrder !== null
+        a.editorFields?.displayOrder !== undefined && a.editorFields.displayOrder !== null
           ? a.editorFields.displayOrder
           : 999
       const bOrder =
-        b.editorFields?.displayOrder !== undefined &&
-        b.editorFields.displayOrder !== null
+        b.editorFields?.displayOrder !== undefined && b.editorFields.displayOrder !== null
           ? b.editorFields.displayOrder
           : 999
       return aOrder - bOrder
@@ -83,10 +76,6 @@ export async function GET() {
     })
   } catch (error: any) {
     console.error('Questionnaire fetch error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch questionnaire' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'Failed to fetch questionnaire' }, { status: 500 })
   }
 }
-

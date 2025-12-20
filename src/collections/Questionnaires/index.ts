@@ -64,7 +64,7 @@ export const Questionnaires: CollectionConfig = {
           const whereClause: any = {
             isCurrent: { equals: true },
           }
-          
+
           // Only exclude current document on update
           if (operation === 'update' && originalDoc?.id) {
             whereClause.id = { not_equals: originalDoc.id }
@@ -87,8 +87,8 @@ export const Questionnaires: CollectionConfig = {
                   data: { isCurrent: false },
                   req,
                   overrideAccess: false,
-                })
-              )
+                }),
+              ),
             )
           }
         }
@@ -98,4 +98,3 @@ export const Questionnaires: CollectionConfig = {
   },
   timestamps: true,
 }
-
