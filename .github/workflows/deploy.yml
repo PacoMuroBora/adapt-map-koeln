@@ -100,19 +100,25 @@ jobs:
             # Navigate to project directory
             cd /opt/adaptmap || (echo "Error: /opt/adaptmap not found" && exit 1)
 
-            # Verify docker-compose.hostinger.yml exists
-            if [ ! -f docker-compose.hostinger.yml ]; then
-              echo "ERROR: docker-compose.hostinger.yml not found in /opt/adaptmap"
+            # Check which compose file exists (prefer hostinger version, fallback to regular)
+            if [ -f docker-compose.hostinger.yml ]; then
+              COMPOSE_FILE="docker-compose.hostinger.yml"
+            elif [ -f docker-compose.yml ]; then
+              COMPOSE_FILE="docker-compose.yml"
+            else
+              echo "ERROR: No docker-compose file found in /opt/adaptmap"
               ls -la
               exit 1
             fi
+
+            echo "Using compose file: $COMPOSE_FILE"
 
             # Tag image with timestamp for versioning
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.IMAGE_NAME }}:$(date +%Y%m%d-%H%M%S)
 
             # Update the Docker stack (creates if doesn't exist)
             echo "Deploying Docker stack..."
-            docker stack deploy -c docker-compose.hostinger.yml ${{ env.STACK_NAME }} --with-registry-auth
+            docker stack deploy -c $COMPOSE_FILE ${{ env.STACK_NAME }} --with-registry-auth
 
             # Wait a moment for services to be created
             sleep 5
