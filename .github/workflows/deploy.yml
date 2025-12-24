@@ -62,21 +62,28 @@ jobs:
           docker save ${{ env.IMAGE_NAME }}:latest -o image.tar
           gzip image.tar
           ls -lh image.tar.gz
-          pwd
-          echo "Image saved successfully at: $(pwd)/image.tar.gz"
+          echo "Image saved successfully"
 
-      - name: Deploy to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.DEPLOY_HOST }}
-          username: ${{ vars.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ vars.DEPLOY_PORT || 22 }}
-          source: 'image.tar.gz'
-          target: '/tmp/'
-          strip_components: 0
-          timeout: 30s
-          command_timeout: 10m
+      - name: Setup SSH and deploy to server
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || 22 }}
+        run: |
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # Copy file using scp
+          echo "Copying image.tar.gz to server..."
+          scp -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -P "$DEPLOY_PORT" \
+              image.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/tmp/"
+          echo "File copied successfully"
 
       - name: Load image and update stack
         uses: appleboy/ssh-action@v1.0.3
