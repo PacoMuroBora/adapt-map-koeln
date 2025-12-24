@@ -62,6 +62,18 @@ jobs:
           docker save ${{ env.IMAGE_NAME }}:latest -o image.tar
           gzip image.tar
 
+      - name: Validate SSH connection
+        run: |
+          if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
+            echo "ERROR: DEPLOY_SSH_KEY secret is required but not set"
+            exit 1
+          fi
+          if [ -z "${{ vars.DEPLOY_HOST }}" ]; then
+            echo "ERROR: DEPLOY_HOST variable is required but not set"
+            exit 1
+          fi
+          echo "SSH connection validated (key and host are set)"
+
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -72,6 +84,8 @@ jobs:
           source: 'image.tar.gz'
           target: '/tmp/'
           strip_components: 0
+          timeout: 30s
+          command_timeout: 10m
 
       - name: Load image and update stack
         uses: appleboy/ssh-action@v1.0.3

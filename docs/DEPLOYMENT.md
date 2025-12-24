@@ -39,7 +39,14 @@ Go to your GitHub repository → Settings → Secrets and variables → Actions:
 ### Secrets (sensitive data):
 - `DATABASE_URI`: MongoDB Atlas connection string (**REQUIRED for build** - Payload needs DB access during build for `generateStaticParams`)
 - `PAYLOAD_SECRET`: Payload CMS secret key (**REQUIRED for build**)
-- `DEPLOY_SSH_KEY`: Your private SSH key (entire content including `-----BEGIN OPENSSH PRIVATE KEY-----`)
+- `DEPLOY_SSH_KEY`: Your private SSH key (**REQUIRED** - must include full key with headers):
+  ```
+  -----BEGIN OPENSSH PRIVATE KEY-----
+  [key content here]
+  -----END OPENSSH PRIVATE KEY-----
+  ```
+  
+  **Important:** Copy the entire key including the BEGIN/END lines. No extra whitespace at start/end.
 
 **Required for build (Next.js needs these at build time):**
 - `DOMAIN_NAME`: Your domain name (e.g., `example.com`) - used for `NEXT_PUBLIC_*` variables
