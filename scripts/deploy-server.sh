@@ -1,12 +1,13 @@
 #!/bin/bash
-# Server-side deployment script
-# This script should be placed on the server at /opt/adaptmap/deploy.sh
+# Server-side deployment script (optional - GitHub Actions handles this automatically)
+# This script can be used for manual deployments if needed
+# Place on server at /docker/app/deploy.sh
 
 set -e
 
-STACK_NAME="adaptmap"
+STACK_NAME="adaptmap-app"
 IMAGE_NAME="adaptmap-app"
-COMPOSE_FILE="/opt/adaptmap/docker-compose.yml"
+COMPOSE_FILE="/docker/app/docker-compose.yml"
 
 echo "Starting deployment..."
 
@@ -18,7 +19,7 @@ if [ -n "$1" ] && [ -f "$1" ]; then
 fi
 
 # Navigate to project directory
-cd /opt/adaptmap || exit 1
+cd /docker/app || exit 1
 
 # Update the Docker stack
 echo "Updating Docker stack..."

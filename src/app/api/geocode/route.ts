@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geocodeCache, createCacheKey } from '@/utilities/geocodeCache'
 
-// Support both PHOTON_URL (server-side) and NEXT_PUBLIC_PHOTON_URL (for documentation)
-// Use regular env var (not NEXT_PUBLIC_) since this runs server-side
-// NEXT_PUBLIC_PHOTON_URL is documented for frontend reference but not used here
+// Forward geocoding service configuration with fallback chain:
+// 1. LocationIQ (if API key provided) - European, 5,000 req/day free, Nominatim-based
+// 2. Custom PHOTON_URL (if set)
+// 3. Public Photon (fallback)
+const LOCATIONIQ_API_KEY = process.env.LOCATIONIQ_API_KEY
+const LOCATIONIQ_BASE_URL = process.env.LOCATIONIQ_BASE_URL || 'https://eu1.locationiq.com/v1'
 const PHOTON_URL = process.env.PHOTON_URL || 'https://photon.komoot.io'
+
+// Determine which service to use
+const useLocationIQ = Boolean(LOCATIONIQ_API_KEY)
 
 // Retry configuration
 const MAX_RETRIES = 3
@@ -95,17 +101,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(cached)
     }
 
+    // Build request URL based on service
+    let requestUrl: string
+    const headers: HeadersInit = {
+      'User-Agent': 'AdaptMapKoeln/1.0',
+    }
+
+    if (useLocationIQ) {
+      // LocationIQ API (European server, higher limits)
+      requestUrl = `${LOCATIONIQ_BASE_URL}/search.php?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1&accept-language=de`
+    } else {
+      // Public Photon (fallback)
+      requestUrl = `${PHOTON_URL}/api?q=${encodeURIComponent(query)}&limit=1&lang=de`
+    }
+
     // Make request to geocoding service with retry logic
-    const response = await fetchWithRetry(
-      `${PHOTON_URL}/api?q=${encodeURIComponent(query)}&limit=1&lang=de`,
-      {
-        headers: {
-          'User-Agent': 'AdaptMapKoeln/1.0',
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(30000), // 30 second timeout
-      },
-    )
+    const response = await fetchWithRetry(requestUrl, {
+      headers,
+      signal: AbortSignal.timeout(30000), // 30 second timeout
+    })
 
     if (!response.ok) {
       // Provide more specific error messages
@@ -126,6 +140,43 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json()
 
+    // Handle LocationIQ response format (different from Photon)
+    if (useLocationIQ) {
+      // LocationIQ returns array directly
+      if (!Array.isArray(data) || data.length === 0) {
+        return NextResponse.json(
+          { error: 'Address not found. Please check your input and try again.' },
+          { status: 404 },
+        )
+      }
+
+      const result = data[0]
+      const lat = parseFloat(result.lat)
+      const lng = parseFloat(result.lon)
+
+      // Validate coordinates
+      if (isNaN(lat) || isNaN(lng)) {
+        return NextResponse.json(
+          { error: 'Invalid coordinates returned from geocoding service' },
+          { status: 500 },
+        )
+      }
+
+      const geocodeResult = {
+        lat,
+        lng,
+        postal_code: result.address?.postcode || postalcode || null,
+        city: result.address?.city || result.address?.town || result.address?.village || city || null,
+        address: result.display_name || query,
+      }
+
+      // Cache the result
+      geocodeCache.set(cacheKey, geocodeResult)
+
+      return NextResponse.json(geocodeResult)
+    }
+
+    // Handle Photon response format (GeoJSON)
     if (!data.features || data.features.length === 0) {
       return NextResponse.json(
         { error: 'Address not found. Please check your input and try again.' },

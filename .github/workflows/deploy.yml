@@ -8,7 +8,7 @@ on:
 
 env:
   IMAGE_NAME: adaptmap-app
-  STACK_NAME: adaptmap
+  STACK_NAME: adaptmap-app
 
 jobs:
   build-and-deploy:
@@ -17,6 +17,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: |
+          if [ ! -f docker-compose.hostinger-app.yml ]; then
+            echo "ERROR: docker-compose.hostinger-app.yml not found"
+            exit 1
+          fi
+          echo "Compose file found: docker-compose.hostinger-app.yml"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -37,11 +45,11 @@ jobs:
           fi
           echo "Build args will be:"
           echo "  NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}"
-          echo "  NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}"
+          echo "  NEXT_PUBLIC_PHOTON_URL=https://photon.komoot.io (public API)"
           echo "  DATABASE_URI=*** (hidden)"
           echo "  PAYLOAD_SECRET=*** (hidden)"
 
-      - name: Build Docker image
+      - name: Build Docker images
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -50,10 +58,10 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          load: true # Load image into local Docker daemon
+          load: true
           build-args: |
             NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}
-            NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}
+            NEXT_PUBLIC_PHOTON_URL=https://photon.komoot.io
             DATABASE_URI=${{ secrets.DATABASE_URI }}
             PAYLOAD_SECRET=${{ secrets.PAYLOAD_SECRET }}
 
@@ -63,6 +71,34 @@ jobs:
           gzip image.tar
           ls -lh image.tar.gz
           echo "Image saved successfully"
+
+      - name: Copy compose file to server
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || 22 }}
+        run: |
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # Ensure directory exists
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -p "$DEPLOY_PORT" \
+              "$DEPLOY_USER@$DEPLOY_HOST" \
+              "mkdir -p /docker/app"
+
+          # Copy compose file
+          echo "Copying docker-compose.yml to server..."
+          scp -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -P "$DEPLOY_PORT" \
+              docker-compose.hostinger-app.yml "$DEPLOY_USER@$DEPLOY_HOST:/docker/app/docker-compose.yml"
+          echo "Compose file copied successfully"
 
       - name: Setup SSH and deploy to server
         env:
@@ -97,19 +133,17 @@ jobs:
             gunzip -c /tmp/image.tar.gz | docker load
             rm /tmp/image.tar.gz
 
-            # Navigate to project directory
-            cd /opt/adaptmap || (echo "Error: /opt/adaptmap not found" && exit 1)
+            # Navigate to app project directory
+            cd /docker/app || (echo "Error: /docker/app not found" && exit 1)
 
-            # Check which compose file exists (prefer hostinger version, fallback to regular)
-            if [ -f docker-compose.hostinger.yml ]; then
-              COMPOSE_FILE="docker-compose.hostinger.yml"
-            elif [ -f docker-compose.yml ]; then
-              COMPOSE_FILE="docker-compose.yml"
-            else
-              echo "ERROR: No docker-compose file found in /opt/adaptmap"
+            # Check if compose file exists
+            if [ ! -f docker-compose.yml ]; then
+              echo "ERROR: docker-compose.yml not found in /docker/app"
               ls -la
               exit 1
             fi
+
+            COMPOSE_FILE="docker-compose.yml"
 
             echo "Using compose file: $COMPOSE_FILE"
 
@@ -156,3 +190,4 @@ jobs:
             echo ""
             echo "=== App Service Details ==="
             docker service ps ${{ env.STACK_NAME }}_app --no-trunc | head -10 || echo "Service not found"
+            echo ""

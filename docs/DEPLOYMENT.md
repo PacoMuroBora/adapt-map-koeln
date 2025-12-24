@@ -1,164 +1,365 @@
-# Deployment Guide
+# Deployment Guide - Step by Step
 
-This guide explains how to deploy the application to your Hostinger VPS using GitHub Actions.
+This guide walks you through deploying the application to Hostinger VPS. No DevOps experience needed!
 
-## Prerequisites
+## 📋 Overview
 
-1. **Docker Swarm initialized on server**
-   ```bash
-   ssh user@your-server
-   docker swarm init
-   ```
+Your deployment has **two separate projects**:
 
-2. **Project directory on server**
-   ```bash
-   mkdir -p /opt/adaptmap
-   # Copy docker-compose.yml to /opt/adaptmap/
-   ```
+1. **Infrastructure Project** (`/docker/services/`) - Set up **once**, rarely changes
+   - Traefik (reverse proxy with SSL)
+   - Redis (cache)
+   - n8n (workflow automation)
 
-3. **Create Traefik volume**
-   ```bash
-   docker volume create traefik_data
-   ```
+2. **App Project** (`/docker/app/`) - Deploys **automatically** on every code push
+   - Next.js application (uses public geocoding APIs or LocationIQ)
 
-4. **SSH key for GitHub Actions**
-   - Generate a new SSH key pair (or use existing)
-   - Add public key to server: `~/.ssh/authorized_keys`
-   - Keep private key for GitHub secrets
+Both projects communicate via shared Docker networks.
 
-## GitHub Secrets and Variables Setup
+---
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions:
+## 🚀 Step 1: Initial Server Setup (One-Time)
 
-### Variables (non-sensitive configuration):
-- `DOMAIN_NAME`: Your domain name without protocol (e.g., `example.com` - **REQUIRED for build**)
-- `DEPLOY_HOST`: Your server IP or domain (e.g., `123.45.67.89`)
-- `DEPLOY_USER`: SSH username (e.g., `root` or `ubuntu`)
-- `DEPLOY_PORT`: SSH port (optional, defaults to 22)
+### 1.1 Initialize Docker Swarm
 
-### Secrets (sensitive data):
-- `DATABASE_URI`: MongoDB Atlas connection string (**REQUIRED for build** - Payload needs DB access during build for `generateStaticParams`)
-- `PAYLOAD_SECRET`: Payload CMS secret key (**REQUIRED for build**)
-- `DEPLOY_SSH_KEY`: Your private SSH key (**REQUIRED** - must include full key with headers):
-  ```
-  -----BEGIN OPENSSH PRIVATE KEY-----
-  [key content here]
-  -----END OPENSSH PRIVATE KEY-----
-  ```
-  
-  **Important:** Copy the entire key including the BEGIN/END lines. No extra whitespace at start/end.
-
-**Required for build (Next.js needs these at build time):**
-- `DOMAIN_NAME`: Your domain name (e.g., `example.com`) - used for `NEXT_PUBLIC_*` variables
-
-**Optional (if you want to build with these vars instead of runtime-only):**
-- `DATABASE_URI`: MongoDB connection string (can be runtime-only on server)
-- `PAYLOAD_SECRET`: Payload secret (can be runtime-only on server)
-
-## Initial Server Setup
-
-1. **Copy docker-compose.yml to server:**
-   ```bash
-   scp docker-compose.yml user@your-server:/opt/adaptmap/
-   ```
-
-2. **Copy docker-compose.hostinger.yml to Hostinger dashboard:**
-   - Use Hostinger's visual YAML editor
-   - Copy the contents of `docker-compose.hostinger.yml` (concise version, under 8192 chars)
-   - Or upload via SSH to `/opt/adaptmap/docker-compose.hostinger.yml`
-
-3. **Create .env file on server:**
-   ```bash
-   ssh $DEPLOY_USER@your-server
-   mkdir -p /opt/adaptmap
-   nano /opt/adaptmap/.env
-   ```
-   
-   Add all required environment variables (see docker-compose.yml comments)
-
-4. **Initial deployment:**
-   ```bash
-   cd /opt/adaptmap
-   docker swarm init  # If not already initialized
-   docker volume create traefik_data  # If not already created
-   docker stack deploy -c docker-compose.hostinger.yml adaptmap
-   ```
-
-## Deployment Process
-
-The GitHub Actions workflow will:
-
-1. **Build** the Docker image on GitHub runner
-2. **Save** image as compressed tar file
-3. **Transfer** to server via SCP
-4. **Load** image on server
-5. **Update** Docker stack (rolling update with 3 replicas)
-6. **Verify** deployment status
-
-## Manual Deployment
-
-If you need to deploy manually:
+SSH into your server and run:
 
 ```bash
-# On your local machine
-docker build -t adaptmap-app:latest .
-docker save adaptmap-app:latest | gzip > image.tar.gz
+ssh root@your-server-ip
+docker swarm init
+```
 
-# Transfer to server
-scp image.tar.gz user@your-server:/tmp/
+**What this does:** Enables Docker Swarm mode for managing multiple containers.
 
+### 1.2 Create Required Volume
+
+```bash
+docker volume create traefik_data
+```
+
+**What this does:** Creates persistent storage for SSL certificates.
+
+### 1.3 Create Project Directories
+
+```bash
+mkdir -p /docker/services
+mkdir -p /docker/app
+```
+
+**What this does:** Creates folders where Docker Compose files will live.
+
+---
+
+## 🏗️ Step 2: Deploy Infrastructure (One-Time Setup)
+
+### 2.1 Create Environment File for Infrastructure
+
+```bash
+nano /docker/services/.env
+```
+
+Add these variables (press `Ctrl+O` to save, `Ctrl+X` to exit):
+
+```env
+DOMAIN_NAME=adaptmap.de
+SSL_EMAIL=your-email@example.com
+GENERIC_TIMEZONE=Europe/Berlin
+```
+
+**Important:** 
+- Replace `adaptmap.de` with your actual domain
+- Use a real email for `SSL_EMAIL` (Let's Encrypt needs it)
+
+### 2.2 Deploy Infrastructure via Hostinger Dashboard
+
+1. **Open Hostinger's Docker Manager** in your hosting panel
+2. **Create a new project** named `services` (or `adaptmap-services`)
+3. **Open the visual YAML editor**
+4. **Copy and paste** the entire contents of `docker-compose.hostinger-infra.yml` from this repository
+5. **Click Deploy** or **Save**
+
+**What happens:** Hostinger will:
+- Store the file at `/docker/services/docker-compose.yml`
+- Start all infrastructure containers (Traefik, Redis, n8n)
+- This takes a few minutes
+
+**How to verify it's working:**
+```bash
+# Check if containers are running
+docker ps
+
+# You should see: traefik, redis, n8n
+```
+
+---
+
+## 📱 Step 3: Set Up GitHub Actions (One-Time)
+
+### 3.1 Add GitHub Secrets
+
+Go to your GitHub repository → **Settings** → **Secrets and variables** → **Actions**
+
+#### Add Variables (non-sensitive):
+- `DOMAIN_NAME`: `adaptmap.de` (your domain without `https://`)
+- `DEPLOY_HOST`: Your server IP address (e.g., `72.61.178.221`)
+- `DEPLOY_USER`: `root` (or your SSH username)
+- `DEPLOY_PORT`: `22` (or your SSH port if different)
+
+#### Add Secrets (sensitive - click "New repository secret"):
+- `DATABASE_URI`: Your MongoDB Atlas connection string
+  - Format: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority`
+- `PAYLOAD_SECRET`: A random secret string (generate with: `openssl rand -base64 32`)
+- `DEPLOY_SSH_KEY`: Your private SSH key
+  - Copy the **entire** key including `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----`
+  - No extra spaces at the beginning or end
+
+### 3.2 Create App Environment File on Server
+
+```bash
+nano /docker/app/.env
+```
+
+Add these variables:
+
+```env
+DOMAIN_NAME=adaptmap.de
+DATABASE_URI=your-mongodb-connection-string
+PAYLOAD_SECRET=your-payload-secret
+LOCATIONIQ_API_KEY=your-locationiq-api-key
+LOCATIONIQ_BASE_URL=https://eu1.locationiq.com/v1
+SMTP_HOST=
+SMTP_USERNAME=
+SMTP_PASSWORD=
+CRON_SECRET=
+SESSION_LOG_SECRET=
+```
+
+**Important:** 
+- Use the **same** `DOMAIN_NAME` as in `/docker/services/.env`
+- `DATABASE_URI` and `PAYLOAD_SECRET` should match your GitHub secrets
+- `LOCATIONIQ_API_KEY` is optional - get free key at https://locationiq.com (5,000 requests/day free)
+- If `LOCATIONIQ_API_KEY` is not set, app falls back to public Nominatim/Photon APIs
+
+### 3.3 Create App Compose File on Server
+
+```bash
+nano /docker/app/docker-compose.yml
+```
+
+Copy and paste the entire contents of `docker-compose.hostinger-app.yml` from this repository.
+
+**What this does:** Defines how the app container should run.
+
+---
+
+## 🔄 Step 4: Automatic Deployment (Happens on Every Push)
+
+Once set up, **every time you push code to the `main` branch**, GitHub Actions will:
+
+1. ✅ **Build** the Next.js app image
+2. ✅ **Transfer** it to your server
+3. ✅ **Deploy** it using Docker Swarm
+4. ✅ **Update** running containers (zero downtime)
+
+**You don't need to do anything!** Just push your code.
+
+---
+
+## 📍 Directory Structure Summary
+
+After setup, your server will have:
+
+```
+/docker/
+├── services/              # Infrastructure project (Hostinger manages)
+│   ├── docker-compose.yml    # Infrastructure compose file
+│   └── .env                  # Infrastructure environment variables
+│
+└── app/                   # App project (GitHub Actions manages)
+    ├── docker-compose.yml    # App compose file
+    └── .env                  # App environment variables
+```
+
+---
+
+## 🔍 How to Check if Everything is Working
+
+### Check Infrastructure Services:
+
+```bash
+# List all running containers
+docker ps
+
+# Check specific service logs
+docker logs traefik
+docker logs redis
+docker logs n8n
+```
+
+### Check App Services:
+
+```bash
+# Check app service (if deployed)
+docker service ls | grep app
+
+# Check app logs
+docker service logs adaptmap-app_app
+```
+
+### Test URLs:
+
+Once deployed, you should be able to access:
+- `https://adaptmap.de` - Your main application
+- `https://n8n.adaptmap.de` - n8n workflow automation
+
+**Note:** SSL certificates take 2-5 minutes to generate after first deployment.
+
+---
+
+## 🛠️ Troubleshooting
+
+### Infrastructure Not Starting
+
+**Problem:** Containers keep restarting or won't start
+
+**Solutions:**
+```bash
+# Check logs for errors
+docker logs traefik
+docker logs redis
+docker logs n8n
+
+# Verify .env file exists and has correct values
+cat /docker/services/.env
+
+# Check if Docker Swarm is active
+docker info | grep Swarm
+```
+
+### App Not Deploying
+
+**Problem:** GitHub Actions workflow fails
+
+**Solutions:**
+1. Check GitHub Actions logs (click on the failed workflow run)
+2. Verify all secrets are set correctly in GitHub
+3. Test SSH connection manually:
+   ```bash
+   ssh -i ~/.ssh/your_key root@your-server-ip
+   ```
+4. Verify app compose file exists:
+   ```bash
+   ls -la /docker/app/docker-compose.yml
+   ```
+
+### Services Can't Communicate
+
+**Problem:** App can't reach Redis or other services
+
+**Solutions:**
+```bash
+# Check if networks exist
+docker network ls | grep adaptmap
+
+# Verify containers are on the same networks
+docker inspect traefik | grep -A 10 Networks
+docker inspect adaptmap-app_app | grep -A 10 Networks
+```
+
+### SSL Certificates Not Working
+
+**Problem:** Getting HTTP instead of HTTPS
+
+**Solutions:**
+1. Wait 5-10 minutes (Let's Encrypt needs time)
+2. Check Traefik logs:
+   ```bash
+   docker logs traefik | grep -i cert
+   ```
+3. Verify DNS is pointing to your server:
+   ```bash
+   nslookup adaptmap.de
+   ```
+4. Check if port 80 and 443 are open:
+   ```bash
+   netstat -tuln | grep -E ':(80|443)'
+   ```
+
+---
+
+## 🔄 Updating Services
+
+### Update Infrastructure
+
+1. Edit `/docker/services/docker-compose.yml` in Hostinger's visual editor
+2. Click **Deploy** or **Update**
+
+### Update App
+
+Just push to `main` branch - GitHub Actions handles it automatically!
+
+### Manual App Update (if needed)
+
+```bash
 # On server
-ssh user@your-server
-gunzip -c /tmp/image.tar.gz | docker load
-cd /opt/adaptmap
-docker stack deploy -c docker-compose.yml adaptmap
-docker image prune -f
+cd /docker/app
+docker stack deploy -c docker-compose.yml adaptmap-app
 ```
 
-## Monitoring Deployments
+---
 
-**Check service status:**
-```bash
-docker service ls
-docker service ps adaptmap_app
-docker service logs -f adaptmap_app
-```
+## 📚 What Each Service Does
 
-**Rollback if needed:**
-```bash
-docker service rollback adaptmap_app
-```
+- **Traefik**: Reverse proxy that handles SSL certificates and routes traffic
+- **Redis**: Fast data storage for caching
+- **n8n**: Workflow automation tool
+- **App**: Your Next.js application (the main website)
 
-## Troubleshooting
+## 🌍 Geocoding Services
 
-**Service not updating:**
-- Check if Docker Swarm is active: `docker info | grep Swarm`
-- Verify image was loaded: `docker images | grep adaptmap-app`
-- Check service logs: `docker service logs adaptmap_app`
+The app uses **public geocoding APIs** with optional commercial service support:
 
-**SSH connection issues:**
-- Verify SSH key is correct in GitHub secrets
-- Test SSH connection manually: `ssh -i ~/.ssh/your_key user@your-server`
-- Check server firewall allows SSH
+### Option 1: LocationIQ (Recommended - European, Open Source Data)
+- **Free tier**: 5,000 requests/day
+- **European servers**: `eu1.locationiq.com`
+- **Open source data**: Uses Nominatim/OpenStreetMap
+- **Setup**: Get free API key at https://locationiq.com
+- **Add to `.env`**: `LOCATIONIQ_API_KEY=your_api_key_here`
 
-**Build failures:**
-- Check GitHub Actions logs
-- Verify Dockerfile is correct
-- Ensure all dependencies are in package.json
+### Option 2: Public Services (Fallback - No Account Needed)
+- **Nominatim**: `https://nominatim.openstreetmap.org` (1 req/sec limit)
+- **Photon**: `https://photon.komoot.io` (fair use)
+- **Automatic fallback**: If LocationIQ key not set, uses public services
 
-## Environment Variables
+**Why LocationIQ?**
+- ✅ European servers (GDPR-friendly)
+- ✅ Open source data (OpenStreetMap)
+- ✅ Higher limits (5,000/day vs 1/sec)
+- ✅ Free tier sufficient for most apps
+- ✅ Same data quality as self-hosted Nominatim
 
-**On Hostinger server** (`.env` file in `/opt/adaptmap/`):
-- `DOMAIN_NAME` - Your domain name
-- `SSL_EMAIL` - For Let's Encrypt certificates
-- `DATABASE_URI` - MongoDB Atlas connection string
-- `PAYLOAD_SECRET` - Payload CMS secret
-- `NOMINATIM_PASSWORD` - Database password for Nominatim
-- `SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD` - Optional email settings
-- `CRON_SECRET`, `SESSION_LOG_SECRET` - Optional secrets
+---
 
-**In GitHub Secrets** (for build-time):
-- `DOMAIN_NAME` - Required for `NEXT_PUBLIC_*` variables (embedded in client bundle)
+## 🆘 Need Help?
 
-**Note:** `NEXT_PUBLIC_*` variables MUST be available at build time. They're embedded in the JavaScript bundle that runs in the browser. Other variables can be runtime-only on the server.
+1. Check container logs: `docker logs <container-name>`
+2. Check service status: `docker service ls`
+3. Verify environment variables: `cat /docker/services/.env` and `cat /docker/app/.env`
+4. Check GitHub Actions logs for deployment issues
 
+---
+
+## ✅ Quick Checklist
+
+Before your first deployment, make sure:
+
+- [ ] Docker Swarm initialized (`docker swarm init`)
+- [ ] `traefik_data` volume created
+- [ ] `/docker/services/` directory exists with `.env` and `docker-compose.yml`
+- [ ] `/docker/app/` directory exists with `.env` and `docker-compose.yml`
+- [ ] Infrastructure deployed via Hostinger dashboard
+- [ ] All GitHub secrets and variables set
+- [ ] DNS records point to your server (A record for `*.adaptmap.de`)
+- [ ] Ports 80 and 443 are open in firewall
+
+Once all checked, push to `main` and watch GitHub Actions deploy your app! 🚀

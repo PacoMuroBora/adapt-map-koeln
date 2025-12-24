@@ -1,0 +1,108 @@
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    command:
+      - --api=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entryPoint.permanent=true
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
+      - --certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}
+      - --certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.mytlschallenge.acme.tlschallenge.entrypoint=web
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - traefik_data:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - app-network
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.n8n.rule=Host(`n8n.${DOMAIN_NAME}`)
+      - traefik.http.routers.n8n.tls=true
+      - traefik.http.routers.n8n.entrypoints=web,websecure
+      - traefik.http.routers.n8n.tls.certresolver=mytlschallenge
+      - traefik.http.middlewares.n8n.headers.SSLRedirect=true
+      - traefik.http.middlewares.n8n.headers.STSSeconds=315360000
+      - traefik.http.middlewares.n8n.headers.browserXSSFilter=true
+      - traefik.http.middlewares.n8n.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.n8n.headers.forceSTSHeader=true
+      - traefik.http.middlewares.n8n.headers.SSLHost=${DOMAIN_NAME}
+      - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.n8n.headers.STSPreload=true
+      - traefik.http.routers.n8n.middlewares=n8n@docker
+    environment:
+      - N8N_HOST=n8n.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://n8n.${DOMAIN_NAME}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-Europe/Berlin}
+      - N8N_PROXY_HOPS=1
+      - QUEUE_BULL_REDIS_HOST=redis
+      - QUEUE_BULL_REDIS_PORT=6379
+      - EXECUTIONS_MODE=queue
+    restart: always
+    ports:
+      - '127.0.0.1:5678:5678'
+    volumes:
+      - n8n_data:/home/node/.n8n
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  traefik_data:
+    external: true
+  redis_data:
+    driver: local
+  n8n_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+    name: adaptmap_app-network

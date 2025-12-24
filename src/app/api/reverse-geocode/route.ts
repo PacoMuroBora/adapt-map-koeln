@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geocodeCache, createCacheKey } from '@/utilities/geocodeCache'
 
-// Support both GEOCODING_URL (server-side) and NEXT_PUBLIC_GEOCODING_URL (for documentation)
-// Use regular env var (not NEXT_PUBLIC_) since this runs server-side
-// NEXT_PUBLIC_GEOCODING_URL is documented for frontend reference but not used here
-const GEOCODING_URL =
-  process.env.GEOCODING_URL ||
-  process.env.NEXT_PUBLIC_GEOCODING_URL ||
-  'https://nominatim.openstreetmap.org'
+// Geocoding service configuration with fallback chain:
+// 1. LocationIQ (if API key provided) - European, 5,000 req/day free, Nominatim-based
+// 2. Custom GEOCODING_URL (if set)
+// 3. Public Nominatim (fallback)
+const LOCATIONIQ_API_KEY = process.env.LOCATIONIQ_API_KEY
+const LOCATIONIQ_BASE_URL = process.env.LOCATIONIQ_BASE_URL || 'https://eu1.locationiq.com/v1'
+const GEOCODING_URL = process.env.GEOCODING_URL || 'https://nominatim.openstreetmap.org'
+
+// Determine which service to use
+const useLocationIQ = Boolean(LOCATIONIQ_API_KEY)
 
 // Retry configuration
 const MAX_RETRIES = 3
@@ -105,17 +108,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(cached)
     }
 
+    // Build request URL based on service
+    let requestUrl: string
+    const headers: HeadersInit = {
+      'User-Agent': 'AdaptMapKoeln/1.0', // Required by public Nominatim API
+    }
+
+    if (useLocationIQ) {
+      // LocationIQ API (European server, higher limits)
+      requestUrl = `${LOCATIONIQ_BASE_URL}/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+    } else {
+      // Public Nominatim (fallback)
+      requestUrl = `${GEOCODING_URL}/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+    }
+
     // Make request to reverse geocoding service with retry logic
-    const response = await fetchWithRetry(
-      `${GEOCODING_URL}/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
-      {
-        headers: {
-          'User-Agent': 'AdaptMapKoeln/1.0', // Required by public Nominatim API
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(30000), // 30 second timeout
-      },
-    )
+    const response = await fetchWithRetry(requestUrl, {
+      headers,
+      signal: AbortSignal.timeout(30000), // 30 second timeout
+    })
 
     if (!response.ok) {
       // Provide more specific error messages

@@ -1,0 +1,75 @@
+services:
+  app:
+    image: adaptmap-app:latest
+    container_name: adaptmap-app
+    restart: always
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: pause
+        monitor: 60s
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 384M
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.app.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.app.tls=true
+      - traefik.http.routers.app.entrypoints=web,websecure
+      - traefik.http.routers.app.tls.certresolver=mytlschallenge
+      - traefik.http.middlewares.app.headers.SSLRedirect=true
+      - traefik.http.middlewares.app.headers.STSSeconds=315360000
+      - traefik.http.middlewares.app.headers.browserXSSFilter=true
+      - traefik.http.middlewares.app.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.app.headers.forceSTSHeader=true
+      - traefik.http.middlewares.app.headers.SSLHost=${DOMAIN_NAME}
+      - traefik.http.middlewares.app.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.app.headers.STSPreload=true
+      - traefik.http.routers.app.middlewares=app@docker
+      - traefik.http.services.app.loadbalancer.server.port=3000
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_SERVER_URL=https://${DOMAIN_NAME}
+      - DATABASE_URI=${DATABASE_URI}
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - CRON_SECRET=${CRON_SECRET:-}
+      - SESSION_LOG_SECRET=${SESSION_LOG_SECRET:-}
+      - GEOCODING_URL=https://nominatim.openstreetmap.org
+      - PHOTON_URL=https://photon.komoot.io
+      - NEXT_PUBLIC_PHOTON_URL=https://photon.komoot.io
+      - LOCATIONIQ_API_KEY=${LOCATIONIQ_API_KEY:-}
+      - LOCATIONIQ_BASE_URL=${LOCATIONIQ_BASE_URL:-https://eu1.locationiq.com/v1}
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health', '||', 'exit', '1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true
+    name: adaptmap_app-network
