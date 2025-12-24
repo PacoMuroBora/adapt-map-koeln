@@ -65,46 +65,14 @@ jobs:
           pwd
           echo "Image saved successfully at: $(pwd)/image.tar.gz"
 
-      - name: Setup SSH key
-        env:
-          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-        run: |
-          if [ -z "$SSH_KEY" ]; then
-            echo "ERROR: DEPLOY_SSH_KEY secret is required but not set"
-            echo "Please verify the secret is set in: Settings → Secrets and variables → Actions → Secrets"
-            exit 1
-          fi
-          if [ -z "$DEPLOY_HOST" ]; then
-            echo "ERROR: DEPLOY_HOST variable is required but not set"
-            echo "Please verify the variable is set in: Settings → Secrets and variables → Actions → Variables"
-            exit 1
-          fi
-          # Write SSH key to file
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Add server to known_hosts to avoid prompt
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          echo "SSH key setup complete"
-
-      - name: Verify file exists before deploy
-        run: |
-          if [ ! -f image.tar.gz ]; then
-            echo "ERROR: image.tar.gz not found!"
-            ls -la
-            exit 1
-          fi
-          echo "File exists: $(ls -lh image.tar.gz)"
-
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ vars.DEPLOY_HOST }}
           username: ${{ vars.DEPLOY_USER }}
-          key_path: ~/.ssh/deploy_key
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
-          source: '${{ github.workspace }}/image.tar.gz'
+          source: 'image.tar.gz'
           target: '/tmp/'
           strip_components: 0
           timeout: 30s
@@ -115,7 +83,7 @@ jobs:
         with:
           host: ${{ vars.DEPLOY_HOST }}
           username: ${{ vars.DEPLOY_USER }}
-          key_path: ~/.ssh/deploy_key
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
           script: |
             # Load the image
@@ -140,7 +108,7 @@ jobs:
         with:
           host: ${{ vars.DEPLOY_HOST }}
           username: ${{ vars.DEPLOY_USER }}
-          key_path: ~/.ssh/deploy_key
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
           script: |
             # Wait a bit for services to start
