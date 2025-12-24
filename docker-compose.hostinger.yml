@@ -7,6 +7,7 @@ services:
       - --api.insecure=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
+      - --providers.docker.swarmmode=false
       - --entrypoints.web.address=:80
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
@@ -23,166 +24,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - app-network
-      - geocoding-network
-
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_SERVER_URL=https://${DOMAIN_NAME}
-        - NEXT_PUBLIC_PHOTON_URL=https://photon.${DOMAIN_NAME}
-        - DATABASE_URI=${DATABASE_URI}
-        - PAYLOAD_SECRET=${PAYLOAD_SECRET}
-        - SMTP_HOST=${SMTP_HOST:-}
-        - SMTP_USERNAME=${SMTP_USERNAME:-}
-        - SMTP_PASSWORD=${SMTP_PASSWORD:-}
-        - CRON_SECRET=${CRON_SECRET:-}
-        - SESSION_LOG_SECRET=${SESSION_LOG_SECRET:-}
-    restart: always
-    deploy:
-      replicas: 3
-      update_config:
-        parallelism: 1
-        delay: 10s
-        failure_action: rollback
-        monitor: 60s
-        order: start-first
-      rollback_config:
-        parallelism: 1
-        delay: 5s
-        failure_action: pause
-        monitor: 60s
-        order: stop-first
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.app.rule=Host(`${DOMAIN_NAME}`)
-      - traefik.http.routers.app.tls=true
-      - traefik.http.routers.app.entrypoints=web,websecure
-      - traefik.http.routers.app.tls.certresolver=mytlschallenge
-      - traefik.http.middlewares.app.headers.SSLRedirect=true
-      - traefik.http.middlewares.app.headers.STSSeconds=315360000
-      - traefik.http.middlewares.app.headers.browserXSSFilter=true
-      - traefik.http.middlewares.app.headers.contentTypeNosniff=true
-      - traefik.http.middlewares.app.headers.forceSTSHeader=true
-      - traefik.http.middlewares.app.headers.SSLHost=${DOMAIN_NAME}
-      - traefik.http.middlewares.app.headers.STSIncludeSubdomains=true
-      - traefik.http.middlewares.app.headers.STSPreload=true
-      - traefik.http.routers.app.middlewares=app@docker
-      - traefik.http.services.app.loadbalancer.server.port=3000
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-      - NEXT_PUBLIC_SERVER_URL=https://${DOMAIN_NAME}
-      - DATABASE_URI=${DATABASE_URI}
-      - PAYLOAD_SECRET=${PAYLOAD_SECRET}
-      - SMTP_HOST=${SMTP_HOST:-}
-      - SMTP_USERNAME=${SMTP_USERNAME:-}
-      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
-      - CRON_SECRET=${CRON_SECRET:-}
-      - SESSION_LOG_SECRET=${SESSION_LOG_SECRET:-}
-      - GEOCODING_URL=http://nominatim:8080
-      - PHOTON_URL=http://photon:2322
-      - NEXT_PUBLIC_PHOTON_URL=https://photon.${DOMAIN_NAME}
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health', '||', 'exit', '1']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    depends_on:
-      nominatim:
-        condition: service_healthy
-    networks:
-      - app-network
-      - geocoding-network
-
-  nominatim:
-    image: mediagis/nominatim:4.2
-    container_name: nominatim
-    restart: unless-stopped
-    ports:
-      - '127.0.0.1:8080:8080'
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.nominatim.rule=Host(`nominatim.${DOMAIN_NAME}`)
-      - traefik.http.routers.nominatim.tls=true
-      - traefik.http.routers.nominatim.entrypoints=web,websecure
-      - traefik.http.routers.nominatim.tls.certresolver=mytlschallenge
-      - traefik.http.services.nominatim.loadbalancer.server.port=8080
-    volumes:
-      - nominatim-data:/var/lib/postgresql/14/main
-      - nominatim-flatnode:/nominatim/flatnode
-    environment:
-      - PBF_URL=https://download.geofabrik.de/europe/germany-latest.osm.pbf
-      - REPLICATION_URL=https://download.geofabrik.de/europe/germany-updates/
-      - IMPORT_WIKIPEDIA=false
-      - IMPORT_US_POSTCODES=false
-      - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production}
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8080/status']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 2h
-    deploy:
-      resources:
-        limits:
-          memory: 6G
-        reservations:
-          memory: 4G
-    networks:
-      - geocoding-network
-
-  photon:
-    build:
-      context: .
-      dockerfile: Dockerfile.photon
-    container_name: photon
-    restart: unless-stopped
-    ports:
-      - '127.0.0.1:2322:2322'
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.photon.rule=Host(`photon.${DOMAIN_NAME}`)
-      - traefik.http.routers.photon.tls=true
-      - traefik.http.routers.photon.entrypoints=web,websecure
-      - traefik.http.routers.photon.tls.certresolver=mytlschallenge
-      - traefik.http.services.photon.loadbalancer.server.port=2322
-    environment:
-      - NOMINATIM_HOST=nominatim
-      - NOMINATIM_PORT=5432
-      - NOMINATIM_DB=nominatim
-      - NOMINATIM_USER=nominatim
-      - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production}
-    command: >
-      sh -c "java -jar /app/photon.jar
-      -nominatim-import:host=nominatim
-      -nominatim-import:port=5432
-      -nominatim-import:database=nominatim
-      -nominatim-import:user=nominatim
-      -nominatim-import:password=$${NOMINATIM_PASSWORD}"
-    depends_on:
-      nominatim:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:2322/api?q=test']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - geocoding-network
 
   redis:
     image: redis:7-alpine
@@ -197,6 +38,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    mem_limit: 512M
+    mem_reservation: 256M
     networks:
       - app-network
 
@@ -234,19 +77,65 @@ services:
       - '127.0.0.1:5678:5678'
     volumes:
       - n8n_data:/home/node/.n8n
+    mem_limit: 512M
+    mem_reservation: 256M
     depends_on:
       redis:
         condition: service_healthy
     networks:
       - app-network
 
+  app:
+    image: adaptmap-app:latest
+    container_name: adaptmap-app
+    restart: always
+    mem_limit: 768M
+    mem_reservation: 384M
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.app.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.app.tls=true
+      - traefik.http.routers.app.entrypoints=web,websecure
+      - traefik.http.routers.app.tls.certresolver=mytlschallenge
+      - traefik.http.middlewares.app.headers.SSLRedirect=true
+      - traefik.http.middlewares.app.headers.STSSeconds=315360000
+      - traefik.http.middlewares.app.headers.browserXSSFilter=true
+      - traefik.http.middlewares.app.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.app.headers.forceSTSHeader=true
+      - traefik.http.middlewares.app.headers.SSLHost=${DOMAIN_NAME}
+      - traefik.http.middlewares.app.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.app.headers.STSPreload=true
+      - traefik.http.routers.app.middlewares=app@docker
+      - traefik.http.services.app.loadbalancer.server.port=3000
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_SERVER_URL=https://${DOMAIN_NAME}
+      - DATABASE_URI=${DATABASE_URI}
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - CRON_SECRET=${CRON_SECRET:-}
+      - SESSION_LOG_SECRET=${SESSION_LOG_SECRET:-}
+      - GEOCODING_URL=https://nominatim.openstreetmap.org
+      - PHOTON_URL=https://photon.komoot.io
+      - NEXT_PUBLIC_PHOTON_URL=https://photon.komoot.io
+      - LOCATIONIQ_API_KEY=${LOCATIONIQ_API_KEY:-}
+      - LOCATIONIQ_BASE_URL=${LOCATIONIQ_BASE_URL:-https://eu1.locationiq.com/v1}
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health', '||', 'exit', '1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+
 volumes:
   traefik_data:
     external: true
-  nominatim-data:
-    driver: local
-  nominatim-flatnode:
-    driver: local
   redis_data:
     driver: local
   n8n_data:
@@ -255,5 +144,4 @@ volumes:
 networks:
   app-network:
     driver: bridge
-  geocoding-network:
-    driver: bridge
+    name: adaptmap_app-network

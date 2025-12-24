@@ -4,15 +4,17 @@ This guide walks you through deploying the application to Hostinger VPS. No DevO
 
 ## 📋 Overview
 
-Your deployment has **two separate projects**:
+Your deployment uses a **single Docker Compose file** that contains all services:
 
-1. **Infrastructure Project** (`/docker/services/`) - Set up **once**, rarely changes
+1. **Infrastructure Services** (set up once, rarely changes):
    - Traefik (reverse proxy with SSL)
    - Redis (cache)
    - n8n (workflow automation)
 
-2. **App Project** (`/docker/app/`) - Deploys **automatically** on every code push
+2. **App Service** (deploys automatically on every code push):
    - Next.js application (uses public geocoding APIs or LocationIQ)
+
+All services are managed in `/docker/services/docker-compose.yml` via Hostinger's Docker Manager.
 
 Both projects communicate via shared Docker networks.
 
@@ -39,20 +41,19 @@ docker volume create traefik_data
 
 **What this does:** Creates persistent storage for SSL certificates.
 
-### 1.3 Create Project Directories
+### 1.3 Create Project Directory
 
 ```bash
 mkdir -p /docker/services
-mkdir -p /docker/app
 ```
 
-**What this does:** Creates folders where Docker Compose files will live.
+**What this does:** Creates folder where the Docker Compose file will live.
 
 ---
 
 ## 🏗️ Step 2: Deploy Infrastructure (One-Time Setup)
 
-### 2.1 Create Environment File for Infrastructure
+### 2.1 Create Environment File
 
 ```bash
 nano /docker/services/.env
@@ -64,31 +65,42 @@ Add these variables (press `Ctrl+O` to save, `Ctrl+X` to exit):
 DOMAIN_NAME=adaptmap.de
 SSL_EMAIL=your-email@example.com
 GENERIC_TIMEZONE=Europe/Berlin
+DATABASE_URI=your-mongodb-connection-string
+PAYLOAD_SECRET=your-payload-secret
+LOCATIONIQ_API_KEY=your-locationiq-api-key
+LOCATIONIQ_BASE_URL=https://eu1.locationiq.com/v1
+SMTP_HOST=
+SMTP_USERNAME=
+SMTP_PASSWORD=
+CRON_SECRET=
+SESSION_LOG_SECRET=
 ```
 
 **Important:** 
 - Replace `adaptmap.de` with your actual domain
 - Use a real email for `SSL_EMAIL` (Let's Encrypt needs it)
+- `DATABASE_URI` and `PAYLOAD_SECRET` should match your GitHub secrets
+- `LOCATIONIQ_API_KEY` is optional - get free key at https://locationiq.com (5,000 requests/day free)
 
-### 2.2 Deploy Infrastructure via Hostinger Dashboard
+### 2.2 Deploy via Hostinger Dashboard
 
 1. **Open Hostinger's Docker Manager** in your hosting panel
-2. **Create a new project** named `services` (or `adaptmap-services`)
+2. **Create a new project** named `adaptmap` (or `services`)
 3. **Open the visual YAML editor**
-4. **Copy and paste** the entire contents of `docker-compose.hostinger-infra.yml` from this repository
+4. **Copy and paste** the entire contents of `docker-compose.hostinger.yml` from this repository
 5. **Click Deploy** or **Save**
 
 **What happens:** Hostinger will:
 - Store the file at `/docker/services/docker-compose.yml`
-- Start all infrastructure containers (Traefik, Redis, n8n)
-- This takes a few minutes
+- Start all containers (Traefik, Redis, n8n, app)
+- The app container will use `adaptmap-app:latest` image (deployed via GitHub Actions)
 
 **How to verify it's working:**
 ```bash
 # Check if containers are running
 docker ps
 
-# You should see: traefik, redis, n8n
+# You should see: traefik, redis, n8n, adaptmap-app
 ```
 
 ---
@@ -113,42 +125,7 @@ Go to your GitHub repository → **Settings** → **Secrets and variables** → 
   - Copy the **entire** key including `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----`
   - No extra spaces at the beginning or end
 
-### 3.2 Create App Environment File on Server
-
-```bash
-nano /docker/app/.env
-```
-
-Add these variables:
-
-```env
-DOMAIN_NAME=adaptmap.de
-DATABASE_URI=your-mongodb-connection-string
-PAYLOAD_SECRET=your-payload-secret
-LOCATIONIQ_API_KEY=your-locationiq-api-key
-LOCATIONIQ_BASE_URL=https://eu1.locationiq.com/v1
-SMTP_HOST=
-SMTP_USERNAME=
-SMTP_PASSWORD=
-CRON_SECRET=
-SESSION_LOG_SECRET=
-```
-
-**Important:** 
-- Use the **same** `DOMAIN_NAME` as in `/docker/services/.env`
-- `DATABASE_URI` and `PAYLOAD_SECRET` should match your GitHub secrets
-- `LOCATIONIQ_API_KEY` is optional - get free key at https://locationiq.com (5,000 requests/day free)
-- If `LOCATIONIQ_API_KEY` is not set, app falls back to public Nominatim/Photon APIs
-
-### 3.3 Create App Compose File on Server
-
-```bash
-nano /docker/app/docker-compose.yml
-```
-
-Copy and paste the entire contents of `docker-compose.hostinger-app.yml` from this repository.
-
-**What this does:** Defines how the app container should run.
+**Note:** The app service is already defined in the compose file, but it needs the `adaptmap-app:latest` Docker image which is built and deployed by GitHub Actions (see Step 3).
 
 ---
 
@@ -156,10 +133,10 @@ Copy and paste the entire contents of `docker-compose.hostinger-app.yml` from th
 
 Once set up, **every time you push code to the `main` branch**, GitHub Actions will:
 
-1. ✅ **Build** the Next.js app image
+1. ✅ **Build** the Next.js app Docker image
 2. ✅ **Transfer** it to your server
-3. ✅ **Deploy** it using Docker Compose
-4. ✅ **Update** the running container
+3. ✅ **Load** the image into Docker
+4. ✅ **Restart** the app service in the existing compose file
 
 **You don't need to do anything!** Just push your code.
 
@@ -171,13 +148,9 @@ After setup, your server will have:
 
 ```
 /docker/
-├── services/              # Infrastructure project (Hostinger manages)
-│   ├── docker-compose.yml    # Infrastructure compose file
-│   └── .env                  # Infrastructure environment variables
-│
-└── app/                   # App project (GitHub Actions manages)
-    ├── docker-compose.yml    # App compose file
-    └── .env                  # App environment variables
+└── services/              # Single project (Hostinger manages)
+    ├── docker-compose.yml    # All services compose file
+    └── .env                  # All environment variables
 ```
 
 ---
@@ -199,11 +172,12 @@ docker logs n8n
 ### Check App Container:
 
 ```bash
-# Check app container (if deployed)
-docker ps | grep adaptmap-app
+# Check app container
+cd /docker/services
+docker compose ps app
 
 # Check app logs
-docker logs adaptmap-app
+docker compose logs app
 ```
 
 ### Test URLs:
@@ -289,7 +263,7 @@ docker inspect adaptmap-app_app | grep -A 10 Networks
 
 ## 🔄 Updating Services
 
-### Update Infrastructure
+### Update Services
 
 1. Edit `/docker/services/docker-compose.yml` in Hostinger's visual editor
 2. Click **Deploy** or **Update**
@@ -302,9 +276,8 @@ Just push to `main` branch - GitHub Actions handles it automatically!
 
 ```bash
 # On server
-cd /docker/app
-docker compose down
-docker compose up -d
+cd /docker/services
+docker compose restart app
 ```
 
 ---
@@ -357,8 +330,7 @@ Before your first deployment, make sure:
 - [ ] Docker is installed and running
 - [ ] `traefik_data` volume created (if not exists, Docker Compose will create it)
 - [ ] `/docker/services/` directory exists with `.env` and `docker-compose.yml`
-- [ ] `/docker/app/` directory exists with `.env` and `docker-compose.yml`
-- [ ] Infrastructure deployed via Hostinger dashboard
+- [ ] All services deployed via Hostinger dashboard
 - [ ] All GitHub secrets and variables set
 - [ ] DNS records point to your server (A record for `*.adaptmap.de`)
 - [ ] Ports 80 and 443 are open in firewall

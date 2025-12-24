@@ -18,13 +18,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Verify compose file exists
+      - name: Verify Dockerfile exists
         run: |
-          if [ ! -f docker-compose.hostinger-app.yml ]; then
-            echo "ERROR: docker-compose.hostinger-app.yml not found"
+          if [ ! -f Dockerfile ]; then
+            echo "ERROR: Dockerfile not found"
             exit 1
           fi
-          echo "Compose file found: docker-compose.hostinger-app.yml"
+          echo "Dockerfile found"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -72,34 +72,6 @@ jobs:
           ls -lh image.tar.gz
           echo "Image saved successfully"
 
-      - name: Copy compose file to server
-        env:
-          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
-          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || 22 }}
-        run: |
-          # Setup SSH key
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          # Ensure directory exists
-          ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              -p "$DEPLOY_PORT" \
-              "$DEPLOY_USER@$DEPLOY_HOST" \
-              "mkdir -p /docker/app"
-
-          # Copy compose file
-          echo "Copying docker-compose.yml to server..."
-          scp -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              -P "$DEPLOY_PORT" \
-              docker-compose.hostinger-app.yml "$DEPLOY_USER@$DEPLOY_HOST:/docker/app/docker-compose.yml"
-          echo "Compose file copied successfully"
-
       - name: Setup SSH and deploy to server
         env:
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -133,36 +105,22 @@ jobs:
             gunzip -c /tmp/image.tar.gz | docker load
             rm /tmp/image.tar.gz
 
-            # Navigate to app project directory
-            cd /docker/app || (echo "Error: /docker/app not found" && exit 1)
-
-            # Check if compose file exists
-            if [ ! -f docker-compose.yml ]; then
-              echo "ERROR: docker-compose.yml not found in /docker/app"
-              ls -la
-              exit 1
-            fi
-
-            COMPOSE_FILE="docker-compose.yml"
-
-            echo "Using compose file: $COMPOSE_FILE"
+            # Navigate to services directory (single compose file location)
+            cd /docker/services || (echo "Error: /docker/services not found" && exit 1)
 
             # Tag image with timestamp for versioning
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.IMAGE_NAME }}:$(date +%Y%m%d-%H%M%S)
 
-            # Stop and remove existing container if it exists
-            docker compose -f $COMPOSE_FILE down || true
-
-            # Start the service (creates if doesn't exist)
-            echo "Deploying Docker container..."
-            docker compose -f $COMPOSE_FILE up -d
+            # Restart only the app service (other services stay running)
+            echo "Restarting app service..."
+            docker compose restart app || docker compose up -d app
 
             # Wait a moment for container to start
             sleep 5
 
             # Check if container is running
             echo "Checking container status..."
-            docker compose -f $COMPOSE_FILE ps
+            docker compose ps app
 
             # Clean up old images (keep last 3 versions)
             docker images ${{ env.IMAGE_NAME }} --format "{{.ID}} {{.CreatedAt}}" | sort -rk 2 | tail -n +4 | awk '{print $1}' | xargs -r docker rmi -f || true
@@ -181,12 +139,15 @@ jobs:
 
             # Check container status
             echo "=== Container Status ==="
-            cd /docker/app
-            docker compose ps
+            cd /docker/services
+            docker compose ps app
             echo ""
             echo "=== Container Logs (last 20 lines) ==="
-            docker compose logs --tail=20 adaptmap-app || echo "Container not found"
+            docker compose logs --tail=20 app || echo "Container not found"
             echo ""
             echo "=== Container Health ==="
             docker ps | grep adaptmap-app || echo "Container not running"
+            echo ""
+            echo "=== Traefik Router Check ==="
+            docker exec traefik wget -qO- http://localhost:8080/api/http/routers 2>/dev/null | python3 -m json.tool | grep -A 5 '"name": "app' || echo "App router not found in Traefik"
             echo ""
