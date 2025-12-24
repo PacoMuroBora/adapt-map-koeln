@@ -26,15 +26,18 @@ This guide explains how to deploy the application to your Hostinger VPS using Gi
    - Add public key to server: `~/.ssh/authorized_keys`
    - Keep private key for GitHub secrets
 
-## GitHub Secrets Setup
+## GitHub Secrets and Variables Setup
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions, and add:
+Go to your GitHub repository → Settings → Secrets and variables → Actions:
 
-**Required for deployment:**
+### Variables (non-sensitive configuration):
+- `DOMAIN_NAME`: Your domain name without protocol (e.g., `example.com` - **REQUIRED for build**)
 - `DEPLOY_HOST`: Your server IP or domain (e.g., `123.45.67.89`)
 - `DEPLOY_USER`: SSH username (e.g., `root` or `ubuntu`)
-- `DEPLOY_SSH_KEY`: Your private SSH key (entire content including `-----BEGIN OPENSSH PRIVATE KEY-----`)
 - `DEPLOY_PORT`: SSH port (optional, defaults to 22)
+
+### Secrets (sensitive data):
+- `DEPLOY_SSH_KEY`: Your private SSH key (entire content including `-----BEGIN OPENSSH PRIVATE KEY-----`)
 
 **Required for build (Next.js needs these at build time):**
 - `DOMAIN_NAME`: Your domain name (e.g., `example.com`) - used for `NEXT_PUBLIC_*` variables

@@ -52,6 +52,15 @@ ENV SMTP_PASSWORD=$SMTP_PASSWORD
 ENV CRON_SECRET=$CRON_SECRET
 ENV SESSION_LOG_SECRET=$SESSION_LOG_SECRET
 
+# Validate required build args before building
+RUN if [ -z "$NEXT_PUBLIC_SERVER_URL" ] || [ "$NEXT_PUBLIC_SERVER_URL" = "https://" ]; then \
+      echo "ERROR: NEXT_PUBLIC_SERVER_URL is required and must be a valid URL (e.g., https://example.com)" && \
+      echo "Current value: '$NEXT_PUBLIC_SERVER_URL'" && \
+      echo "Make sure DOMAIN_NAME secret is set in GitHub Actions" && \
+      exit 1; \
+    fi && \
+    echo "Building with NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL"
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.

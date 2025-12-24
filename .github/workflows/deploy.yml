@@ -13,13 +13,25 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Set build environment variables
+        run: |
+          if [ -z "${{ vars.DOMAIN_NAME }}" ]; then
+            echo "ERROR: DOMAIN_NAME variable is required but not set"
+            exit 1
+          fi
+          echo "NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
+          echo "Build args will be:"
+          echo "  NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}"
+          echo "  NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}"
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -32,10 +44,8 @@ jobs:
           cache-to: type=gha,mode=max
           load: true # Load image into local Docker daemon
           build-args: |
-            NEXT_PUBLIC_SERVER_URL=https://${{ secrets.DOMAIN_NAME }}
-            NEXT_PUBLIC_PHOTON_URL=https://photon.${{ secrets.DOMAIN_NAME }}
-            # Note: Other env vars (DATABASE_URI, PAYLOAD_SECRET, etc.) are runtime-only
-            # They're set in docker-compose.yml environment section, not needed at build time
+            NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}
+            NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}
 
       - name: Save Docker image to tar
         run: |
@@ -45,35 +55,35 @@ jobs:
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
-          source: "image.tar.gz"
-          target: "/tmp/"
+          port: ${{ vars.DEPLOY_PORT || 22 }}
+          source: 'image.tar.gz'
+          target: '/tmp/'
           strip_components: 0
 
       - name: Load image and update stack
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          port: ${{ vars.DEPLOY_PORT || 22 }}
           script: |
             # Load the image
             gunzip -c /tmp/image.tar.gz | docker load
             rm /tmp/image.tar.gz
-            
+
             # Navigate to project directory
             cd /opt/adaptmap || (echo "Error: /opt/adaptmap not found" && exit 1)
-            
+
             # Tag image with timestamp for versioning
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.IMAGE_NAME }}:$(date +%Y%m%d-%H%M%S)
-            
+
             # Update the Docker stack (creates if doesn't exist)
             docker stack deploy -c docker-compose.yml ${{ env.STACK_NAME }} --with-registry-auth
-            
+
             # Clean up old images (keep last 3 versions)
             docker images ${{ env.IMAGE_NAME }} --format "{{.ID}} {{.CreatedAt}}" | sort -rk 2 | tail -n +4 | awk '{print $1}' | xargs -r docker rmi -f || true
             docker image prune -f
@@ -81,15 +91,14 @@ jobs:
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          port: ${{ vars.DEPLOY_PORT || 22 }}
           script: |
             # Wait a bit for services to start
             sleep 10
-            
+
             # Check service status
             docker service ls | grep ${{ env.STACK_NAME }}_app || echo "Service not found"
             docker service ps ${{ env.STACK_NAME }}_app --no-trunc | head -5
-
