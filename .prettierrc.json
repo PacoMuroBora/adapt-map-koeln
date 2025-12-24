@@ -11,5 +11,7 @@
   "bracketSameLine": false,
   "jsxSingleQuote": false,
   "quoteProps": "as-needed",
-  "proseWrap": "preserve"
+  "proseWrap": "preserve",
+  "insertPragma": false,
+  "requirePragma": false
 }

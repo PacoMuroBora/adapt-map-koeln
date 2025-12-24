@@ -421,11 +421,11 @@
           {
             "id": 10,
             "title": "Comprehensive testing and edge case handling",
-            "description": "Test the complete heatmap implementation with various scenarios and handle edge cases.",
+            "description": "Test the complete heatmap implementation with various scenarios, handle edge cases, and create a QR code generator component for Payload CMS admin.",
             "dependencies": [9],
-            "details": "Test with empty submissions dataset, test with single submission, test with many submissions, test with missing postal codes, test API error handling, test network failures, test with different postal code distributions, verify GeoJSON validation, test map interactions (zoom, pan, etc.), verify legend accuracy, test mobile responsiveness.",
+            "details": "Test with empty submissions dataset, test with single submission, test with many submissions, test with missing postal codes, test API error handling, test network failures, test with different postal code distributions, verify GeoJSON validation, test map interactions (zoom, pan, etc.), verify legend accuracy, test mobile responsiveness.\n\nAdditionally, create a custom Payload CMS admin component for QR code generation:\n- Add a custom component accessible to editors/admins in the Payload admin panel\n- Component should allow input of either an address (string) or coordinates (lat/lng)\n- If address is provided, use geocoding API to convert to coordinates\n- Generate QR code that links to the web app with the location as a parameter\n- Display the QR code preview in the admin UI\n- Include a download button to save the QR code as an image (PNG)\n- Use a QR code library (e.g., qrcode or qrcode.react)\n- Component should be a Client Component (needs interactivity)\n- Reference .cursor/rules/components.md for Payload component patterns\n- Can be added as a root component (beforeDashboard/afterDashboard) or as a custom view",
             "status": "pending",
-            "testStrategy": "Run comprehensive test suite covering all scenarios, verify edge cases are handled gracefully, test error states, verify performance meets requirements",
+            "testStrategy": "Run comprehensive test suite covering all scenarios, verify edge cases are handled gracefully, test error states, verify performance meets requirements. For QR code component: test address input with geocoding, test coordinate input, verify QR code generation, test download functionality, verify QR code links correctly to web app with location parameter",
             "parentId": "6"
           }
         ]

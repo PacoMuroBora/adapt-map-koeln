@@ -30,13 +30,9 @@ export async function POST(req: NextRequest) {
     // })
     // ... handle response
 
-    return NextResponse.json(
-      { error: 'Not implemented yet' },
-      { status: 501 },
-    )
+    return NextResponse.json({ error: 'Not implemented yet' }, { status: 501 })
   } catch (error: any) {
     console.error('AI recommendation error:', error)
     return NextResponse.json({ error: 'Failed to generate AI recommendation' }, { status: 500 })
   }
 }
-

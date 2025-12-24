@@ -29,7 +29,7 @@ export const UICopy: GlobalConfig = {
         {
           name: 'ctaButton',
           type: 'text',
-          defaultValue: 'Los geht\'s',
+          defaultValue: "Los geht's",
         },
       ],
     },
@@ -107,4 +107,3 @@ export const UICopy: GlobalConfig = {
     },
   ],
 }
-

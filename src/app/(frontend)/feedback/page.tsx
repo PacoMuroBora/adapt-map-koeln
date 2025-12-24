@@ -23,7 +23,12 @@ export default function FeedbackPage() {
 
     try {
       // Validate required data
-      if (!state.location || !state.location.lat || !state.location.lng || !state.location.postal_code) {
+      if (
+        !state.location ||
+        !state.location.lat ||
+        !state.location.lng ||
+        !state.location.postal_code
+      ) {
         throw new Error('Standort fehlt. Bitte kehren Sie zur Standortseite zurück.')
       }
 
@@ -128,7 +133,9 @@ export default function FeedbackPage() {
             />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Maximal {MAX_LENGTH} Zeichen</span>
-              <span className={remaining < 50 ? 'text-destructive' : ''}>{remaining} verbleibend</span>
+              <span className={remaining < 50 ? 'text-destructive' : ''}>
+                {remaining} verbleibend
+              </span>
             </div>
           </div>
 
@@ -161,4 +168,3 @@ export default function FeedbackPage() {
     </div>
   )
 }
-

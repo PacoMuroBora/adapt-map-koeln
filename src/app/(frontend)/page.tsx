@@ -20,8 +20,10 @@ export default async function LandingPage() {
 
   const title = uiData?.landingPage?.title || siteData?.siteName || 'AdaptMap Köln'
   const description =
-    uiData?.landingPage?.description || siteData?.siteDescription || 'Berichten Sie über hitzebezogene Probleme in Ihrer Umgebung.'
-  const ctaButton = uiData?.landingPage?.ctaButton || 'Los geht\'s'
+    uiData?.landingPage?.description ||
+    siteData?.siteDescription ||
+    'Berichten Sie über hitzebezogene Probleme in Ihrer Umgebung.'
+  const ctaButton = uiData?.landingPage?.ctaButton || "Los geht's"
 
   return (
     <div className="flex min-h-[calc(100vh-200px)] flex-col items-center justify-center px-4 py-8 md:py-16">
@@ -48,6 +50,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: siteSettings?.siteName || 'AdaptMap Köln',
-    description: siteSettings?.siteDescription || 'Berichten Sie über hitzebezogene Probleme in Ihrer Umgebung.',
+    description:
+      siteSettings?.siteDescription ||
+      'Berichten Sie über hitzebezogene Probleme in Ihrer Umgebung.',
   }
 }

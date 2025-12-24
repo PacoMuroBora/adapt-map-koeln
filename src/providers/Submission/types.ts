@@ -22,7 +22,15 @@ export interface ConsentData {
 
 export interface SubmissionState {
   // Current step in the journey
-  currentStep: 'landing' | 'consent' | 'location' | 'personal' | 'questionnaire' | 'feedback' | 'results' | null
+  currentStep:
+    | 'landing'
+    | 'consent'
+    | 'location'
+    | 'personal'
+    | 'questionnaire'
+    | 'feedback'
+    | 'results'
+    | null
 
   // Consent data
   consent: ConsentData | null
@@ -89,4 +97,3 @@ export const initialSubmissionState: SubmissionState = {
   aiRecommendations: null,
   aiGeneratedAt: null,
 }
-

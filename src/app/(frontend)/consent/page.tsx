@@ -46,7 +46,8 @@ export default function ConsentPage() {
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Einverständniserklärung</h1>
           <p className="text-muted-foreground">
-            Bevor Sie fortfahren, benötigen wir Ihr Einverständnis zur Datenerhebung und -verarbeitung.
+            Bevor Sie fortfahren, benötigen wir Ihr Einverständnis zur Datenerhebung und
+            -verarbeitung.
           </p>
         </div>
 
@@ -67,9 +68,9 @@ export default function ConsentPage() {
                   Datenerhebung akzeptieren
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Ich stimme der Erhebung und Verarbeitung meiner anonymen Daten für die Zwecke dieser
-                  Umfrage zu. Meine Daten werden anonymisiert gespeichert und nur für statistische Zwecke
-                  verwendet.
+                  Ich stimme der Erhebung und Verarbeitung meiner anonymen Daten für die Zwecke
+                  dieser Umfrage zu. Meine Daten werden anonymisiert gespeichert und nur für
+                  statistische Zwecke verwendet.
                 </p>
               </div>
             </div>
@@ -95,7 +96,12 @@ export default function ConsentPage() {
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row">
-            <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="w-full sm:w-auto"
+            >
               Zurück
             </Button>
             <Button type="submit" className="w-full sm:w-auto sm:ml-auto">
@@ -107,4 +113,3 @@ export default function ConsentPage() {
     </div>
   )
 }
-

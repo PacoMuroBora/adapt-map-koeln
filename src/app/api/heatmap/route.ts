@@ -88,30 +88,26 @@ export async function GET() {
       }
 
       postalCodeData[postalCode].count += 1
-      postalCodeData[postalCode].totalProblemIndex +=
-        submissionData.problem_index || 0
+      postalCodeData[postalCode].totalProblemIndex += submissionData.problem_index || 0
     })
 
     // Convert to GeoJSON
-    const features: GeoJSONFeature[] = Object.entries(postalCodeData).map(
-      ([postalCode, data]) => {
-        const avgProblemIndex =
-          data.count > 0 ? data.totalProblemIndex / data.count : 0
+    const features: GeoJSONFeature[] = Object.entries(postalCodeData).map(([postalCode, data]) => {
+      const avgProblemIndex = data.count > 0 ? data.totalProblemIndex / data.count : 0
 
-        return {
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [data.lng, data.lat], // GeoJSON format: [lng, lat]
-          },
-          properties: {
-            postalCode,
-            count: data.count,
-            average_problem_index: Math.round(avgProblemIndex * 100) / 100, // Round to 2 decimals
-          },
-        }
-      },
-    )
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [data.lng, data.lat], // GeoJSON format: [lng, lat]
+        },
+        properties: {
+          postalCode,
+          count: data.count,
+          average_problem_index: Math.round(avgProblemIndex * 100) / 100, // Round to 2 decimals
+        },
+      }
+    })
 
     const geoJson: GeoJSONResponse = {
       type: 'FeatureCollection',
@@ -130,10 +126,6 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Heatmap API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to generate heatmap data' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'Failed to generate heatmap data' }, { status: 500 })
   }
 }
-

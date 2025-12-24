@@ -42,8 +42,8 @@ export default function PersonalPage() {
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Persönliche Angaben</h1>
           <p className="text-muted-foreground">
-            Diese Angaben sind optional und helfen uns, die Ergebnisse besser zu verstehen. Alle Daten
-            werden anonymisiert gespeichert.
+            Diese Angaben sind optional und helfen uns, die Ergebnisse besser zu verstehen. Alle
+            Daten werden anonymisiert gespeichert.
           </p>
         </div>
 
@@ -111,4 +111,3 @@ export default function PersonalPage() {
     </div>
   )
 }
-

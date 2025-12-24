@@ -21,10 +21,13 @@ export default function ResultsPage() {
   }, [state, router, updateCurrentStep])
 
   const problemIndex = state.problemIndex ?? 0
-  const severity =
-    problemIndex >= 70 ? 'hoch' : problemIndex >= 40 ? 'mittel' : 'niedrig'
+  const severity = problemIndex >= 70 ? 'hoch' : problemIndex >= 40 ? 'mittel' : 'niedrig'
   const severityColor =
-    problemIndex >= 70 ? 'text-destructive' : problemIndex >= 40 ? 'text-yellow-600' : 'text-green-600'
+    problemIndex >= 70
+      ? 'text-destructive'
+      : problemIndex >= 40
+        ? 'text-yellow-600'
+        : 'text-green-600'
   const severityIcon =
     problemIndex >= 70 ? (
       <AlertCircle className="h-6 w-6" />
@@ -121,4 +124,3 @@ export default function ResultsPage() {
     </div>
   )
 }
-

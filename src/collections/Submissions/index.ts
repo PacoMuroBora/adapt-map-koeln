@@ -217,4 +217,3 @@ export const Submissions: CollectionConfig = {
   ],
   timestamps: true,
 }
-

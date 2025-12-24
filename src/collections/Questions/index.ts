@@ -131,7 +131,8 @@ export const Questions: CollectionConfig = {
       name: 'category',
       type: 'text',
       admin: {
-        description: 'Category for grouping questions (e.g., "comfort", "health", "infrastructure")',
+        description:
+          'Category for grouping questions (e.g., "comfort", "health", "infrastructure")',
       },
     },
     {
@@ -257,4 +258,3 @@ export const Questions: CollectionConfig = {
   ],
   timestamps: true,
 }
-

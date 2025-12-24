@@ -38,25 +38,9 @@ const heatmapLayer = {
   type: 'heatmap' as const,
   paint: {
     // Weight based on average_problem_index (0-100)
-    'heatmap-weight': [
-      'interpolate',
-      ['linear'],
-      ['get', 'average_problem_index'],
-      0,
-      0,
-      100,
-      1,
-    ],
+    'heatmap-weight': ['interpolate', ['linear'], ['get', 'average_problem_index'], 0, 0, 100, 1],
     // Intensity increases with zoom
-    'heatmap-intensity': [
-      'interpolate',
-      ['linear'],
-      ['zoom'],
-      0,
-      1,
-      9,
-      3,
-    ],
+    'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3],
     // Color gradient: blue (low) to red (high)
     'heatmap-color': [
       'interpolate',
@@ -76,25 +60,9 @@ const heatmapLayer = {
       'rgb(178,24,43)', // Red
     ],
     // Radius increases with zoom
-    'heatmap-radius': [
-      'interpolate',
-      ['linear'],
-      ['zoom'],
-      0,
-      2,
-      9,
-      20,
-    ],
+    'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],
     // Opacity decreases slightly at higher zoom
-    'heatmap-opacity': [
-      'interpolate',
-      ['linear'],
-      ['zoom'],
-      7,
-      1,
-      9,
-      0.7,
-    ],
+    'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0.7],
   },
 }
 
@@ -200,11 +168,7 @@ export function HeatmapMap({ userLocation, className }: HeatmapMapProps) {
 
         {/* User location marker */}
         {userLocation?.lat && userLocation?.lng && (
-          <Marker
-            longitude={userLocation.lng}
-            latitude={userLocation.lat}
-            anchor="center"
-          >
+          <Marker longitude={userLocation.lng} latitude={userLocation.lat} anchor="center">
             <div className="relative">
               {/* Outer pulse ring */}
               <div className="absolute h-8 w-8 animate-ping rounded-full bg-primary opacity-75" />
@@ -236,4 +200,3 @@ export function HeatmapMap({ userLocation, className }: HeatmapMapProps) {
     </div>
   )
 }
-

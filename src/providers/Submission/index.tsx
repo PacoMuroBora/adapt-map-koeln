@@ -21,9 +21,9 @@ const initialContext: SubmissionContextType = {
   updateAnswer: () => null,
   updateAnswers: () => null,
   updateUserText: () => null,
-    updateCurrentStep: () => null,
-    updateQuestionnaireVersion: () => null,
-    updateResults: () => null,
+  updateCurrentStep: () => null,
+  updateQuestionnaireVersion: () => null,
+  updateResults: () => null,
   updateAIResults: () => null,
   reset: () => null,
 }
@@ -165,4 +165,3 @@ export const SubmissionProvider = ({ children }: { children: React.ReactNode }) 
 }
 
 export const useSubmission = (): SubmissionContextType => use(SubmissionContext)
-

@@ -165,10 +165,13 @@ export default function QuestionClient({
       case 'dropdown':
         if (!question.options || !Array.isArray(question.options)) return null
         return (
-          <Select value={answer || ''} onValueChange={(value) => {
-            setAnswer(value)
-            setError(null)
-          }}>
+          <Select
+            value={answer || ''}
+            onValueChange={(value) => {
+              setAnswer(value)
+              setError(null)
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Bitte auswählen" />
             </SelectTrigger>
@@ -188,8 +191,7 @@ export default function QuestionClient({
         const max = sliderConfig?.max || 100
         const step = sliderConfig?.step || 1
         const unit = sliderConfig?.unit || ''
-        const sliderValue =
-          answer !== null && answer !== undefined ? answer : min
+        const sliderValue = answer !== null && answer !== undefined ? answer : min
 
         return (
           <div className="space-y-4">
@@ -243,14 +245,13 @@ export default function QuestionClient({
         {/* Progress bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Frage {stepNumber} von {totalSteps}</span>
+            <span className="text-muted-foreground">
+              Frage {stepNumber} von {totalSteps}
+            </span>
             <span className="font-medium">{Math.round(progress)}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
 
@@ -282,11 +283,7 @@ export default function QuestionClient({
             <ChevronLeft className="mr-2 h-4 w-4" />
             {previousButtonText}
           </Button>
-          <Button
-            type="button"
-            onClick={handleNext}
-            className="w-full sm:w-auto sm:ml-auto"
-          >
+          <Button type="button" onClick={handleNext} className="w-full sm:w-auto sm:ml-auto">
             {stepNumber === totalSteps ? 'Zum Feedback' : nextButtonText}
             {stepNumber < totalSteps && <ChevronRight className="ml-2 h-4 w-4" />}
           </Button>
@@ -295,4 +292,3 @@ export default function QuestionClient({
     </div>
   )
 }
-

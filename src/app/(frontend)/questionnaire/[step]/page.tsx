@@ -71,13 +71,11 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     ? [...questionnaire.questions].sort((a, b) => {
         if (typeof a === 'string' || typeof b === 'string') return 0
         const aOrder =
-          a.editorFields?.displayOrder !== undefined &&
-          a.editorFields.displayOrder !== null
+          a.editorFields?.displayOrder !== undefined && a.editorFields.displayOrder !== null
             ? a.editorFields.displayOrder
             : 999
         const bOrder =
-          b.editorFields?.displayOrder !== undefined &&
-          b.editorFields.displayOrder !== null
+          b.editorFields?.displayOrder !== undefined && b.editorFields.displayOrder !== null
             ? b.editorFields.displayOrder
             : 999
         return aOrder - bOrder
@@ -114,4 +112,3 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     />
   )
 }
-

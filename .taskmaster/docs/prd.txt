@@ -684,3 +684,8 @@ AI recommendations are generated only when CTA is clicked, in German, and saved 
 Legal pages and cookie banner are editable via Payload Globals.
 
 
+
+
+
+
+
