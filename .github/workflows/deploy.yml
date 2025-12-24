@@ -61,6 +61,9 @@ jobs:
         run: |
           docker save ${{ env.IMAGE_NAME }}:latest -o image.tar
           gzip image.tar
+          ls -lh image.tar.gz
+          pwd
+          echo "Image saved successfully at: $(pwd)/image.tar.gz"
 
       - name: Setup SSH key
         env:
@@ -85,6 +88,15 @@ jobs:
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           echo "SSH key setup complete"
 
+      - name: Verify file exists before deploy
+        run: |
+          if [ ! -f image.tar.gz ]; then
+            echo "ERROR: image.tar.gz not found!"
+            ls -la
+            exit 1
+          fi
+          echo "File exists: $(ls -lh image.tar.gz)"
+
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -92,7 +104,7 @@ jobs:
           username: ${{ vars.DEPLOY_USER }}
           key_path: ~/.ssh/deploy_key
           port: ${{ vars.DEPLOY_PORT || 22 }}
-          source: 'image.tar.gz'
+          source: '${{ github.workspace }}/image.tar.gz'
           target: '/tmp/'
           strip_components: 0
           timeout: 30s
