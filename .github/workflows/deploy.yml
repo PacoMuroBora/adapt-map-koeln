@@ -27,11 +27,19 @@ jobs:
             echo "ERROR: DOMAIN_NAME variable is required but not set"
             exit 1
           fi
-          echo "NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
+          if [ -z "${{ secrets.DATABASE_URI }}" ]; then
+            echo "ERROR: DATABASE_URI secret is required but not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.PAYLOAD_SECRET }}" ]; then
+            echo "ERROR: PAYLOAD_SECRET secret is required but not set"
+            exit 1
+          fi
           echo "Build args will be:"
           echo "  NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}"
           echo "  NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}"
+          echo "  DATABASE_URI=*** (hidden)"
+          echo "  PAYLOAD_SECRET=*** (hidden)"
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -46,6 +54,8 @@ jobs:
           build-args: |
             NEXT_PUBLIC_SERVER_URL=https://${{ vars.DOMAIN_NAME }}
             NEXT_PUBLIC_PHOTON_URL=https://photon.${{ vars.DOMAIN_NAME }}
+            DATABASE_URI=${{ secrets.DATABASE_URI }}
+            PAYLOAD_SECRET=${{ secrets.PAYLOAD_SECRET }}
 
       - name: Save Docker image to tar
         run: |

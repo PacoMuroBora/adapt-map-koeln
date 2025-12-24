@@ -37,6 +37,8 @@ Go to your GitHub repository → Settings → Secrets and variables → Actions:
 - `DEPLOY_PORT`: SSH port (optional, defaults to 22)
 
 ### Secrets (sensitive data):
+- `DATABASE_URI`: MongoDB Atlas connection string (**REQUIRED for build** - Payload needs DB access during build for `generateStaticParams`)
+- `PAYLOAD_SECRET`: Payload CMS secret key (**REQUIRED for build**)
 - `DEPLOY_SSH_KEY`: Your private SSH key (entire content including `-----BEGIN OPENSSH PRIVATE KEY-----`)
 
 **Required for build (Next.js needs these at build time):**
