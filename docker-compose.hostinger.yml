@@ -1,45 +1,5 @@
 version: '3.8'
 
-# ============================================================================
-# Docker Compose Configuration for Production Deployment
-# ============================================================================
-# This file combines:
-# - Traefik reverse proxy with SSL
-# - Next.js/Payload CMS application (3 instances with load balancing)
-# - Geocoding services (Nominatim & Photon)
-# Note: MongoDB is hosted on MongoDB Atlas (cloud), not in this compose file
-#
-# IMPORTANT: This configuration uses Docker Swarm mode for scaling and rolling updates.
-# To deploy:
-#   1. Initialize Swarm: docker swarm init
-#   2. Create volumes: docker volume create traefik_data
-#   3. Deploy stack: docker stack deploy -c docker-compose.yml adaptmap
-#   4. Scale app: docker service scale adaptmap_app=3
-#   5. Rolling update: docker service update --image <new-image> adaptmap_app
-#
-# For regular docker-compose (without Swarm):
-#   - Remove the `deploy` sections
-#   - Use: docker-compose up -d --scale app=3
-#   - Note: Rolling updates won't work without Swarm mode
-#
-# Environment Variables Required:
-#   - DOMAIN_NAME (e.g., "example.com")
-#   - SSL_EMAIL (for Let's Encrypt)
-#   - DATABASE_URI (MongoDB Atlas connection string)
-#   - PAYLOAD_SECRET
-#   - NOMINATIM_PASSWORD
-#   - SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD (optional)
-#   - CRON_SECRET (optional)
-#   - SESSION_LOG_SECRET (optional)
-#
-# Quick Start (Swarm Mode):
-#   1. Create .env file with required variables
-#   2. Initialize: docker swarm init
-#   3. Create volume: docker volume create traefik_data
-#   4. Deploy: docker stack deploy -c docker-compose.yml adaptmap
-#   5. Monitor: docker service logs -f adaptmap_app
-# ============================================================================
-
 services:
   traefik:
     image: traefik:latest
@@ -84,17 +44,17 @@ services:
     deploy:
       replicas: 3
       update_config:
-        parallelism: 1 # Update one instance at a time
-        delay: 10s # Wait 10 seconds between updates
-        failure_action: rollback # Rollback on failure
-        monitor: 60s # Monitor health for 60 seconds
-        order: start-first # Start new instance before stopping old one
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        order: start-first
       rollback_config:
         parallelism: 1
         delay: 5s
         failure_action: pause
         monitor: 60s
-        order: stop-first # Stop old instance before starting new one
+        order: stop-first
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -133,7 +93,6 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - CRON_SECRET=${CRON_SECRET:-}
       - SESSION_LOG_SECRET=${SESSION_LOG_SECRET:-}
-      # Geocoding service URLs (internal Docker network)
       - GEOCODING_URL=http://nominatim:8080
       - PHOTON_URL=http://photon:2322
       - NEXT_PUBLIC_PHOTON_URL=https://photon.${DOMAIN_NAME}
@@ -142,7 +101,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s # Allow 40 seconds for initial startup
+      start_period: 40s
     depends_on:
       nominatim:
         condition: service_healthy
@@ -151,14 +110,11 @@ services:
       - geocoding-network
 
   nominatim:
-    # Nominatim is the reverse geocoding service (coordinates → address)
     image: mediagis/nominatim:4.2
     container_name: nominatim
     restart: unless-stopped
-
-    # Expose port 8080 - accessible through Traefik or internally
     ports:
-      - '127.0.0.1:8080:8080' # Only accessible from localhost (use Traefik for external)
+      - '127.0.0.1:8080:8080'
     labels:
       - traefik.enable=true
       - traefik.http.routers.nominatim.rule=Host(`nominatim.${DOMAIN_NAME}`)
@@ -166,59 +122,36 @@ services:
       - traefik.http.routers.nominatim.entrypoints=web,websecure
       - traefik.http.routers.nominatim.tls.certresolver=mytlschallenge
       - traefik.http.services.nominatim.loadbalancer.server.port=8080
-
-    # Persistent storage for database and data
     volumes:
-      - nominatim-data:/var/lib/postgresql/14/main # Database storage
-      - nominatim-flatnode:/nominatim/flatnode # Index storage
-
+      - nominatim-data:/var/lib/postgresql/14/main
+      - nominatim-flatnode:/nominatim/flatnode
     environment:
-      # ====================================================================
-      # IMPORTANT: Choose your region!
-      # ====================================================================
-      # Option 1: NRW only (faster, less resources) - RECOMMENDED FOR TESTING
-      # - PBF_URL=https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf
-      # - REPLICATION_URL=https://download.geofabrik.de/europe/germany/nordrhein-westfalen-updates/
-      #
-      # Option 2: All of Germany (slower, more resources) - FOR PRODUCTION
       - PBF_URL=https://download.geofabrik.de/europe/germany-latest.osm.pbf
       - REPLICATION_URL=https://download.geofabrik.de/europe/germany-updates/
-      # ====================================================================
-
-      # Disable features we don't need (saves time and space)
       - IMPORT_WIKIPEDIA=false
       - IMPORT_US_POSTCODES=false
-
-      # Database password - MUST be set in .env file!
       - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production}
-
-    # Health check - Docker will verify the service is working
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:8080/status']
-      interval: 30s # Check every 30 seconds
-      timeout: 10s # Wait 10 seconds for response
-      retries: 3 # Try 3 times before marking as unhealthy
-      start_period: 2h # Allow 2 hours for initial import (this is normal!)
-
-    # Resource limits - adjust based on your VPS capacity
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 2h
     deploy:
       resources:
         limits:
-          memory: 6G # Maximum RAM Nominatim can use
+          memory: 6G
         reservations:
-          memory: 4G # Minimum RAM to reserve for Nominatim
+          memory: 4G
     networks:
       - geocoding-network
 
   photon:
-    # Photon is the forward geocoding service (address → coordinates)
     image: komoot/photon:latest
     container_name: photon
     restart: unless-stopped
-
-    # Expose port 2322 - accessible through Traefik or internally
     ports:
-      - '127.0.0.1:2322:2322' # Only accessible from localhost (use Traefik for external)
+      - '127.0.0.1:2322:2322'
     labels:
       - traefik.enable=true
       - traefik.http.routers.photon.rule=Host(`photon.${DOMAIN_NAME}`)
@@ -226,21 +159,15 @@ services:
       - traefik.http.routers.photon.entrypoints=web,websecure
       - traefik.http.routers.photon.tls.certresolver=mytlschallenge
       - traefik.http.services.photon.loadbalancer.server.port=2322
-
     environment:
-      # Photon connects to Nominatim's database (they share data)
-      - NOMINATIM_HOST=nominatim # Internal Docker network name
-      - NOMINATIM_PORT=5432 # PostgreSQL port
-      - NOMINATIM_DB=nominatim # Database name
-      - NOMINATIM_USER=nominatim # Database user
-      - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production} # Same password as Nominatim
-
-    # Wait for Nominatim to be healthy before starting
+      - NOMINATIM_HOST=nominatim
+      - NOMINATIM_PORT=5432
+      - NOMINATIM_DB=nominatim
+      - NOMINATIM_USER=nominatim
+      - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production}
     depends_on:
       nominatim:
         condition: service_healthy
-
-    # Health check
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:2322/api?q=test']
       interval: 30s
@@ -249,22 +176,17 @@ services:
     networks:
       - geocoding-network
 
-# ============================================================================
-# Volumes - Persistent storage for data
-# ============================================================================
 volumes:
   traefik_data:
-    external: true # Create with: docker volume create traefik_data
-  nominatim-data: # Stores the PostgreSQL database (this is the big one!)
+    external: true
+  nominatim-data:
     driver: local
-  nominatim-flatnode: # Stores search indexes
+  nominatim-flatnode:
     driver: local
 
-# ============================================================================
-# Networks - Internal communication between containers
-# ============================================================================
 networks:
   app-network:
     driver: bridge
   geocoding-network:
     driver: bridge
+
