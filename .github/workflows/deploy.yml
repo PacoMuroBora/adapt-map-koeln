@@ -31,6 +31,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true # Load image into local Docker daemon
+          build-args: |
+            NEXT_PUBLIC_SERVER_URL=https://${{ secrets.DOMAIN_NAME }}
+            NEXT_PUBLIC_PHOTON_URL=https://photon.${{ secrets.DOMAIN_NAME }}
+            # Note: Other env vars (DATABASE_URI, PAYLOAD_SECRET, etc.) are runtime-only
+            # They're set in docker-compose.yml environment section, not needed at build time
 
       - name: Save Docker image to tar
         run: |

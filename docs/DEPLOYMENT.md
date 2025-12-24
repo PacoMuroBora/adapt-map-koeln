@@ -30,10 +30,18 @@ This guide explains how to deploy the application to your Hostinger VPS using Gi
 
 Go to your GitHub repository → Settings → Secrets and variables → Actions, and add:
 
+**Required for deployment:**
 - `DEPLOY_HOST`: Your server IP or domain (e.g., `123.45.67.89`)
 - `DEPLOY_USER`: SSH username (e.g., `root` or `ubuntu`)
 - `DEPLOY_SSH_KEY`: Your private SSH key (entire content including `-----BEGIN OPENSSH PRIVATE KEY-----`)
 - `DEPLOY_PORT`: SSH port (optional, defaults to 22)
+
+**Required for build (Next.js needs these at build time):**
+- `DOMAIN_NAME`: Your domain name (e.g., `example.com`) - used for `NEXT_PUBLIC_*` variables
+
+**Optional (if you want to build with these vars instead of runtime-only):**
+- `DATABASE_URI`: MongoDB connection string (can be runtime-only on server)
+- `PAYLOAD_SECRET`: Payload secret (can be runtime-only on server)
 
 ## Initial Server Setup
 
@@ -121,11 +129,17 @@ docker service rollback adaptmap_app
 
 ## Environment Variables
 
-Make sure your server's `.env` file includes:
-- `DOMAIN_NAME`
-- `SSL_EMAIL`
-- `DATABASE_URI` (MongoDB Atlas connection string)
-- `PAYLOAD_SECRET`
-- `NOMINATIM_PASSWORD`
-- Other optional variables as needed
+**On Hostinger server** (`.env` file in `/opt/adaptmap/`):
+- `DOMAIN_NAME` - Your domain name
+- `SSL_EMAIL` - For Let's Encrypt certificates
+- `DATABASE_URI` - MongoDB Atlas connection string
+- `PAYLOAD_SECRET` - Payload CMS secret
+- `NOMINATIM_PASSWORD` - Database password for Nominatim
+- `SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD` - Optional email settings
+- `CRON_SECRET`, `SESSION_LOG_SECRET` - Optional secrets
+
+**In GitHub Secrets** (for build-time):
+- `DOMAIN_NAME` - Required for `NEXT_PUBLIC_*` variables (embedded in client bundle)
+
+**Note:** `NEXT_PUBLIC_*` variables MUST be available at build time. They're embedded in the JavaScript bundle that runs in the browser. Other variables can be runtime-only on the server.
 

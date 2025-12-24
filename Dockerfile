@@ -25,6 +25,33 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Accept build args for NEXT_PUBLIC_* variables (REQUIRED at build time)
+# These are embedded in the client JavaScript bundle
+ARG NEXT_PUBLIC_SERVER_URL
+ARG NEXT_PUBLIC_PHOTON_URL
+
+# Optional build args (only needed if used in next.config.js during build)
+# These are runtime-only for Payload CMS, but can be passed for convenience
+ARG DATABASE_URI=
+ARG PAYLOAD_SECRET=
+ARG SMTP_HOST=
+ARG SMTP_USERNAME=
+ARG SMTP_PASSWORD=
+ARG CRON_SECRET=
+ARG SESSION_LOG_SECRET=
+
+# Set as environment variables for Next.js build
+ENV NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL
+ENV NEXT_PUBLIC_PHOTON_URL=$NEXT_PUBLIC_PHOTON_URL
+# Only set if provided (non-empty)
+ENV DATABASE_URI=$DATABASE_URI
+ENV PAYLOAD_SECRET=$PAYLOAD_SECRET
+ENV SMTP_HOST=$SMTP_HOST
+ENV SMTP_USERNAME=$SMTP_USERNAME
+ENV SMTP_PASSWORD=$SMTP_PASSWORD
+ENV CRON_SECRET=$CRON_SECRET
+ENV SESSION_LOG_SECRET=$SESSION_LOG_SECRET
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.

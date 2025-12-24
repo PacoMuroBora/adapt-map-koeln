@@ -63,7 +63,7 @@ const heatmapLayer = {
     'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],
     // Opacity decreases slightly at higher zoom
     'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0.7],
-  },
+  } as any,
 }
 
 // Default center: Cologne, Germany
@@ -156,7 +156,6 @@ export function HeatmapMap({ userLocation, className }: HeatmapMapProps) {
         onMove={(evt) => setViewState(evt.viewState)}
         mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
         style={{ width: '100%', height: '100%' }}
-        attributionControl={true}
         reuseMaps={true}
       >
         {/* Heatmap layer */}

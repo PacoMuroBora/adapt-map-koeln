@@ -23,14 +23,18 @@ version: '3.8'
 #   - Note: Rolling updates won't work without Swarm mode
 #
 # Environment Variables Required:
-#   - DOMAIN_NAME (e.g., "example.com")
-#   - SSL_EMAIL (for Let's Encrypt)
-#   - DATABASE_URI (MongoDB Atlas connection string)
-#   - PAYLOAD_SECRET
-#   - NOMINATIM_PASSWORD
-#   - SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD (optional)
-#   - CRON_SECRET (optional)
-#   - SESSION_LOG_SECRET (optional)
+#   - DOMAIN_NAME (e.g., "example.com") - REQUIRED in both GitHub Secrets AND server .env
+#   - SSL_EMAIL (for Let's Encrypt) - server .env only
+#   - DATABASE_URI (MongoDB Atlas connection string) - server .env only
+#   - PAYLOAD_SECRET - server .env only
+#   - NOMINATIM_PASSWORD - server .env only
+#   - SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD (optional) - server .env only
+#   - CRON_SECRET (optional) - server .env only
+#   - SESSION_LOG_SECRET (optional) - server .env only
+#
+# IMPORTANT: NEXT_PUBLIC_* variables MUST be available at build time!
+# They're embedded in the client JavaScript bundle during `next build`.
+# Build happens on GitHub Actions, so DOMAIN_NAME must be in GitHub Secrets.
 #
 # Quick Start (Swarm Mode):
 #   1. Create .env file with required variables
@@ -72,9 +76,13 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        # NEXT_PUBLIC_* vars MUST be build args (embedded in client bundle at build time)
         - NEXT_PUBLIC_SERVER_URL=https://${DOMAIN_NAME}
-        - DATABASE_URI=${DATABASE_URI}
-        - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+        - NEXT_PUBLIC_PHOTON_URL=https://photon.${DOMAIN_NAME}
+        # Optional: These are runtime-only for Payload CMS, but can be passed here
+        # They'll be overridden by environment section below at runtime anyway
+        - DATABASE_URI=${DATABASE_URI:-}
+        - PAYLOAD_SECRET=${PAYLOAD_SECRET:-}
         - SMTP_HOST=${SMTP_HOST:-}
         - SMTP_USERNAME=${SMTP_USERNAME:-}
         - SMTP_PASSWORD=${SMTP_PASSWORD:-}
@@ -134,9 +142,11 @@ services:
       - CRON_SECRET=${CRON_SECRET:-}
       - SESSION_LOG_SECRET=${SESSION_LOG_SECRET:-}
       # Geocoding service URLs (internal Docker network)
+      # Note: GEOCODING_URL (Nominatim) is runtime-only - only used server-side in API routes
+      # NEXT_PUBLIC_PHOTON_URL is set in build args above (needed at build time for client bundle)
       - GEOCODING_URL=http://nominatim:8080
       - PHOTON_URL=http://photon:2322
-      - NEXT_PUBLIC_PHOTON_URL=https://photon.${DOMAIN_NAME}
+      - NEXT_PUBLIC_PHOTON_URL=https://photon.${DOMAIN_NAME} # Also set at runtime (but build-time value is what matters)
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health', '||', 'exit', '1']
       interval: 30s
