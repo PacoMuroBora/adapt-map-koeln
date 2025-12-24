@@ -20,16 +20,16 @@ Both projects communicate via shared Docker networks.
 
 ## 🚀 Step 1: Initial Server Setup (One-Time)
 
-### 1.1 Initialize Docker Swarm
+### 1.1 Verify Docker is Running
 
-SSH into your server and run:
+SSH into your server and verify Docker is installed:
 
 ```bash
 ssh root@your-server-ip
-docker swarm init
+docker --version
 ```
 
-**What this does:** Enables Docker Swarm mode for managing multiple containers.
+**What this does:** Ensures Docker is available for running containers.
 
 ### 1.2 Create Required Volume
 
@@ -158,8 +158,8 @@ Once set up, **every time you push code to the `main` branch**, GitHub Actions w
 
 1. ✅ **Build** the Next.js app image
 2. ✅ **Transfer** it to your server
-3. ✅ **Deploy** it using Docker Swarm
-4. ✅ **Update** running containers (zero downtime)
+3. ✅ **Deploy** it using Docker Compose
+4. ✅ **Update** the running container
 
 **You don't need to do anything!** Just push your code.
 
@@ -196,14 +196,14 @@ docker logs redis
 docker logs n8n
 ```
 
-### Check App Services:
+### Check App Container:
 
 ```bash
-# Check app service (if deployed)
-docker service ls | grep app
+# Check app container (if deployed)
+docker ps | grep adaptmap-app
 
 # Check app logs
-docker service logs adaptmap-app_app
+docker logs adaptmap-app
 ```
 
 ### Test URLs:
@@ -232,8 +232,8 @@ docker logs n8n
 # Verify .env file exists and has correct values
 cat /docker/services/.env
 
-# Check if Docker Swarm is active
-docker info | grep Swarm
+# Check if Docker is running
+docker ps
 ```
 
 ### App Not Deploying
@@ -303,7 +303,8 @@ Just push to `main` branch - GitHub Actions handles it automatically!
 ```bash
 # On server
 cd /docker/app
-docker stack deploy -c docker-compose.yml adaptmap-app
+docker compose down
+docker compose up -d
 ```
 
 ---
@@ -353,8 +354,8 @@ The app uses **public geocoding APIs** with optional commercial service support:
 
 Before your first deployment, make sure:
 
-- [ ] Docker Swarm initialized (`docker swarm init`)
-- [ ] `traefik_data` volume created
+- [ ] Docker is installed and running
+- [ ] `traefik_data` volume created (if not exists, Docker Compose will create it)
 - [ ] `/docker/services/` directory exists with `.env` and `docker-compose.yml`
 - [ ] `/docker/app/` directory exists with `.env` and `docker-compose.yml`
 - [ ] Infrastructure deployed via Hostinger dashboard

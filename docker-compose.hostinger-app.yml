@@ -3,30 +3,8 @@ services:
     image: adaptmap-app:latest
     container_name: adaptmap-app
     restart: always
-    deploy:
-      replicas: 3
-      update_config:
-        parallelism: 1
-        delay: 10s
-        failure_action: rollback
-        monitor: 60s
-        order: start-first
-      rollback_config:
-        parallelism: 1
-        delay: 5s
-        failure_action: pause
-        monitor: 60s
-        order: stop-first
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          memory: 768M
-        reservations:
-          memory: 384M
+    mem_limit: 768M
+    mem_reservation: 384M
     labels:
       - traefik.enable=true
       - traefik.http.routers.app.rule=Host(`${DOMAIN_NAME}`)

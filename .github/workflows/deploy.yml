@@ -150,17 +150,19 @@ jobs:
             # Tag image with timestamp for versioning
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.IMAGE_NAME }}:$(date +%Y%m%d-%H%M%S)
 
-            # Update the Docker stack (creates if doesn't exist)
-            echo "Deploying Docker stack..."
-            docker stack deploy -c $COMPOSE_FILE ${{ env.STACK_NAME }} --with-registry-auth
+            # Stop and remove existing container if it exists
+            docker compose -f $COMPOSE_FILE down || true
 
-            # Wait a moment for services to be created
+            # Start the service (creates if doesn't exist)
+            echo "Deploying Docker container..."
+            docker compose -f $COMPOSE_FILE up -d
+
+            # Wait a moment for container to start
             sleep 5
 
-            # Check if stack was deployed
-            echo "Checking stack status..."
-            docker stack ls
-            docker stack services ${{ env.STACK_NAME }} || echo "Stack services not found"
+            # Check if container is running
+            echo "Checking container status..."
+            docker compose -f $COMPOSE_FILE ps
 
             # Clean up old images (keep last 3 versions)
             docker images ${{ env.IMAGE_NAME }} --format "{{.ID}} {{.CreatedAt}}" | sort -rk 2 | tail -n +4 | awk '{print $1}' | xargs -r docker rmi -f || true
@@ -177,17 +179,14 @@ jobs:
             # Wait a bit for services to start
             sleep 15
 
-            # Check stack status
-            echo "=== Stack Status ==="
-            docker stack ls
+            # Check container status
+            echo "=== Container Status ==="
+            cd /docker/app
+            docker compose ps
             echo ""
-            echo "=== Stack Services ==="
-            docker stack services ${{ env.STACK_NAME }} || echo "Stack not found"
+            echo "=== Container Logs (last 20 lines) ==="
+            docker compose logs --tail=20 adaptmap-app || echo "Container not found"
             echo ""
-            echo "=== App Service Status ==="
-            docker service ls | grep ${{ env.STACK_NAME }}_app || echo "Service not found - checking all services:"
-            docker service ls
-            echo ""
-            echo "=== App Service Details ==="
-            docker service ps ${{ env.STACK_NAME }}_app --no-trunc | head -10 || echo "Service not found"
+            echo "=== Container Health ==="
+            docker ps | grep adaptmap-app || echo "Container not running"
             echo ""
