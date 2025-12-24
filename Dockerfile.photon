@@ -1,0 +1,24 @@
+FROM eclipse-temurin:17-jre-alpine
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Create app directory
+WORKDIR /app
+
+# Download Photon JAR from GitHub releases
+# Using the latest stable release
+RUN curl -L -o photon.jar https://github.com/komoot/photon/releases/download/0.3.14/photon-0.3.14.jar
+
+# Expose Photon port
+EXPOSE 2322
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+  CMD curl -f http://localhost:2322/api?q=test || exit 1
+
+# Run Photon
+# Photon connects to Nominatim database using environment variables
+# Default command - can be overridden in docker-compose
+CMD ["java", "-jar", "photon.jar"]
+

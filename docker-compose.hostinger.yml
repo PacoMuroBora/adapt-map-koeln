@@ -147,7 +147,9 @@ services:
       - geocoding-network
 
   photon:
-    image: komoot/photon:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.photon
     container_name: photon
     restart: unless-stopped
     ports:
@@ -165,6 +167,13 @@ services:
       - NOMINATIM_DB=nominatim
       - NOMINATIM_USER=nominatim
       - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production}
+    command: >
+      sh -c "java -jar /app/photon.jar
+      -nominatim-import:host=nominatim
+      -nominatim-import:port=5432
+      -nominatim-import:database=nominatim
+      -nominatim-import:user=nominatim
+      -nominatim-import:password=$${NOMINATIM_PASSWORD}"
     depends_on:
       nominatim:
         condition: service_healthy

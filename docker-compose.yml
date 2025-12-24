@@ -222,7 +222,9 @@ services:
 
   photon:
     # Photon is the forward geocoding service (address → coordinates)
-    image: komoot/photon:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.photon
     container_name: photon
     restart: unless-stopped
 
@@ -244,6 +246,13 @@ services:
       - NOMINATIM_DB=nominatim # Database name
       - NOMINATIM_USER=nominatim # Database user
       - NOMINATIM_PASSWORD=${NOMINATIM_PASSWORD:-change_me_in_production} # Same password as Nominatim
+    command: >
+      sh -c "java -jar /app/photon.jar
+      -nominatim-import:host=nominatim
+      -nominatim-import:port=5432
+      -nominatim-import:database=nominatim
+      -nominatim-import:user=nominatim
+      -nominatim-import:password=$${NOMINATIM_PASSWORD}"
 
     # Wait for Nominatim to be healthy before starting
     depends_on:

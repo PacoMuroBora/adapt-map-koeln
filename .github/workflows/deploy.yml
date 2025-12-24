@@ -100,11 +100,27 @@ jobs:
             # Navigate to project directory
             cd /opt/adaptmap || (echo "Error: /opt/adaptmap not found" && exit 1)
 
+            # Verify docker-compose.hostinger.yml exists
+            if [ ! -f docker-compose.hostinger.yml ]; then
+              echo "ERROR: docker-compose.hostinger.yml not found in /opt/adaptmap"
+              ls -la
+              exit 1
+            fi
+
             # Tag image with timestamp for versioning
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.IMAGE_NAME }}:$(date +%Y%m%d-%H%M%S)
 
             # Update the Docker stack (creates if doesn't exist)
-            docker stack deploy -c docker-compose.yml ${{ env.STACK_NAME }} --with-registry-auth
+            echo "Deploying Docker stack..."
+            docker stack deploy -c docker-compose.hostinger.yml ${{ env.STACK_NAME }} --with-registry-auth
+
+            # Wait a moment for services to be created
+            sleep 5
+
+            # Check if stack was deployed
+            echo "Checking stack status..."
+            docker stack ls
+            docker stack services ${{ env.STACK_NAME }} || echo "Stack services not found"
 
             # Clean up old images (keep last 3 versions)
             docker images ${{ env.IMAGE_NAME }} --format "{{.ID}} {{.CreatedAt}}" | sort -rk 2 | tail -n +4 | awk '{print $1}' | xargs -r docker rmi -f || true
@@ -119,8 +135,18 @@ jobs:
           port: ${{ vars.DEPLOY_PORT || 22 }}
           script: |
             # Wait a bit for services to start
-            sleep 10
+            sleep 15
 
-            # Check service status
-            docker service ls | grep ${{ env.STACK_NAME }}_app || echo "Service not found"
-            docker service ps ${{ env.STACK_NAME }}_app --no-trunc | head -5
+            # Check stack status
+            echo "=== Stack Status ==="
+            docker stack ls
+            echo ""
+            echo "=== Stack Services ==="
+            docker stack services ${{ env.STACK_NAME }} || echo "Stack not found"
+            echo ""
+            echo "=== App Service Status ==="
+            docker service ls | grep ${{ env.STACK_NAME }}_app || echo "Service not found - checking all services:"
+            docker service ls
+            echo ""
+            echo "=== App Service Details ==="
+            docker service ps ${{ env.STACK_NAME }}_app --no-trunc | head -10 || echo "Service not found"

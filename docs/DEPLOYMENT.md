@@ -62,19 +62,26 @@ Go to your GitHub repository → Settings → Secrets and variables → Actions:
    scp docker-compose.yml user@your-server:/opt/adaptmap/
    ```
 
-2. **Create .env file on server:**
+2. **Copy docker-compose.hostinger.yml to Hostinger dashboard:**
+   - Use Hostinger's visual YAML editor
+   - Copy the contents of `docker-compose.hostinger.yml` (concise version, under 8192 chars)
+   - Or upload via SSH to `/opt/adaptmap/docker-compose.hostinger.yml`
+
+3. **Create .env file on server:**
    ```bash
-   ssh user@your-server
-   cd /opt/adaptmap
-   nano .env
+   ssh $DEPLOY_USER@your-server
+   mkdir -p /opt/adaptmap
+   nano /opt/adaptmap/.env
    ```
    
    Add all required environment variables (see docker-compose.yml comments)
 
-3. **Initial deployment:**
+4. **Initial deployment:**
    ```bash
    cd /opt/adaptmap
-   docker stack deploy -c docker-compose.yml adaptmap
+   docker swarm init  # If not already initialized
+   docker volume create traefik_data  # If not already created
+   docker stack deploy -c docker-compose.hostinger.yml adaptmap
    ```
 
 ## Deployment Process
