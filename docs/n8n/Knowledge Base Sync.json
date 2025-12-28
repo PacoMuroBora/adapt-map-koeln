@@ -10,7 +10,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1136,
+        -1392,
         64
       ],
       "id": "03bd559f-5bd7-4be0-9c9e-7ced8ffe5c2e",
@@ -24,8 +24,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1856,
-        96
+        2064,
+        128
       ],
       "id": "310871b2-8980-4faf-8906-45e686ef15be",
       "name": "Respond to Webhook"
@@ -37,7 +37,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -944,
+        -1152,
         64
       ],
       "id": "da7ba970-6b02-4e8d-a964-9716d9bcfdf6",
@@ -100,12 +100,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// Check if item should be synced\nconst kbItem = $input.first().json;\n\n// Only sync published items\nif (kbItem.status !== 'published') {\n  return {\n    json: {\n      shouldSync: false,\n      reason: 'Item is not published',\n      kbItem: kbItem\n    }\n  };\n}\n\n// Check if item exists in MongoDB\nconst existingVector = $('Check Existing Vector').first()?.json || null;\n\nif (!existingVector) {\n  // Item doesn't exist - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Item not found in vector DB',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item exists - check if content changed\n// Create content hash for comparison\nfunction createContentHash(item) {\n  const title = item.title_de || '';\n  const content = item.content_de || '';\n  const tags = JSON.stringify((item.tags || []).map(t => t.tag || t).sort());\n  const category = item.category || '';\n  return `${title}|${content}|${tags}|${category}`;\n}\n\nconst currentHash = createContentHash(kbItem);\nconst existingHash = createContentHash(existingVector);\n\nif (currentHash !== existingHash) {\n  // Content changed - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Content changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Check if embedding model changed\nconst currentModel = $env.EMBEDDING_MODEL || 'text-embedding-3-small';\nif (existingVector.embeddingModel && existingVector.embeddingModel !== currentModel) {\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Embedding model changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item is up to date - skip sync\nreturn {\n  json: {\n    shouldSync: false,\n    reason: 'Item already synced and up to date',\n    kbItem: kbItem,\n    existingVector: existingVector\n  }\n};"
+        "jsCode": "// Check if item should be synced\nconst kbItem = $input.first().json;\n\n// Only sync published items\nif (kbItem.status !== 'published') {\n  return {\n    json: {\n      shouldSync: false,\n      reason: 'Item is not published',\n      kbItem: kbItem\n    }\n  };\n}\n\n// Check if item exists in MongoDB\nconst existingVector = $('Check Existing Vector').first()?.json || null;\n\nif (!existingVector) {\n  // Item doesn't exist - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Item not found in vector DB',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item exists - check if content changed\n// Create content hash for comparison\nfunction createContentHash(item) {\n  const title = item.title_de || '';\n  const content = JSON.stringify(item.content_de || {});\n  const tags = JSON.stringify((item.tags || []).map(t => t.tag || t).sort());\n  const category = item.category || '';\n  return `${title}|${content}|${tags}|${category}`;\n}\n\nconst currentHash = createContentHash(kbItem);\nconst existingHash = createContentHash(existingVector);\n\nif (currentHash !== existingHash) {\n  // Content changed - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Content changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Check if embedding model changed\nconst currentModel = $env.EMBEDDING_MODEL || 'text-embedding-3-small';\nif (existingVector.embeddingModel && existingVector.embeddingModel !== currentModel) {\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Embedding model changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item is up to date - skip sync\nreturn {\n  json: {\n    shouldSync: false,\n    reason: 'Item already synced and up to date',\n    kbItem: kbItem,\n    existingVector: existingVector\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -80,
+        -224,
         112
       ],
       "id": "88248223-f333-4056-88bc-3033c6da674d",
@@ -138,7 +138,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        176,
+        384,
         112
       ],
       "id": "d5668418-6e12-464f-ad9f-8cb5eeae4a21",
@@ -146,12 +146,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prepare text content for embedding\nconst checkResult = $('Check If Sync Needed').first().json;\nconst kbItem = checkResult.kbItem;\n\nconst title = kbItem.title_de || '';\nconst contentText = kbItem.content_de || '';\nconst combinedText = `${title}\\n\\n${contentText}`.trim();\n\n// Extract tags\nconst tags = (kbItem.tags || []).map(t => t.tag || t).filter(Boolean);\n\n// Create content hash for tracking\nfunction createContentHash(item) {\n  const title = item.title_de || '';\n  const content = item.content_de || '';\n  const tags = JSON.stringify((item.tags || []).map(t => t.tag || t).sort());\n  const category = item.category || '';\n  return `${title}|${content}|${tags}|${category}`;\n}\n\nreturn {\n  json: {\n    kbItemId: kbItem.id,\n    title_de: title,\n    contentText: contentText,\n    combinedText: combinedText,\n    tags: tags,\n    category: kbItem.category || null,\n    status: kbItem.status,\n    contentHash: createContentHash(kbItem),\n    reason: checkResult.reason\n  }\n};"
+        "jsCode": "// Extract text content from rich text for embedding\nconst checkResult = $('Check If Sync Needed').first().json;\nconst kbItem = checkResult.kbItem;\n\nconst title = kbItem.title_de || '';\nconst contentText = kbItem.content_de;\nconst combinedText = `${title}\\n\\n${contentText}`.trim();\n\n// Extract tags\nconst tags = (kbItem.tags || []).map(t => t.tag || t).filter(Boolean);\n\n// Create content hash for tracking\nfunction createContentHash(item) {\n  const title = item.title_de || '';\n  const content = JSON.stringify(item.content_de || {});\n  const tags = JSON.stringify((item.tags || []).map(t => t.tag || t).sort());\n  const category = item.category || '';\n  return `${title}|${content}|${tags}|${category}`;\n}\n\nreturn {\n  json: {\n    kbItemId: kbItem.id,\n    title_de: title,\n    contentText: contentText,\n    //combinedText: combinedText,\n    tags: tags,\n    category: kbItem.category || null,\n    combinedText: createContentHash(kbItem),\n    //reason: checkResult.reason\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        656,
+        864,
         352
       ],
       "id": "ebdfed7f-3350-4395-a77e-6d14e67a460c",
@@ -159,12 +159,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prepare document for MongoDB upsert\nconst textData = $('Prepare Text for Embedding').first().json;\nconst embeddingResult = $input.first().json;\n\n// Extract embedding array\nconst embeddingArray = Array.isArray(embeddingResult.embedding) \n  ? embeddingResult.embedding \n  : (embeddingResult.data || []);\n\nif (!Array.isArray(embeddingArray) || embeddingArray.length === 0) {\n  throw new Error('Failed to generate embedding: Invalid embedding array');\n}\n\nconst embeddingModel = $env.EMBEDDING_MODEL || 'text-embedding-3-small';\nconst now = new Date().toISOString();\n\nconst document = {\n  _id: textData.kbItemId,\n  title_de: textData.title_de,\n  content_de: textData.contentText,\n  contentHash: textData.contentHash,\n  tags: textData.tags,\n  category: textData.category,\n  status: textData.status,\n  embedding: embeddingArray,\n  embeddingModel: embeddingModel,\n  embeddingDimensions: embeddingArray.length,\n  lastSyncedAt: now,\n  createdAt: now,\n  updatedAt: now\n};\n\nreturn { json: document };"
+        "jsCode": "// Prepare document for MongoDB upsert\nconst textData = $('Prepare Text for Embedding').first().json;\nconst embeddingResult = $input.all();\n\nif (!Array.isArray(embeddingResult) || embeddingResult.length === 0) {\n  throw new Error('Failed to generate embedding: Invalid embedding array');\n}\n\nconst embeddingModel = 'text-embedding-3-small';\nconst now = new Date().toISOString();\n\nconst document = {\n  _id: textData.kbItemId,\n  title_de: textData.title_de,\n  content_de: textData.contentText,\n  combinedText: textData.combinedText,\n  tags: textData.tags,\n  category: textData.category,\n  status: textData.status,\n  embedding: embeddingResult,\n  embeddingModel: embeddingModel,\n  embeddingDimensions: embeddingResult.length,\n  lastSyncedAt: now,\n  createdAt: now,\n  updatedAt: now\n};\n\nreturn { json: document };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
+        1408,
         352
       ],
       "id": "78ecd439-bbb7-4be5-a8a4-d47c21197792",
@@ -193,7 +193,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1392,
+        1600,
         352
       ],
       "id": "e1a42c5f-d326-4b50-ab80-bba1a4f230d1",
@@ -212,8 +212,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1040,
-        96
+        1248,
+        128
       ],
       "id": "1bf8e2d0-4818-41d3-b85b-ab9bf6081424",
       "name": "Format Response"
@@ -225,7 +225,7 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        720,
+        928,
         640
       ],
       "id": "aa8da63f-ce98-4495-93cf-e8ad1f957e38",
@@ -251,7 +251,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreMongoDBAtlas",
       "typeVersion": 1.3,
       "position": [
-        848,
+        1056,
         352
       ],
       "id": "7ff9841c-17af-4e4b-b083-b23494799f1a",
@@ -282,8 +282,8 @@
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        928,
-        608
+        1136,
+        640
       ],
       "id": "4290b00f-74b9-42bd-9549-a8b5f07fe37b",
       "name": "Default Data Loader"
@@ -295,7 +295,7 @@
       "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
       "typeVersion": 1,
       "position": [
-        976,
+        1184,
         800
       ],
       "id": "0d43abfd-5453-4cf9-a70f-7064548bc66d",
@@ -303,13 +303,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// Check if document exists in MongoDB\nconst { MongoClient } = require('mongodb');\n\n// Use your existing MongoDB connection string\nconst uri = process.env.VECTOR_DATABASE_URI || process.env.DATABASE_URI;\n\nif (!uri) {\n  throw new Error('VECTOR_DATABASE_URI or DATABASE_URI environment variable not set');\n}\n\nconst client = new MongoClient(uri);\n\nasync function checkExisting() {\n  try {\n    await client.connect();\n    const db = client.db('adaptmap_vectors'); // Your database name\n    const collection = db.collection('knowledge_base_vectors');\n    \n    const kbItemId = $('Parse Input').first().json.kbItemId;\n    const existing = await collection.findOne({ _id: kbItemId });\n    \n    return {\n      json: existing || null\n    };\n  } catch (error) {\n    throw new Error(`Failed to check existing vector: ${error.message}`);\n  } finally {\n    await client.close();\n  }\n}\n\nreturn checkExisting();"
+        "jsCode": "// Check if document exists in MongoDB\nconst { MongoClient } = require('mongodb');\n\n// Use your existing MongoDB connection string\nconst uri = \"mongodb+srv://adaptmap_vectors:PrnHyJbzerW953Tn@cluster0.hrerykt.mongodb.net/adaptmap_vectors?appName=Cluster0\" // $env.VECTOR_DATABASE_URI || $env.DATABASE_URI; // TODO set uri from env\n\nif (!uri) {\n  throw new Error('VECTOR_DATABASE_URI or DATABASE_URI environment variable not set');\n}\n\nconst client = new MongoClient(uri);\n\nasync function checkExisting() {\n  try {\n    await client.connect();\n    const db = client.db('adaptmap_vectors'); // Your database name\n    const collection = db.collection('knowledge_base_vectors');\n    \n    const kbItemId = $('Parse Input').first().json.kbItemId;\n    const existing = await collection.findOne({ _id: kbItemId });\n    \n    return {\n      json: existing || null\n    };\n  } catch (error) {\n    throw new Error(`Failed to check existing vector: ${error.message}`);\n  } finally {\n    await client.close();\n  }\n}\n\nreturn checkExisting();"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -288,
-        112
+        -224,
+        304
       ],
       "id": "a5114f7c-d407-483e-aa5c-bceb6a9fd9ae",
       "name": "Check Existing Vector"
@@ -329,16 +329,31 @@
     },
     {
       "parameters": {
-        "jsCode": "// Delete document from MongoDB\nconst { MongoClient } = require('mongodb');\n\nconst uri = process.env.VECTOR_DATABASE_URI || process.env.DATABASE_URI;\n\nif (!uri) {\n  throw new Error('VECTOR_DATABASE_URI or DATABASE_URI environment variable not set');\n}\n\nconst client = new MongoClient(uri);\n\nasync function deleteVector() {\n  try {\n    await client.connect();\n    const db = client.db('adaptmap_vectors');\n    const collection = db.collection('knowledge_base_vectors');\n    \n    const kbItemId = $('Parse Input').first().json.kbItemId;\n    const result = await collection.deleteOne({ _id: kbItemId });\n    \n    return {\n      json: {\n        deleted: result.deletedCount > 0,\n        kbItemId: kbItemId,\n        deletedCount: result.deletedCount\n      }\n    };\n  } catch (error) {\n    throw new Error(`Failed to delete vector: ${error.message}`);\n  } finally {\n    await client.close();\n  }\n}\n\nreturn deleteVector();"
+        "jsCode": "// Delete document from MongoDB\nconst { MongoClient } = require('mongodb');\n\nconst uri = \"mongodb+srv://adaptmap_vectors:PrnHyJbzerW953Tn@cluster0.hrerykt.mongodb.net/adaptmap_vectors?appName=Cluster0\" // process.env.VECTOR_DATABASE_URI || process.env.DATABASE_URI; // TODO set uri from env\n\nif (!uri) {\n  throw new Error('VECTOR_DATABASE_URI or DATABASE_URI environment variable not set');\n}\n\nconst client = new MongoClient(uri);\n\nasync function deleteVector() {\n  try {\n    await client.connect();\n    const db = client.db('adaptmap_vectors');\n    const collection = db.collection('knowledge_base_vectors');\n    \n    const kbItemId = $('Parse Input').first().json.kbItemId;\n    const result = await collection.deleteOne({ _id: kbItemId });\n    \n    return {\n      json: {\n        deleted: result.deletedCount > 0,\n        kbItemId: kbItemId,\n        deletedCount: result.deletedCount\n      }\n    };\n  } catch (error) {\n    throw new Error(`Failed to delete vector: ${error.message}`);\n  } finally {\n    await client.close();\n  }\n}\n\nreturn deleteVector();"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        448,
+        656,
         352
       ],
       "id": "dfd960e5-885a-48e2-9dc5-8d08a0c2c7c5",
       "name": "Delete Before Embedding"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        112,
+        112
+      ],
+      "id": "e585f0b9-6f1a-44bd-ac2d-41bcab80f221",
+      "name": "Merge"
     }
   ],
   "connections": {
@@ -389,6 +404,11 @@
             "node": "Check Existing Vector",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Check If Sync Needed",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -397,7 +417,7 @@
       "main": [
         [
           {
-            "node": "Should Sync?",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -514,9 +534,9 @@
       "main": [
         [
           {
-            "node": "Check If Sync Needed",
+            "node": "Merge",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -542,9 +562,50 @@
           }
         ]
       ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Should Sync?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "pinData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "headers": {
+          "host": "n8n.adaptmap.de",
+          "user-agent": "node",
+          "content-length": "77",
+          "accept": "*/*",
+          "accept-encoding": "br, gzip, deflate",
+          "accept-language": "*",
+          "content-type": "application/json",
+          "sec-fetch-mode": "cors",
+          "x-forwarded-for": "188.26.192.143",
+          "x-forwarded-host": "n8n.adaptmap.de",
+          "x-forwarded-port": "443",
+          "x-forwarded-proto": "https",
+          "x-forwarded-server": "23901d2c61cc",
+          "x-real-ip": "188.26.192.143"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "action": "update",
+          "kbItemId": "69519ffc974abdb08fb468d6",
+          "trigger": "webhook"
+        },
+        "webhookUrl": "https://n8n.adaptmap.de/webhook/kb/sync",
+        "executionMode": "production"
+      }
+    ]
+  },
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "b965f1b1f353f12e1f5972bc6fbf945dbfe06182ae524b0cb4a5b1c93ccbc132"

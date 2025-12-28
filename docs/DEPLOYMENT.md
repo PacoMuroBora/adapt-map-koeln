@@ -67,6 +67,7 @@ SSL_EMAIL=your-email@example.com
 GENERIC_TIMEZONE=Europe/Berlin
 DATABASE_URI=your-mongodb-connection-string
 PAYLOAD_SECRET=your-payload-secret
+PAYLOAD_KEY=your-payload-api-key
 LOCATIONIQ_API_KEY=your-locationiq-api-key
 LOCATIONIQ_BASE_URL=https://eu1.locationiq.com/v1
 SMTP_HOST=
@@ -80,6 +81,7 @@ SESSION_LOG_SECRET=
 - Replace `adaptmap.de` with your actual domain
 - Use a real email for `SSL_EMAIL` (Let's Encrypt needs it)
 - `DATABASE_URI` and `PAYLOAD_SECRET` should match your GitHub secrets
+- `PAYLOAD_KEY` is used for n8n to authenticate with Payload CMS API - use a secure random string
 - `LOCATIONIQ_API_KEY` is optional - get free key at https://locationiq.com (5,000 requests/day free)
 
 ### 2.2 Deploy via Hostinger Dashboard

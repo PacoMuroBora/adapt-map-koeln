@@ -68,6 +68,8 @@ services:
       - WEBHOOK_URL=https://n8n.${DOMAIN_NAME}/
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-Europe/Berlin}
       - N8N_PROXY_HOPS=1
+      # Allow environment variable access in Code nodes
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       # Enable MongoDB module for Code nodes (KB sync workflow)
       - NODE_FUNCTION_ALLOW_EXTERNAL=mongodb
       # MongoDB connection for vector database
@@ -111,6 +113,7 @@ services:
       - NEXT_PUBLIC_SERVER_URL=https://${DOMAIN_NAME}
       - DATABASE_URI=${DATABASE_URI}
       - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+      - PAYLOAD_KEY=${PAYLOAD_KEY}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_USERNAME=${SMTP_USERNAME:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
