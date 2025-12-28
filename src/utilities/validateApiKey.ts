@@ -4,7 +4,7 @@ import { APIError } from 'payload'
  * Validates API key from Authorization header
  * Returns true if valid, throws APIError if invalid
  */
-export function validateApiKey(req: Request): void {
+export function validateApiKey(req: { headers: Request['headers'] }): void {
   const authHeader = req.headers.get('authorization')
 
   if (!authHeader) {

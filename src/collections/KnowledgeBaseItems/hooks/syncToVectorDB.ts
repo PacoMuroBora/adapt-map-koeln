@@ -23,7 +23,7 @@ export const syncKnowledgeBaseToVectorDB: CollectionAfterChangeHook<KnowledgeBas
   if (doc.status !== 'published') {
     // If item was unpublished, trigger delete sync
     if (previousDoc?.status === 'published') {
-      await triggerKBSync('delete', doc.id, payload)
+      await triggerKBSync('delete', String(doc.id), payload)
     }
     return doc
   }
@@ -39,7 +39,7 @@ export const syncKnowledgeBaseToVectorDB: CollectionAfterChangeHook<KnowledgeBas
   // Only sync if content changed or it's a new item
   if (contentChanged || operation === 'create') {
     const action = operation === 'create' ? 'create' : 'update'
-    await triggerKBSync(action, doc.id, payload)
+    await triggerKBSync(action, String(doc.id), payload)
   }
 
   return doc
@@ -57,7 +57,7 @@ export const deleteKnowledgeBaseFromVectorDB: CollectionAfterDeleteHook<Knowledg
     return
   }
 
-  await triggerKBSync('delete', id, payload)
+  await triggerKBSync('delete', String(id), payload)
 }
 
 /**

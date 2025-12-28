@@ -14,7 +14,7 @@ export const getKbItemWithApiKey: Endpoint = {
     // Validate API key
     validateApiKey(req)
 
-    const { id } = req.routeParams
+    const id = req.routeParams?.id as string | undefined
 
     if (!id) {
       throw new APIError('Missing KB item ID', 400)
@@ -46,8 +46,8 @@ export const updateKbItemMetadataWithApiKey: Endpoint = {
     // Validate API key
     validateApiKey(req)
 
-    const { id } = req.routeParams
-    const body = await req.json()
+    const id = req.routeParams?.id as string | undefined
+    const body = await (req as { json: () => Promise<any> }).json()
 
     if (!id) {
       throw new APIError('Missing KB item ID', 400)

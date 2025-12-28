@@ -71,6 +71,10 @@ services:
       - QUEUE_BULL_REDIS_HOST=redis
       - QUEUE_BULL_REDIS_PORT=6379
       - EXECUTIONS_MODE=queue
+      # Enable MongoDB module for Code nodes (KB sync workflow)
+      - NODE_FUNCTION_ALLOW_EXTERNAL=mongodb
+      # MongoDB connection for vector database
+      - VECTOR_DATABASE_URI=${VECTOR_DATABASE_URI:-}
     restart: always
     ports:
       - '127.0.0.1:5678:5678'
