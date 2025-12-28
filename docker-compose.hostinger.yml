@@ -7,7 +7,6 @@ services:
       - --api.insecure=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
-      - --providers.docker.swarmmode=false
       - --entrypoints.web.address=:80
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
@@ -125,7 +124,7 @@ services:
       - LOCATIONIQ_API_KEY=${LOCATIONIQ_API_KEY:-}
       - LOCATIONIQ_BASE_URL=${LOCATIONIQ_BASE_URL:-https://eu1.locationiq.com/v1}
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health', '||', 'exit', '1']
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -135,7 +134,7 @@ services:
 
 volumes:
   traefik_data:
-    external: true
+    driver: local
   redis_data:
     driver: local
   n8n_data:
