@@ -7,10 +7,7 @@ import {
   deleteKnowledgeBaseFromVectorDB,
   syncKnowledgeBaseToVectorDB,
 } from './hooks/syncToVectorDB'
-import {
-  getKbItemWithApiKey,
-  updateKbItemMetadataWithApiKey,
-} from './endpoints/apiKeyAccess'
+import { getKbItemWithApiKey, updateKbItemMetadataWithApiKey } from './endpoints/apiKeyAccess'
 
 export const KnowledgeBaseItems: CollectionConfig = {
   slug: 'knowledge-base-items',
@@ -36,10 +33,10 @@ export const KnowledgeBaseItems: CollectionConfig = {
     },
     {
       name: 'content_de',
-      type: 'richText',
+      type: 'textarea',
       required: true,
       admin: {
-        description: 'Content in German',
+        description: 'Content in German (plain text for embeddings)',
       },
     },
     {

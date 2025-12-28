@@ -1066,23 +1066,9 @@ export interface KnowledgeBaseItem {
    */
   title_de: string;
   /**
-   * Content in German
+   * Content in German (plain text for embeddings)
    */
-  content_de: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
+  content_de: string;
   /**
    * Tags for categorization and search
    */

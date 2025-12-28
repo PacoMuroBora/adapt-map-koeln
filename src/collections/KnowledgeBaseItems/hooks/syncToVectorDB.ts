@@ -32,7 +32,7 @@ export const syncKnowledgeBaseToVectorDB: CollectionAfterChangeHook<KnowledgeBas
   const contentChanged =
     !previousDoc ||
     doc.title_de !== previousDoc.title_de ||
-    JSON.stringify(doc.content_de) !== JSON.stringify(previousDoc.content_de) ||
+    doc.content_de !== previousDoc.content_de ||
     JSON.stringify(doc.tags) !== JSON.stringify(previousDoc.tags) ||
     doc.category !== previousDoc.category
 
@@ -48,10 +48,9 @@ export const syncKnowledgeBaseToVectorDB: CollectionAfterChangeHook<KnowledgeBas
 /**
  * Hook to handle deletion - remove from vector database
  */
-export const deleteKnowledgeBaseFromVectorDB: CollectionAfterDeleteHook<KnowledgeBaseItem> = async ({
-  id,
-  req: { payload, context },
-}) => {
+export const deleteKnowledgeBaseFromVectorDB: CollectionAfterDeleteHook<
+  KnowledgeBaseItem
+> = async ({ id, req: { payload, context } }) => {
   // Skip if sync is disabled
   if (context.skipKBSync) {
     return
@@ -96,4 +95,3 @@ async function triggerKBSync(
     // Don't throw - we don't want to fail the Payload operation if sync fails
   }
 }
-

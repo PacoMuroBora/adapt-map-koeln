@@ -70,4 +70,3 @@ export const updateKbItemMetadataWithApiKey: Endpoint = {
     return Response.json(updated)
   },
 }
-
