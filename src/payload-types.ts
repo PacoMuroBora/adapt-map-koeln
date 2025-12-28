@@ -121,14 +121,12 @@ export interface Config {
     header: Header;
     footer: Footer;
     'site-settings': SiteSetting;
-    'legal-content': LegalContent;
     'ui-copy': UiCopy;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    'legal-content': LegalContentSelect<false> | LegalContentSelect<true>;
     'ui-copy': UiCopySelect<false> | UiCopySelect<true>;
   };
   locale: null;
@@ -2246,68 +2244,89 @@ export interface SiteSetting {
      */
     kbSync: string;
   };
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "legal-content".
- */
-export interface LegalContent {
-  id: string;
   /**
-   * Impressum / Legal notice
+   * Legal content pages (Impressum, Privacy Policy, Terms & Conditions)
    */
-  impressum: {
-    root: {
-      type: string;
-      children: {
-        type: any;
+  legalContent: {
+    /**
+     * Impressum / Legal notice
+     */
+    impressum: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
         version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
+      };
+      [k: string]: unknown;
     };
-    [k: string]: unknown;
+    /**
+     * Privacy policy / Datenschutzerklärung
+     */
+    privacyPolicy: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    };
+    /**
+     * Terms and conditions / AGB
+     */
+    termsAndConditions: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    };
   };
   /**
-   * Privacy policy / Datenschutzerklärung
+   * Cookie consent banner configuration
    */
-  privacyPolicy: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  /**
-   * Terms and conditions / AGB
-   */
-  termsAndConditions: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
+  cookieBanner: {
+    /**
+     * Cookie banner title
+     */
+    title: string;
+    /**
+     * Cookie banner message text
+     */
+    message: string;
+    /**
+     * Accept all cookies button text
+     */
+    acceptAllText: string;
+    /**
+     * Accept necessary cookies only button text
+     */
+    acceptNecessaryText: string;
+    /**
+     * Privacy policy link text
+     */
+    privacyLinkText: string;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2421,18 +2440,22 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         aiRecommendation?: T;
         kbSync?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "legal-content_select".
- */
-export interface LegalContentSelect<T extends boolean = true> {
-  impressum?: T;
-  privacyPolicy?: T;
-  termsAndConditions?: T;
+  legalContent?:
+    | T
+    | {
+        impressum?: T;
+        privacyPolicy?: T;
+        termsAndConditions?: T;
+      };
+  cookieBanner?:
+    | T
+    | {
+        title?: T;
+        message?: T;
+        acceptAllText?: T;
+        acceptNecessaryText?: T;
+        privacyLinkText?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

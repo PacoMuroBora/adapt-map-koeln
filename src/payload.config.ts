@@ -15,7 +15,7 @@ import { Submissions } from './collections/Submissions'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
-import { LegalContent } from './globals/LegalContent'
+// LegalContent removed - legal content is now in SiteSettings "Legal & Cookies" tab
 import { SiteSettings } from './globals/SiteSettings'
 import { UICopy } from './globals/UICopy'
 import { plugins } from './plugins'
@@ -76,7 +76,7 @@ export default buildConfig({
     KnowledgeBaseItems,
   ],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer, SiteSettings, LegalContent, UICopy],
+  globals: [Header, Footer, SiteSettings, UICopy],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,
