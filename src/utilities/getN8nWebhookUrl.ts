@@ -22,7 +22,7 @@ export async function getN8nWebhookUrl(
   // Fallback to default paths if not configured in SiteSettings
   const defaultPath =
     webhookPath === 'aiRecommendation' ? '/webhook/ai/recommendation' : '/webhook/kb/sync'
-  let configuredPath = webhookPathValue || defaultPath
+  const configuredPath = webhookPathValue || defaultPath
 
   // Extract path from full URL if provided (strip domain)
   let pathOnly = configuredPath
