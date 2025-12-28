@@ -2,14 +2,13 @@
   "master": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Set up Payload CMS with collections and RBAC",
         "description": "Initialize Payload CMS with the required collections, user roles, and access control as specified in the PRD.",
         "details": "⚠️ CRITICAL: Apply security patterns from .cursor/rules/security-critical.mdc (Local API access control, transaction safety, prevent hook loops). Reference .cursor/rules/access-control.md and access-control-advanced.md for RBAC patterns. See .cursor/rules/collections.md, fields.md, hooks.md for implementation patterns.\n\nPayload CMS 3.68.5 is already installed and configured with MongoDB Atlas (see src/payload.config.ts). The form builder plugin (@payloadcms/plugin-form-builder) is already installed and configured in src/plugins/index.ts - consider leveraging it for questionnaire forms. Create the following collections:\n\n1. Users (with roles: user, editor, admin)\n2. Question (with fields: key, title_de, description_de, type, options[], sliderConfig, required, category, editorFields, adminScoring)\n3. Questionnaire (with fields: version, isCurrent, questions[], status)\n4. Submission (with fields: metadata, location, personal fields, questionnaireVersion, answers, problem_index, free text, AI fields)\n5. KnowledgeBaseItem (with fields: title_de, content_de, tags[], category, contact, status, embedding metadata)\n\nImplement Globals for:\n- siteSettings\n- legalContent\n- uiCopy (optional)\n\nImplement RBAC with the following permissions:\n- Editors: can manage questions, content, and knowledge base\n- Admins: full access to all collections, scoring weights, users/permissions\n\nUse Payload's built-in authentication and access control features. Configure MongoDB Atlas with appropriate indexes for performance.\n\nCode example for collection setup:\n```typescript\nexport const Questions: CollectionConfig = {\n  slug: 'questions',\n  admin: {\n    useAsTitle: 'title_de',\n    defaultColumns: ['title_de', 'type', 'category', 'required'],\n  },\n  access: {\n    read: () => true,\n    update: ({ req: { user } }) => {\n      return user?.role === 'admin' || user?.role === 'editor';\n    },\n    create: ({ req: { user } }) => {\n      return user?.role === 'admin' || user?.role === 'editor';\n    },\n    delete: ({ req: { user } }) => {\n      return user?.role === 'admin';\n    },\n  },\n  fields: [\n    {\n      name: 'key',\n      type: 'text',\n      required: true,\n      unique: true,\n    },\n    {\n      name: 'title_de',\n      type: 'text',\n      required: true,\n    },\n    // Additional fields as per PRD\n  ]\n};\n```",
         "testStrategy": "1. Verify all collections are created with correct fields and relationships\n2. Test RBAC by creating test users for each role and verifying access permissions\n3. Ensure editors can manage questions but not scoring weights\n4. Verify admins have full access to all collections and configurations\n5. Test MongoDB connection and data persistence\n6. Validate that the Globals are properly configured and accessible",
         "priority": "high",
         "dependencies": [],
-
         "status": "done",
         "subtasks": [
           {
@@ -27,7 +26,9 @@
             "id": 2,
             "title": "Add roles field to existing Users collection for RBAC",
             "description": "Extend the existing Users collection (src/collections/Users/index.ts) with roles field and implement RBAC.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Reference .cursor/rules/access-control.md for RBAC pattern. The Users collection already exists in src/collections/Users/index.ts with auth: true. ADD a roles field (select type with options: 'user', 'editor', 'admin', hasMany: false, defaultValue: 'user', saveToJWT: true) to enable RBAC. Update access controls to check user.roles instead of user.role. The collection already has basic authenticated access - extend it with role-based permissions. Configure access control policies: users with basic access, editors can manage questions/content/KB (but not scoring weights), admins have full system access.",
             "status": "done",
             "testStrategy": "Test user registration and login flows. Verify role-based permissions work correctly. Test password reset functionality. Ensure proper validation of user data.",
@@ -38,7 +39,10 @@
             "id": 3,
             "title": "Create Question and Questionnaire collections",
             "description": "Implement the Question and Questionnaire collections with all required fields and relationships between them.",
-            "dependencies": [1, 2],
+            "dependencies": [
+              1,
+              2
+            ],
             "details": "Reference .cursor/rules/access-control.md for field-level access (adminScoring admin-only), .cursor/rules/fields.md for field patterns. IMPORTANT: @payloadcms/plugin-form-builder is already installed (see src/plugins/index.ts). It provides 'forms' and 'form-submissions' collections. However, the PRD requires specific fields (scoring weights, problem_index calculation, adminScoring) that may require custom Question/Questionnaire collections. Evaluate: 1) Use form builder for UI rendering but custom collections for data model, OR 2) Extend form builder with custom fields. Create the Question collection with fields: key, title_de, description_de, type, options[], sliderConfig, required, category, editorFields (editable by editors), and adminScoring (admin-only: weights/mappings). Implement the Questionnaire collection with fields: version, isCurrent, questions[] (relationship to Question, must enforce exactly 10), and status. Set up appropriate access controls: editors can manage questions/content, admins can manage scoring weights.",
             "status": "done",
             "testStrategy": "Verify all fields are correctly defined with proper validation. Test relationship between Question and Questionnaire collections. Confirm access controls work correctly for different user roles.",
@@ -49,7 +53,11 @@
             "id": 4,
             "title": "Implement Submission and KnowledgeBaseItem collections",
             "description": "Create the Submission and KnowledgeBaseItem collections with all required fields and appropriate access controls.",
-            "dependencies": [1, 2, 3],
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
             "details": "⚠️ CRITICAL: Reference .cursor/rules/security-critical.mdc for transaction safety in hooks. Reference .cursor/rules/hooks.md for hook patterns. Implement the Submission collection with fields: metadata, location, personal fields, questionnaireVersion, answers, problem_index, free text, and AI fields. Create the KnowledgeBaseItem collection with fields: title_de, content_de, tags[], category, contact, status, and embedding metadata. Configure access controls to ensure data privacy and security. Set up appropriate hooks for data processing and validation. ALWAYS pass req to nested operations in hooks for transaction safety.",
             "status": "done",
             "testStrategy": "Test submission creation and retrieval. Verify all fields are correctly stored. Test knowledge base item creation and search functionality. Confirm access controls prevent unauthorized access to sensitive data.",
@@ -60,7 +68,12 @@
             "id": 5,
             "title": "Set up Globals and finalize CMS configuration",
             "description": "Implement Global collections for site settings, legal content, and UI copy, and finalize the CMS configuration.",
-            "dependencies": [1, 2, 3, 4],
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
             "details": "Create Global collections for siteSettings (containing general configuration), legalContent (privacy policy, terms of service), and uiCopy (optional, for multilingual text). Configure the admin dashboard with custom views and widgets for improved usability. Set up webhooks for integration with external systems. Implement backup and restore functionality. Document the CMS structure and access patterns for future reference.",
             "status": "done",
             "testStrategy": "Verify globals are correctly defined and accessible. Test admin dashboard functionality. Confirm backup and restore processes work correctly. Validate that all collections work together as expected in the complete system.",
@@ -71,7 +84,7 @@
         "updatedAt": "2025-12-19T11:24:50.062Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Implement Next.js frontend with mobile-first UI components",
         "description": "Set up the Next.js application with Tailwind CSS and shadcn/ui components, focusing on mobile-first design and the user journey flow.",
         "details": "Next.js 15.4.10 with App Router is already set up (see src/app/). Tailwind CSS and shadcn/ui components are already configured. Implement the following pages/components:\n\n1. Set up Tailwind CSS for styling with a mobile-first approach\n2. Install and configure shadcn/ui components for consistent UI\n3. Create the basic page structure following the user journey:\n   - Landing page\n   - Consent screen\n   - Location capture\n   - Personal information\n   - Questionnaire (dynamic)\n   - Free text input\n   - Results overview\n   - AI recommendation CTA\n   - Heatmap view\n\nImplement responsive layouts that work well on mobile devices and tablets. Use Tailwind's responsive utilities to ensure optimal display across device sizes.\n\nFor state management, use React Context or Zustand (v4.4+) to manage the submission flow state.\n\nExample for setting up the app structure:\n```typescript\n// app/layout.tsx\nimport { Inter } from 'next/font/google';\nimport './globals.css';\n\nconst inter = Inter({ subsets: ['latin'] });\n\nexport default function RootLayout({ children }) {\n  return (\n    <html lang=\"de\">\n      <body className={inter.className}>\n        <main className=\"min-h-screen bg-background\">\n          {children}\n        </main>\n      </body>\n    </html>\n  );\n}\n\n// app/page.tsx (Landing page)\nexport default function Home() {\n  return (\n    <div className=\"container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[80vh]\">\n      <h1 className=\"text-2xl font-bold mb-4\">Projekt Titel</h1>\n      <p className=\"mb-8 text-center\">Projekt Beschreibung</p>\n      <Button asChild size=\"lg\">\n        <Link href=\"/consent\">Los geht's</Link>\n      </Button>\n    </div>\n  );\n}\n```",
@@ -95,7 +108,9 @@
             "id": 2,
             "title": "Create landing page with German content integration",
             "description": "Implement the main landing page that serves as the entry point for users, displaying project information in German.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Create app/page.tsx with mobile-first responsive design using Tailwind CSS. Include project title, description, and call-to-action button linking to consent page. Integrate with Payload CMS Globals for dynamic content management of German text.",
             "status": "done",
             "testStrategy": "Test responsive layout on mobile/tablet/desktop, verify German content displays correctly, and test navigation to consent page",
@@ -106,7 +121,9 @@
             "id": 3,
             "title": "Implement consent screen with cookie consent integration",
             "description": "Create the consent page where users agree to data collection and cookie usage before proceeding with the survey.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Build app/consent/page.tsx with consent form, privacy policy links, and cookie banner integration. Include checkboxes for different consent types and validation. Store consent status in submission context and localStorage for cookie preferences.",
             "status": "done",
             "testStrategy": "Test consent validation, verify cookie banner functionality, test navigation flow with and without consent, and verify localStorage persistence",
@@ -117,7 +134,9 @@
             "id": 4,
             "title": "Create location capture page with GPS and manual input",
             "description": "Implement the location capture functionality allowing users to share GPS location or manually enter their address.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Build app/location/page.tsx with two input methods: GPS geolocation API integration and manual address form (Straße, Hausnummer, PLZ, Stadt). Include error handling for denied permissions and offline states. Store location data in submission context.",
             "status": "done",
             "testStrategy": "Test GPS functionality on mobile devices, test manual address input validation, verify error handling for location services, and test data storage in context",
@@ -128,7 +147,9 @@
             "id": 5,
             "title": "Build personal information form page",
             "description": "Create the personal information collection page for demographic data required for the survey analysis.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Implement app/personal/page.tsx with form fields for age, gender, household size, and other demographic information. Use shadcn/ui form components with proper validation. Ensure mobile-first responsive design and store data in submission context.",
             "status": "done",
             "testStrategy": "Test form validation, verify responsive design on mobile devices, test data persistence in context, and verify accessibility compliance",
@@ -139,7 +160,9 @@
             "id": 6,
             "title": "Implement dynamic questionnaire engine",
             "description": "Create a dynamic questionnaire system that displays one question per screen for the 10 survey questions.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Build app/questionnaire/[step]/page.tsx with dynamic routing for question steps. Create question components for different answer types (multiple choice, scale, etc.). Include progress indicator and navigation between questions. Store answers in submission context.",
             "status": "done",
             "testStrategy": "Test question navigation flow, verify different question types render correctly, test progress tracking, and verify answer storage in context",
@@ -150,7 +173,9 @@
             "id": 7,
             "title": "Create free text input page",
             "description": "Implement the free text input page where users can provide additional comments or feedback.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Build app/feedback/page.tsx with a large textarea for user comments. Include character count, optional field validation, and mobile-optimized input experience. Store text input in submission context with proper sanitization.",
             "status": "done",
             "testStrategy": "Test textarea functionality on mobile devices, verify character counting, test input sanitization, and verify data storage in context",
@@ -161,7 +186,9 @@
             "id": 8,
             "title": "Build results overview page with problem index display",
             "description": "Create the results page that shows users their calculated problem index and summary of their responses.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Implement app/results/page.tsx displaying the calculated problem index score, visual indicators (charts/progress bars), and summary of user responses. Include responsive design for mobile viewing and prepare for integration with scoring API.",
             "status": "done",
             "testStrategy": "Test results display with mock data, verify responsive charts/indicators, test summary information accuracy, and verify mobile layout",
@@ -172,7 +199,9 @@
             "id": 9,
             "title": "Create AI recommendation CTA component",
             "description": "Implement the call-to-action component that encourages users to get AI-powered recommendations based on their results.",
-            "dependencies": [8],
+            "dependencies": [
+              8
+            ],
             "details": "Build a reusable CTA component for AI recommendations, including compelling copy, button styling with shadcn/ui, and integration points for future AI service connection. Make it prominent on results page with mobile-optimized design.",
             "status": "done",
             "testStrategy": "Test CTA visibility and positioning, verify button interactions, test responsive design, and verify integration with results page",
@@ -183,7 +212,9 @@
             "id": 10,
             "title": "Implement heatmap view page structure",
             "description": "Create the basic structure for the heatmap view page that will later integrate with MapLibre for geographic data visualization.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "Build app/heatmap/page.tsx with placeholder structure for map integration. Include mobile-first responsive container, loading states, and basic UI elements. Prepare data structure for geographic visualization integration in future tasks.",
             "status": "done",
             "testStrategy": "Test page structure and responsive layout, verify placeholder content displays correctly, and test navigation to heatmap page",
@@ -194,7 +225,17 @@
             "id": 11,
             "title": "Verify mobile-first responsive design across all pages",
             "description": "Conduct comprehensive testing and optimization of responsive design across all implemented pages and components.",
-            "dependencies": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
             "details": "Test all pages on various screen sizes (320px mobile to desktop), verify Tailwind responsive utilities work correctly, optimize touch targets for mobile, and ensure consistent spacing and typography across devices. Fix any responsive issues found.",
             "status": "pending",
             "testStrategy": "Test on real devices and browser dev tools, verify touch targets meet accessibility standards, test landscape/portrait orientations, and use Lighthouse for mobile performance",
@@ -205,7 +246,17 @@
             "id": 12,
             "title": "Implement navigation flow and routing between pages",
             "description": "Set up the complete navigation system and routing logic to connect all pages in the proper user journey sequence.",
-            "dependencies": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
             "details": "Implement navigation logic with Next.js App Router, create navigation guards to prevent skipping steps, add back/forward navigation where appropriate, and ensure proper URL structure. Include progress tracking and breadcrumb navigation for user orientation.",
             "status": "pending",
             "testStrategy": "Test complete user journey flow, verify navigation guards work correctly, test browser back/forward buttons, and verify URL structure and routing logic",
@@ -215,13 +266,15 @@
         "updatedAt": "2025-12-20T11:39:59.165Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Implement location capture with geocoding integration",
         "description": "Create the location capture functionality with both GPS and manual address input options, integrating with self-hosted OSM-based geocoding services.",
         "details": "Reference .cursor/rules/endpoints.md for API endpoint patterns. Implement location capture with two options:\n\n1. GPS geolocation using the browser's Geolocation API\n2. Manual address input form (Straße, Hausnummer, PLZ, Stadt)\n\nSet up self-hosted geocoding services:\n- Nominatim for reverse geocoding (coordinates to postal code)\n- Photon for address search/forward geocoding\n\nDeploy these services using Docker containers for reliability and to avoid rate limits.\n\nCreate API endpoints:\n- `/api/geocode` - Convert address to coordinates\n- `/api/reverse-geocode` - Convert coordinates to postal code\n\nImplement robust error handling for:\n- User denying location permission\n- Geocoding service failures\n- Offline state\n\nExample implementation for browser geolocation:\n```typescript\nconst getUserLocation = async () => {\n  setIsLoading(true);\n  try {\n    if (!navigator.geolocation) {\n      throw new Error('Geolocation is not supported by your browser');\n    }\n    \n    const position = await new Promise((resolve, reject) => {\n      navigator.geolocation.getCurrentPosition(resolve, reject, {\n        enableHighAccuracy: true,\n        timeout: 10000,\n        maximumAge: 0\n      });\n    });\n    \n    const { latitude, longitude } = position.coords;\n    const response = await fetch('/api/reverse-geocode', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ lat: latitude, lng: longitude })\n    });\n    \n    if (!response.ok) throw new Error('Geocoding failed');\n    \n    const data = await response.json();\n    setLocation({\n      lat: latitude,\n      lng: longitude,\n      postal_code: data.postal_code,\n      city: data.city\n    });\n  } catch (error) {\n    setError(error.message);\n    // Show fallback to manual input\n  } finally {\n    setIsLoading(false);\n  }\n};\n```\n\nFor the self-hosted geocoding services, use Docker Compose:\n```yaml\nversion: '3'\nservices:\n  nominatim:\n    image: mediagis/nominatim:4.2\n    ports:\n      - \"8080:8080\"\n    volumes:\n      - nominatim-data:/var/lib/postgresql/12/main\n    environment:\n      - PBF_URL=https://download.geofabrik.de/europe/germany-latest.osm.pbf\n      \n  photon:\n    image: komoot/photon:latest\n    ports:\n      - \"2322:2322\"\n    depends_on:\n      - nominatim\n\nvolumes:\n  nominatim-data:\n```",
         "testStrategy": "1. Test GPS location capture on real mobile devices\n2. Test manual address input with various valid and invalid addresses\n3. Verify that postal codes are correctly extracted from both methods\n4. Test error handling for denied permissions, offline state, and service failures\n5. Benchmark geocoding service response times\n6. Verify that the self-hosted services can handle expected load\n7. Test edge cases like international addresses or addresses at postal code boundaries",
         "priority": "high",
-        "dependencies": ["2"],
+        "dependencies": [
+          "2"
+        ],
         "status": "done",
         "subtasks": [
           {
@@ -239,7 +292,9 @@
             "id": 2,
             "title": "Implement robust error handling and retry logic for geocoding APIs",
             "description": "Add comprehensive error handling, rate limiting awareness, and retry mechanisms to the geocoding API endpoints.",
-            "dependencies": [1],
+            "dependencies": [
+              1
+            ],
             "details": "✅ COMPLETED: Implemented retry logic with exponential backoff (3 retries max). Added rate limit handling (429 status) with longer delays. Implemented timeout handling (30s timeout). Added comprehensive error messages for different failure scenarios (network errors, timeouts, service unavailable, rate limits). Validated input parameters and coordinate ranges.",
             "status": "done",
             "testStrategy": "Test rate limiting scenarios, network failures, and service unavailability. Verify retry logic works correctly and fallbacks are triggered appropriately.",
@@ -250,7 +305,9 @@
             "id": 3,
             "title": "Enhance GPS geolocation implementation with improved error handling",
             "description": "Improve the browser geolocation functionality with better error handling, user permission management, and fallback to manual input.",
-            "dependencies": [2],
+            "dependencies": [
+              2
+            ],
             "details": "✅ COMPLETED: Enhanced GPS geolocation with position caching (5-minute validity), accuracy validation (warns if >200m), configurable timeout (15s), improved error messages for all geolocation error codes, watchPosition for better accuracy, and automatic cache clearing on errors.",
             "status": "done",
             "testStrategy": "Test on various devices and browsers, simulate permission denial, test in areas with poor GPS signal, and verify fallback mechanisms work correctly.",
@@ -261,7 +318,9 @@
             "id": 4,
             "title": "Implement manual address input form with validation and geocoding",
             "description": "Create a comprehensive manual address input form with German address format validation and integration with geocoding services.",
-            "dependencies": [2],
+            "dependencies": [
+              2
+            ],
             "details": "✅ COMPLETED: Added address autocomplete using Photon API with debounced search (300ms), suggestion dropdown with click-to-select, improved postal code validation (numeric only, 5 digits), enhanced error handling with specific messages, and better UX with loading states and suggestion management.",
             "status": "done",
             "testStrategy": "Test with various valid and invalid German addresses, verify postal code validation, test autocomplete functionality, and ensure proper integration with geocoding services.",
@@ -283,7 +342,10 @@
             "id": 6,
             "title": "Implement comprehensive testing and monitoring for location capture system",
             "description": "Create comprehensive tests and monitoring for the complete location capture functionality including both GPS and manual input methods.",
-            "dependencies": [3, 4],
+            "dependencies": [
+              3,
+              4
+            ],
             "details": "✅ COMPLETED: Created integration tests (tests/int/geocoding.int.spec.ts) covering API endpoints, error handling, retry logic, and validation. Created E2E tests (tests/e2e/location.e2e.spec.ts) covering GPS location capture, manual address input, autocomplete, form validation, error scenarios, and navigation flows.",
             "status": "done",
             "testStrategy": "Run comprehensive test suite covering all location capture scenarios, verify monitoring alerts work correctly, and validate performance meets requirements across different network conditions.",
@@ -294,37 +356,46 @@
         "updatedAt": "2025-12-20T12:00:00.000Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "Build dynamic questionnaire engine",
         "description": "Develop a dynamic questionnaire system that fetches the current questionnaire from Payload CMS and renders questions one per screen with appropriate validation.",
         "details": "Reference .cursor/rules/queries.md for fetching questionnaire with proper access control. IMPORTANT FINDING: @payloadcms/plugin-form-builder is already installed and configured (see src/plugins/index.ts and src/blocks/Form/Component.tsx). The form builder provides form rendering capabilities with react-hook-form integration. The existing FormBlock component shows how forms are rendered - this pattern could be adapted for the questionnaire flow. However, the PRD requires custom scoring logic and admin-defined weights that may require custom Question/Questionnaire collections rather than using the form builder directly.\n\nCreate a questionnaire engine that:\n\n1. Fetches the current questionnaire version from Payload CMS\n2. Validates that exactly 10 active questions exist\n3. Renders one question per screen with navigation controls\n4. Supports all required question types: singleChoice, multiChoice, dropdown, slider\n5. Validates required answers before allowing progression\n6. Stores answers as JSON keyed by question key\n\nImplement a React component structure that can dynamically render different question types based on the Payload data. Consider leveraging the existing form builder components (see src/blocks/Form/) for rendering, but use custom collections for the data model.\n\nUse React Hook Form (v7.x) for form state management and validation - already used in the project.\n\nExample implementation:\n```typescript\n// QuestionScreen.tsx\nimport { useForm } from 'react-hook-form';\nimport { Button } from '@/components/ui/button';\nimport { SingleChoiceQuestion, MultiChoiceQuestion, DropdownQuestion, SliderQuestion } from '@/components/questions';\n\ntype QuestionProps = {\n  question: {\n    key: string;\n    title_de: string;\n    description_de?: string;\n    type: 'singleChoice' | 'multiChoice' | 'dropdown' | 'slider';\n    options?: Array<{ value: string; label: string }>;\n    sliderConfig?: { min: number; max: number; step: number };\n    required: boolean;\n  };\n  onNext: (answer: any) => void;\n  onPrevious: () => void;\n  currentAnswer?: any;\n};\n\nexport function QuestionScreen({ question, onNext, onPrevious, currentAnswer }: QuestionProps) {\n  const { control, handleSubmit, formState: { errors } } = useForm({\n    defaultValues: currentAnswer || {}\n  });\n\n  const onSubmit = (data: any) => {\n    onNext({ [question.key]: data });\n  };\n\n  return (\n    <div className=\"container mx-auto px-4 py-8\">\n      <h2 className=\"text-xl font-semibold mb-2\">{question.title_de}</h2>\n      {question.description_de && <p className=\"mb-4\">{question.description_de}</p>}\n      \n      <form onSubmit={handleSubmit(onSubmit)} className=\"space-y-6\">\n        {question.type === 'singleChoice' && (\n          <SingleChoiceQuestion \n            name={question.key} \n            control={control} \n            options={question.options || []} \n            required={question.required} \n          />\n        )}\n        \n        {/* Similar components for other question types */}\n        \n        <div className=\"flex justify-between mt-8\">\n          <Button type=\"button\" variant=\"outline\" onClick={onPrevious}>\n            Zurück\n          </Button>\n          <Button type=\"submit\">\n            Weiter\n          </Button>\n        </div>\n      </form>\n    </div>\n  );\n}\n```\n\nImplement a questionnaire context to manage the overall flow:\n```typescript\n// QuestionnaireContext.tsx\nimport { createContext, useContext, useState, useEffect } from 'react';\n\nconst QuestionnaireContext = createContext<any>(null);\n\nexport function QuestionnaireProvider({ children }) {\n  const [questionnaire, setQuestionnaire] = useState(null);\n  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);\n  const [answers, setAnswers] = useState({});\n  const [isLoading, setIsLoading] = useState(true);\n  const [error, setError] = useState(null);\n\n  useEffect(() => {\n    const fetchQuestionnaire = async () => {\n      try {\n        const response = await fetch('/api/questionnaire/current');\n        if (!response.ok) throw new Error('Failed to fetch questionnaire');\n        const data = await response.json();\n        \n        if (!data.questions || data.questions.length !== 10) {\n          throw new Error('Questionnaire must have exactly 10 questions');\n        }\n        \n        setQuestionnaire(data);\n      } catch (error) {\n        setError(error.message);\n      } finally {\n        setIsLoading(false);\n      }\n    };\n    \n    fetchQuestionnaire();\n  }, []);\n\n  // Additional context methods for navigation and answer storage\n  \n  return (\n    <QuestionnaireContext.Provider value={{\n      questionnaire,\n      currentQuestionIndex,\n      answers,\n      isLoading,\n      error,\n      // Additional methods\n    }}>\n      {children}\n    </QuestionnaireContext.Provider>\n  );\n}\n\nexport const useQuestionnaire = () => useContext(QuestionnaireContext);\n```",
         "testStrategy": "1. Verify that the questionnaire fetches correctly from Payload CMS\n2. Test rendering of all question types (singleChoice, multiChoice, dropdown, slider)\n3. Validate required field enforcement\n4. Test navigation between questions\n5. Verify that answers are correctly stored in state\n6. Test error handling when fewer than 10 questions are active\n7. Test with various questionnaire configurations\n8. Verify that the questionnaire works correctly on mobile devices",
         "priority": "high",
-        "dependencies": ["1", "2"],
+        "dependencies": [
+          "1",
+          "2"
+        ],
         "status": "done",
         "subtasks": [],
         "updatedAt": "2025-12-20T11:15:38.909Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "Implement submission API and scoring system",
         "description": "Create the submission API endpoint and implement the scoring system based on admin-defined weights to calculate the problem index.",
         "details": "⚠️ CRITICAL: Reference .cursor/rules/security-critical.mdc for all 3 security patterns. Reference .cursor/rules/endpoints.md for endpoint patterns, .cursor/rules/hooks.md for hooks, .cursor/rules/queries.md for Local API queries.\n\nDevelop the submission API and scoring system with the following components:\n\n1. Create a POST `/api/submit` endpoint that:\n   - Validates the submission payload\n   - Computes the problem index based on admin-defined scoring weights\n   - Stores the submission in the database\n   - Returns the submission ID and baseline results\n\n2. Implement the scoring system that:\n   - Uses per-question weights defined by admins\n   - Applies per-option score mapping for choice questions\n   - Applies normalization rules for slider questions\n   - Calculates a problem_index (0-100 scale for consistency)\n   - Optionally calculates sub-scores per category\n\nExample implementation for the submission API:\n```typescript\n// pages/api/submit.js (or app/api/submit/route.ts for App Router)\nimport { NextResponse } from 'next/server';\nimport payload from 'payload';\n\nexport async function POST(req) {\n  try {\n    const body = await req.json();\n    \n    // Validate required fields\n    if (!body.location || !body.questionnaireVersion || !body.answers) {\n      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });\n    }\n    \n    // Get the questionnaire for scoring\n    const questionnaire = await payload.find({\n      collection: 'questionnaires',\n      where: { version: body.questionnaireVersion }\n    });\n    \n    if (!questionnaire.docs.length) {\n      return NextResponse.json({ error: 'Questionnaire not found' }, { status: 404 });\n    }\n    \n    // Get questions with scoring weights\n    const questionIds = questionnaire.docs[0].questions.map(q => q.id);\n    const questions = await payload.find({\n      collection: 'questions',\n      where: { id: { in: questionIds } }\n    });\n    \n    // Calculate problem index\n    const { problemIndex, subScores } = calculateProblemIndex(body.answers, questions.docs);\n    \n    // Create submission\n    const submission = await payload.create({\n      collection: 'submissions',\n      data: {\n        metadata: {\n          timestamp: new Date().toISOString(),\n          user_agent: req.headers.get('user-agent'),\n          consent_version: body.consentVersion\n        },\n        location: body.location,\n        personal_fields: body.personalFields || {},\n        questionnaireVersion: body.questionnaireVersion,\n        answers: body.answers,\n        problem_index: problemIndex,\n        sub_scores: subScores,\n        user_text: body.freeText || ''\n      }\n    });\n    \n    // Generate baseline results\n    const baselineResults = generateBaselineResults(problemIndex, subScores, questions.docs);\n    \n    return NextResponse.json({\n      submissionId: submission.id,\n      problemIndex,\n      baselineResults\n    });\n  } catch (error) {\n    console.error('Submission error:', error);\n    return NextResponse.json({ error: 'Failed to process submission' }, { status: 500 });\n  }\n}\n\nfunction calculateProblemIndex(answers, questions) {\n  let totalScore = 0;\n  let maxPossibleScore = 0;\n  const subScores = {};\n  \n  questions.forEach(question => {\n    const answer = answers[question.key];\n    if (!answer) return;\n    \n    const { weight = 1, category } = question;\n    let score = 0;\n    \n    switch (question.type) {\n      case 'singleChoice':\n        const option = question.options.find(opt => opt.value === answer);\n        score = option?.score || 0;\n        break;\n      case 'multiChoice':\n        score = answer.reduce((sum, selected) => {\n          const option = question.options.find(opt => opt.value === selected);\n          return sum + (option?.score || 0);\n        }, 0);\n        break;\n      case 'slider':\n        const { min = 0, max = 100 } = question.sliderConfig || {};\n        score = ((answer - min) / (max - min)) * 100;\n        break;\n      // Handle other question types\n    }\n    \n    const weightedScore = score * weight;\n    totalScore += weightedScore;\n    maxPossibleScore += 100 * weight; // Assuming max score is 100\n    \n    // Track sub-scores by category\n    if (category) {\n      if (!subScores[category]) subScores[category] = { score: 0, max: 0 };\n      subScores[category].score += weightedScore;\n      subScores[category].max += 100 * weight;\n    }\n  });\n  \n  // Normalize to 0-100 scale\n  const problemIndex = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 100 : 0;\n  \n  // Normalize sub-scores\n  Object.keys(subScores).forEach(category => {\n    const { score, max } = subScores[category];\n    subScores[category] = max > 0 ? (score / max) * 100 : 0;\n  });\n  \n  return { problemIndex, subScores };\n}\n\nfunction generateBaselineResults(problemIndex, subScores, questions) {\n  // Logic to generate baseline results based on problem index and sub-scores\n  // This would map to German text based on score ranges\n  \n  let severity = 'niedrig';\n  if (problemIndex > 70) severity = 'hoch';\n  else if (problemIndex > 40) severity = 'mittel';\n  \n  // Generate category-specific insights\n  const insights = Object.entries(subScores)\n    .sort(([, a], [, b]) => b - a)\n    .slice(0, 3)\n    .map(([category, score]) => {\n      // Map category to German text based on score\n      return `${category}: ${score > 70 ? 'Kritisch' : score > 40 ? 'Problematisch' : 'Unauffällig'}`;\n    });\n  \n  return {\n    summary: `Ihr Hitze-Problem-Index: ${Math.round(problemIndex)}/100 (${severity})`,\n    insights\n  };\n}\n```",
         "testStrategy": "1. Test the submission API with valid and invalid payloads\n2. Verify that the problem index is calculated correctly based on admin-defined weights\n3. Test with different question types and answer combinations\n4. Verify that sub-scores are calculated correctly by category\n5. Test the baseline results generation for different problem index values\n6. Verify that submissions are correctly stored in the database\n7. Test error handling and validation\n8. Benchmark API performance under load",
         "priority": "high",
-        "dependencies": ["1", "4"],
+        "dependencies": [
+          "1",
+          "4"
+        ],
         "status": "done",
         "subtasks": [],
         "updatedAt": "2025-12-20T11:41:56.458Z"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "Implement public heatmap with MapLibre GL JS",
         "description": "Create the public heatmap visualization using MapLibre GL JS, displaying aggregated data at the postal code level with appropriate styling and user location marker.",
         "details": "Reference .cursor/rules/endpoints.md for GET endpoint patterns, .cursor/rules/queries.md for aggregation queries and performance optimization. Implement the public heatmap with the following components:\n\n1. Create a GET `/api/heatmap` endpoint that:\n   - Aggregates submission data by postal code\n   - Returns GeoJSON format with properties for count and average_problem_index\n   - Implements caching for performance (server-side or Redis)\n\n2. Implement the frontend map using MapLibre GL JS via react-map-gl:\n   - Display a heatmap layer based on the GeoJSON data\n   - Show the user's location marker\n   - Include a legend explaining the heatmap colors\n   - Ensure mobile-friendly controls and performance\n\nUse the latest versions of MapLibre GL JS (v3.x) and react-map-gl (v7.x).\n\nExample implementation for the heatmap API:\n```typescript\n// app/api/heatmap/route.ts\nimport { NextResponse } from 'next/server';\nimport payload from 'payload';\nimport { cache } from 'react';\n\n// Use Node.js cache or implement Redis for production\nlet cachedData = null;\nlet cacheTime = 0;\nconst CACHE_DURATION = 5 * 60 * 1000; // 5 minutes\n\nexport async function GET() {\n  try {\n    // Check cache\n    if (cachedData && (Date.now() - cacheTime < CACHE_DURATION)) {\n      return NextResponse.json(cachedData);\n    }\n    \n    // Aggregate submissions by postal code\n    const submissions = await payload.find({\n      collection: 'submissions',\n      limit: 10000, // Adjust based on expected volume\n    });\n    \n    const postalCodeData = {};\n    \n    submissions.docs.forEach(submission => {\n      const postalCode = submission.location.postal_code;\n      if (!postalCode) return;\n      \n      if (!postalCodeData[postalCode]) {\n        postalCodeData[postalCode] = {\n          count: 0,\n          totalProblemIndex: 0,\n          // Use a representative point for the postal code\n          // This could be improved with a postal code centroid database\n          lat: submission.location.lat,\n          lng: submission.location.lng\n        };\n      }\n      \n      postalCodeData[postalCode].count += 1;\n      postalCodeData[postalCode].totalProblemIndex += submission.problem_index;\n    });\n    \n    // Convert to GeoJSON\n    const features = Object.entries(postalCodeData).map(([postalCode, data]) => {\n      const avgProblemIndex = data.totalProblemIndex / data.count;\n      \n      return {\n        type: 'Feature',\n        geometry: {\n          type: 'Point',\n          coordinates: [data.lng, data.lat]\n        },\n        properties: {\n          postalCode,\n          count: data.count,\n          average_problem_index: avgProblemIndex\n        }\n      };\n    });\n    \n    const geoJson = {\n      type: 'FeatureCollection',\n      features\n    };\n    \n    // Update cache\n    cachedData = geoJson;\n    cacheTime = Date.now();\n    \n    return NextResponse.json(geoJson);\n  } catch (error) {\n    console.error('Heatmap error:', error);\n    return NextResponse.json({ error: 'Failed to generate heatmap data' }, { status: 500 });\n  }\n}\n```\n\nExample implementation for the frontend map component:\n```typescript\n// components/Heatmap.tsx\nimport { useState, useEffect } from 'react';\nimport Map, { Source, Layer, Marker } from 'react-map-gl';\nimport 'maplibre-gl/dist/maplibre-gl.css';\n\nconst heatmapLayer = {\n  id: 'heatmap',\n  type: 'heatmap',\n  paint: {\n    'heatmap-weight': ['interpolate', ['linear'], ['get', 'average_problem_index'], 0, 0, 100, 1],\n    'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3],\n    'heatmap-color': [\n      'interpolate',\n      ['linear'],\n      ['heatmap-density'],\n      0, 'rgba(33,102,172,0)',\n      0.2, 'rgb(103,169,207)',\n      0.4, 'rgb(209,229,240)',\n      0.6, 'rgb(253,219,199)',\n      0.8, 'rgb(239,138,98)',\n      1, 'rgb(178,24,43)'\n    ],\n    'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],\n    'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0.7]\n  }\n};\n\nexport function Heatmap({ userLocation }) {\n  const [viewState, setViewState] = useState({\n    longitude: userLocation?.lng || 10.4515,\n    latitude: userLocation?.lat || 51.1657,\n    zoom: 6\n  });\n  const [heatmapData, setHeatmapData] = useState(null);\n  const [isLoading, setIsLoading] = useState(true);\n  const [error, setError] = useState(null);\n\n  useEffect(() => {\n    const fetchHeatmapData = async () => {\n      try {\n        const response = await fetch('/api/heatmap');\n        if (!response.ok) throw new Error('Failed to fetch heatmap data');\n        const data = await response.json();\n        setHeatmapData(data);\n      } catch (error) {\n        setError(error.message);\n      } finally {\n        setIsLoading(false);\n      }\n    };\n    \n    fetchHeatmapData();\n  }, []);\n\n  if (isLoading) return <div className=\"p-4\">Lade Heatmap...</div>;\n  if (error) return <div className=\"p-4 text-red-500\">Fehler: {error}</div>;\n\n  return (\n    <div className=\"h-[80vh] w-full\">\n      <Map\n        {...viewState}\n        onMove={evt => setViewState(evt.viewState)}\n        mapStyle=\"https://basemaps.cartocdn.com/gl/positron-gl-style/style.json\"\n        mapLib={maplibregl}\n      >\n        {heatmapData && (\n          <Source type=\"geojson\" data={heatmapData}>\n            <Layer {...heatmapLayer} />\n          </Source>\n        )}\n        \n        {userLocation && (\n          <Marker\n            longitude={userLocation.lng}\n            latitude={userLocation.lat}\n            color=\"#FF0000\"\n          />\n        )}\n        \n        <div className=\"absolute bottom-0 left-0 bg-white p-2 m-2 rounded shadow\">\n          <h3 className=\"font-bold mb-1\">Legende</h3>\n          <div className=\"flex items-center\">\n            <div className=\"w-4 h-4 bg-blue-500 mr-1\"></div>\n            <span className=\"text-xs\">Niedrig</span>\n          </div>\n          <div className=\"flex items-center\">\n            <div className=\"w-4 h-4 bg-yellow-500 mr-1\"></div>\n            <span className=\"text-xs\">Mittel</span>\n          </div>\n          <div className=\"flex items-center\">\n            <div className=\"w-4 h-4 bg-red-500 mr-1\"></div>\n            <span className=\"text-xs\">Hoch</span>\n          </div>\n        </div>\n      </Map>\n    </div>\n  );\n}\n```",
         "testStrategy": "1. Test the heatmap API with various datasets\n2. Verify that the GeoJSON output is correctly formatted\n3. Test caching functionality and performance\n4. Verify that the heatmap renders correctly on different devices\n5. Test map interactions (zoom, pan, etc.)\n6. Verify that the user location marker is displayed correctly\n7. Test with different postal code distributions\n8. Verify that the legend is clear and accurate",
         "priority": "medium",
-        "dependencies": ["2", "5"],
+        "dependencies": [
+          "2",
+          "5"
+        ],
         "status": "pending",
         "subtasks": [
           {
@@ -352,7 +423,9 @@
             "id": 3,
             "title": "Implement server-side caching for heatmap data",
             "description": "Add caching mechanism to improve performance of the heatmap API endpoint.",
-            "dependencies": [2],
+            "dependencies": [
+              2
+            ],
             "details": "Implement in-memory caching with configurable cache duration (default 5 minutes). Use Node.js Map or simple object for cache storage. Add cache invalidation logic. Consider Redis for production (optional, can be future enhancement). Add cache headers to API response. Document cache behavior.",
             "status": "done",
             "testStrategy": "Test cache hit/miss scenarios, verify cache expiration works correctly, test cache invalidation, measure performance improvement",
@@ -362,7 +435,10 @@
             "id": 4,
             "title": "Create HeatmapMap component with MapLibre integration",
             "description": "Build the main map component using react-map-gl to display the heatmap visualization.",
-            "dependencies": [1, 2],
+            "dependencies": [
+              1,
+              2
+            ],
             "details": "Create a reusable HeatmapMap component (or integrate directly into heatmap page). Configure MapLibre with appropriate map style (CartoDB Positron or similar). Set up initial view state (default to Cologne area: lat 50.9375, lng 6.9603, zoom 6). Implement loading and error states. Ensure component is client-side ('use client' directive).",
             "status": "done",
             "testStrategy": "Test map renders correctly, verify initial view state, test loading states, verify error handling",
@@ -372,7 +448,9 @@
             "id": 5,
             "title": "Implement heatmap layer with GeoJSON data",
             "description": "Add the heatmap layer visualization using MapLibre's heatmap layer type with proper styling.",
-            "dependencies": [4],
+            "dependencies": [
+              4
+            ],
             "details": "Configure heatmap layer with proper paint properties: heatmap-weight based on average_problem_index, heatmap-intensity based on zoom level, heatmap-color gradient (blue to red), heatmap-radius based on zoom, heatmap-opacity based on zoom. Fetch GeoJSON data from /api/heatmap endpoint. Connect Source and Layer components from react-map-gl. Handle data updates and re-rendering.",
             "status": "done",
             "testStrategy": "Test heatmap visualization with sample data, verify color gradient displays correctly, test zoom interactions affect heatmap appearance, verify data updates trigger re-render",
@@ -382,7 +460,9 @@
             "id": 6,
             "title": "Add user location marker to map",
             "description": "Display the user's location marker on the map if location data is available from submission context.",
-            "dependencies": [4],
+            "dependencies": [
+              4
+            ],
             "details": "Get user location from SubmissionContext (state.location). Add Marker component from react-map-gl. Style marker appropriately (red pin or custom icon). Position marker at user's coordinates. Handle case where location is not available. Ensure marker is visible and doesn't interfere with heatmap visualization.",
             "status": "done",
             "testStrategy": "Test marker displays with location data, verify marker position is correct, test without location data, verify marker styling",
@@ -392,7 +472,9 @@
             "id": 7,
             "title": "Implement legend component for heatmap",
             "description": "Create a legend component explaining the heatmap color coding (low/medium/high problem index).",
-            "dependencies": [5],
+            "dependencies": [
+              5
+            ],
             "details": "Design legend with color indicators matching heatmap gradient. Include German labels (Niedrig/Mittel/Hoch). Position legend appropriately (bottom-left corner, mobile-friendly). Style with Tailwind CSS to match app design. Make legend responsive for mobile devices. Ensure legend is accessible and readable.",
             "status": "done",
             "testStrategy": "Test legend displays correctly, verify colors match heatmap, test responsive design on mobile, verify German text is correct",
@@ -402,7 +484,12 @@
             "id": 8,
             "title": "Optimize map for mobile devices and performance",
             "description": "Ensure the heatmap works well on mobile devices with proper touch controls and performance optimization.",
-            "dependencies": [4, 5, 6, 7],
+            "dependencies": [
+              4,
+              5,
+              6,
+              7
+            ],
             "details": "Test and optimize touch interactions (pan, zoom, pinch). Ensure map controls are mobile-friendly. Optimize rendering performance (consider data limits, debounce updates). Test on various mobile devices and screen sizes. Add proper loading states for slow connections. Optimize bundle size if needed. Test with limited data to ensure performance.",
             "status": "done",
             "testStrategy": "Test on real mobile devices, verify touch interactions work correctly, test performance with large datasets, verify loading states, test on slow connections",
@@ -412,7 +499,12 @@
             "id": 9,
             "title": "Integrate HeatmapMap component into heatmap page",
             "description": "Replace the placeholder content in the heatmap page with the fully functional map component.",
-            "dependencies": [4, 5, 6, 7],
+            "dependencies": [
+              4,
+              5,
+              6,
+              7
+            ],
             "details": "Update src/app/(frontend)/heatmap/page.tsx to use the HeatmapMap component. Remove placeholder content. Ensure proper integration with SubmissionContext for user location. Maintain existing page structure and styling. Test navigation flow to heatmap page.",
             "status": "done",
             "testStrategy": "Test complete heatmap page integration, verify navigation works, test with and without user location, verify page layout and styling",
@@ -422,8 +514,10 @@
             "id": 10,
             "title": "Comprehensive testing and edge case handling",
             "description": "Test the complete heatmap implementation with various scenarios, handle edge cases, and create a QR code generator component for Payload CMS admin.",
-            "dependencies": [9],
-            "details": "Test with empty submissions dataset, test with single submission, test with many submissions, test with missing postal codes, test API error handling, test network failures, test with different postal code distributions, verify GeoJSON validation, test map interactions (zoom, pan, etc.), verify legend accuracy, test mobile responsiveness.\n\nAdditionally, create a custom Payload CMS admin component for QR code generation:\n- Add a custom component accessible to editors/admins in the Payload admin panel\n- Component should allow input of either an address (string) or coordinates (lat/lng)\n- If address is provided, use geocoding API to convert to coordinates\n- Generate QR code that links to the web app with the location as a parameter\n- Display the QR code preview in the admin UI\n- Include a download button to save the QR code as an image (PNG)\n- Use a QR code library (e.g., qrcode or qrcode.react)\n- Component should be a Client Component (needs interactivity)\n- Reference .cursor/rules/components.md for Payload component patterns\n- Can be added as a root component (beforeDashboard/afterDashboard) or as a custom view",
+            "dependencies": [
+              9
+            ],
+            "details": "Test with empty submissions dataset, test with single submission, test with many submissions, test with missing postal codes, test API error handling, test network failures, test with different postal code distributions, verify GeoJSON validation, test map interactions (zoom, pan, etc.), verify legend accuracy, test mobile responsiveness.\n\nAdditionally, create a custom Payload CMS admin component for QR code generation:\n- Add a custom component accessible to editors/admins in the Payload admin panel\n- Component should allow input of either an address (string) or coordinates (lat/lng)\n- If address is provided, use geocoding API to convert to coordinates\n- Generate QR code that links to the web app with the location as a parameter\n- Display the QR code preview in the admin UI\n- Include a download button to save the QR code as an image (PNG)\n- Use a QR code library (e.g., qrcode or qrcode.react)\n- Component should be a Client Component (needs interactivity)\n- Reference .cursor/rules/components.md for Payload component patterns\n- Can be added as a root component (beforeDashboard/afterDashboard) or as a custom view\n<info added on 2025-12-28T14:51:23.746Z>\nQR code generator component requirement has been removed. QR codes will be simple static codes pointing to https://adaptmap.de/qr (which redirects to /location). No Payload CMS admin component needed for QR generation - external QR generators can be used instead. The /qr redirect route has been implemented.\n</info added on 2025-12-28T14:51:23.746Z>",
             "status": "pending",
             "testStrategy": "Run comprehensive test suite covering all scenarios, verify edge cases are handled gracefully, test error states, verify performance meets requirements. For QR code component: test address input with geocoding, test coordinate input, verify QR code generation, test download functionality, verify QR code links correctly to web app with location parameter",
             "parentId": "6"
@@ -431,46 +525,64 @@
         ]
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "Implement AI recommendation system with n8n integration",
         "description": "Create the on-demand AI recommendation system that integrates with n8n for RAG-based recommendations in German.",
         "details": "⚠️ CRITICAL: Reference .cursor/rules/security-critical.mdc for transaction safety when updating submission. Reference .cursor/rules/endpoints.md for endpoint patterns. Implement the AI recommendation system with the following components:\n\n1. Create a POST `/api/ai/recommendation` endpoint that:\n   - Proxies requests to the n8n endpoint\n   - Stores the AI output in the submission record\n   - Handles retries and error states\n\n2. Implement the frontend CTA button and results display:\n   - Show the CTA button after successful submission\n   - Display loading state during AI generation\n   - Show the AI recommendations in a structured format\n\n3. Set up n8n workflow integration:\n   - Configure webhook triggers for knowledge base sync\n   - Set up the recommendation generation workflow\n\nExample implementation for the AI recommendation API:\n```typescript\n// app/api/ai/recommendation/route.ts\nimport { NextResponse } from 'next/server';\nimport payload from 'payload';\n\nconst N8N_ENDPOINT = process.env.N8N_RECOMMENDATION_ENDPOINT;\n\nexport async function POST(req) {\n  try {\n    const { submissionId } = await req.json();\n    \n    if (!submissionId) {\n      return NextResponse.json({ error: 'Missing submission ID' }, { status: 400 });\n    }\n    \n    // Get the submission\n    const submission = await payload.findByID({\n      collection: 'submissions',\n      id: submissionId\n    });\n    \n    if (!submission) {\n      return NextResponse.json({ error: 'Submission not found' }, { status: 404 });\n    }\n    \n    // Check if AI recommendation already exists\n    if (submission.ai_summary_de && submission.ai_recommendations_de) {\n      return NextResponse.json({\n        ai_summary_de: submission.ai_summary_de,\n        ai_recommendations_de: submission.ai_recommendations_de,\n        ai_generated_at: submission.ai_generated_at\n      });\n    }\n    \n    // Call n8n endpoint\n    const n8nResponse = await fetch(N8N_ENDPOINT, {\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json'\n      },\n      body: JSON.stringify({\n        submissionId,\n        answers: submission.answers,\n        problemIndex: submission.problem_index,\n        location: submission.location,\n        freeText: submission.user_text\n      })\n    });\n    \n    if (!n8nResponse.ok) {\n      throw new Error(`n8n error: ${n8nResponse.status}`);\n    }\n    \n    const aiResult = await n8nResponse.json();\n    \n    // Update the submission with AI results\n    await payload.update({\n      collection: 'submissions',\n      id: submissionId,\n      data: {\n        ai_summary_de: aiResult.summary,\n        ai_recommendations_de: aiResult.recommendations,\n        ai_referenced_kb_ids: aiResult.referencedKbIds || [],\n        ai_model_metadata: aiResult.modelMetadata || {},\n        ai_generated_at: new Date().toISOString()\n      }\n    });\n    \n    return NextResponse.json({\n      ai_summary_de: aiResult.summary,\n      ai_recommendations_de: aiResult.recommendations,\n      ai_generated_at: new Date().toISOString()\n    });\n  } catch (error) {\n    console.error('AI recommendation error:', error);\n    return NextResponse.json({ error: 'Failed to generate AI recommendation' }, { status: 500 });\n  }\n}\n```\n\nExample implementation for the frontend AI recommendation component:\n```typescript\n// components/AIRecommendation.tsx\nimport { useState } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Spinner } from '@/components/ui/spinner';\n\nexport function AIRecommendation({ submissionId }) {\n  const [isLoading, setIsLoading] = useState(false);\n  const [error, setError] = useState(null);\n  const [recommendation, setRecommendation] = useState(null);\n  const [retryCount, setRetryCount] = useState(0);\n\n  const generateRecommendation = async () => {\n    setIsLoading(true);\n    setError(null);\n    \n    try {\n      const response = await fetch('/api/ai/recommendation', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ submissionId })\n      });\n      \n      if (!response.ok) {\n        const errorData = await response.json();\n        throw new Error(errorData.error || 'Failed to generate recommendation');\n      }\n      \n      const data = await response.json();\n      setRecommendation(data);\n    } catch (error) {\n      setError(error.message);\n      setRetryCount(prev => prev + 1);\n    } finally {\n      setIsLoading(false);\n    }\n  };\n\n  if (recommendation) {\n    return (\n      <div className=\"bg-white p-4 rounded-lg shadow-md\">\n        <h3 className=\"text-lg font-semibold mb-3\">KI-Empfehlung</h3>\n        <p className=\"mb-4\">{recommendation.ai_summary_de}</p>\n        \n        <h4 className=\"font-medium mb-2\">Empfehlungen:</h4>\n        <ul className=\"space-y-3\">\n          {recommendation.ai_recommendations_de.map((rec, index) => (\n            <li key={index} className=\"p-2 bg-gray-50 rounded\">\n              <div className=\"font-medium\">{rec.title}</div>\n              <div className=\"text-sm\">{rec.description}</div>\n              {rec.priority && (\n                <div className=\"mt-1\">\n                  <span className={`text-xs px-2 py-1 rounded ${rec.priority === 'high' ? 'bg-red-100 text-red-800' : rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>\n                    {rec.priority === 'high' ? 'Hohe Priorität' : rec.priority === 'medium' ? 'Mittlere Priorität' : 'Niedrige Priorität'}\n                  </span>\n                </div>\n              )}\n            </li>\n          ))}\n        </ul>\n        \n        <div className=\"text-xs text-gray-500 mt-4\">\n          Generiert am: {new Date(recommendation.ai_generated_at).toLocaleString('de-DE')}\n        </div>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"bg-white p-4 rounded-lg shadow-md text-center\">\n      {error && (\n        <div className=\"text-red-500 mb-3\">\n          Fehler: {error}\n        </div>\n      )}\n      \n      <Button\n        onClick={generateRecommendation}\n        disabled={isLoading}\n        className=\"w-full py-2\"\n      >\n        {isLoading ? (\n          <>\n            <Spinner className=\"mr-2\" />\n            KI-Empfehlung wird generiert...\n          </>\n        ) : retryCount > 0 ? (\n          'Erneut versuchen'\n        ) : (\n          'KI-Empfehlung erhalten'\n        )}\n      </Button>\n      \n      <p className=\"text-sm text-gray-600 mt-2\">\n        Basierend auf Ihren Antworten erstellt unsere KI personalisierte Empfehlungen.\n      </p>\n    </div>\n  );\n}\n```\n\nFor the n8n workflow, provide documentation on setting up:\n1. A webhook trigger for the recommendation endpoint\n2. MongoDB Atlas Vector Search integration for RAG\n3. LLM integration (e.g., OpenAI or open-source alternative)\n4. Knowledge base synchronization workflow",
         "testStrategy": "1. Test the AI recommendation API with various submission data\n2. Verify that recommendations are generated in German\n3. Test error handling and retry functionality\n4. Verify that AI outputs are correctly stored in the submission record\n5. Test the frontend CTA button and loading states\n6. Verify that the recommendation display renders correctly\n7. Test n8n webhook integration\n8. Verify that the RAG system retrieves relevant knowledge base items",
         "priority": "medium",
-        "dependencies": ["1", "5"],
+        "dependencies": [
+          "1",
+          "5"
+        ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "Implement legal pages and cookie consent",
         "description": "Create the legal pages and cookie consent banner using content managed in Payload CMS Globals.",
         "details": "Reference .cursor/rules/collections.md for Global patterns, .cursor/rules/access-control.md for global access control. Implement the legal pages and cookie consent with the following components:\n\n1. Set up Payload Globals for legal content:\n   - About/Impressum\n   - Privacy policy\n   - Terms and conditions\n   - Cookie banner content\n\n2. Create frontend pages that render the legal content from Globals\n\n3. Implement a cookie consent banner that:\n   - Shows on first visit\n   - Allows users to accept necessary cookies only or all cookies\n   - Stores consent in localStorage\n   - Links to privacy policy\n\nUse a lightweight cookie consent library like 'cookieconsent' or implement a custom solution.\n\nExample implementation for Payload Globals:\n```typescript\n// payload.config.ts\nimport { buildConfig } from 'payload/config';\n\nexport default buildConfig({\n  // ... other config\n  globals: [\n    {\n      slug: 'legal-content',\n      label: 'Legal Content',\n      access: {\n        read: () => true,\n        update: ({ req: { user } }) => {\n          return user?.role === 'admin' || user?.role === 'editor';\n        },\n      },\n      fields: [\n        {\n          name: 'impressum',\n          type: 'richText',\n          label: 'Impressum',\n          required: true,\n        },\n        {\n          name: 'privacyPolicy',\n          type: 'richText',\n          label: 'Datenschutzerklärung',\n          required: true,\n        },\n        {\n          name: 'termsAndConditions',\n          type: 'richText',\n          label: 'AGB',\n          required: true,\n        },\n      ],\n    },\n    {\n      slug: 'cookie-banner',\n      label: 'Cookie Banner',\n      access: {\n        read: () => true,\n        update: ({ req: { user } }) => {\n          return user?.role === 'admin' || user?.role === 'editor';\n        },\n      },\n      fields: [\n        {\n          name: 'title',\n          type: 'text',\n          label: 'Title',\n          required: true,\n        },\n        {\n          name: 'message',\n          type: 'textarea',\n          label: 'Message',\n          required: true,\n        },\n        {\n          name: 'acceptAllText',\n          type: 'text',\n          label: 'Accept All Button Text',\n          required: true,\n        },\n        {\n          name: 'acceptNecessaryText',\n          type: 'text',\n          label: 'Accept Necessary Button Text',\n          required: true,\n        },\n        {\n          name: 'privacyLinkText',\n          type: 'text',\n          label: 'Privacy Link Text',\n          required: true,\n        },\n      ],\n    },\n  ],\n});\n```\n\nExample implementation for legal pages:\n```typescript\n// app/legal/[page]/page.tsx\nimport { notFound } from 'next/navigation';\nimport payload from 'payload';\nimport { RichText } from '@/components/RichText';\n\nexport async function generateStaticParams() {\n  return [\n    { page: 'impressum' },\n    { page: 'privacy' },\n    { page: 'terms' },\n  ];\n}\n\nexport default async function LegalPage({ params }) {\n  const { page } = params;\n  \n  const legalContent = await payload.findGlobal({\n    slug: 'legal-content',\n  });\n  \n  let content;\n  let title;\n  \n  switch (page) {\n    case 'impressum':\n      content = legalContent.impressum;\n      title = 'Impressum';\n      break;\n    case 'privacy':\n      content = legalContent.privacyPolicy;\n      title = 'Datenschutzerklärung';\n      break;\n    case 'terms':\n      content = legalContent.termsAndConditions;\n      title = 'AGB';\n      break;\n    default:\n      return notFound();\n  }\n  \n  return (\n    <div className=\"container mx-auto px-4 py-8\">\n      <h1 className=\"text-2xl font-bold mb-6\">{title}</h1>\n      <div className=\"prose max-w-none\">\n        <RichText content={content} />\n      </div>\n    </div>\n  );\n}\n```\n\nExample implementation for cookie consent banner:\n```typescript\n// components/CookieBanner.tsx\nimport { useState, useEffect } from 'react';\nimport Link from 'next/link';\n\nexport function CookieBanner({ cookieBannerContent }) {\n  const [showBanner, setShowBanner] = useState(false);\n  \n  useEffect(() => {\n    // Check if consent is already stored\n    const consent = localStorage.getItem('cookieConsent');\n    if (!consent) {\n      setShowBanner(true);\n    }\n  }, []);\n  \n  const acceptAll = () => {\n    localStorage.setItem('cookieConsent', 'all');\n    setShowBanner(false);\n    // Initialize analytics if needed\n  };\n  \n  const acceptNecessary = () => {\n    localStorage.setItem('cookieConsent', 'necessary');\n    setShowBanner(false);\n  };\n  \n  if (!showBanner) return null;\n  \n  return (\n    <div className=\"fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg z-50\">\n      <div className=\"container mx-auto\">\n        <h3 className=\"font-bold mb-2\">{cookieBannerContent.title}</h3>\n        <p className=\"mb-4\">{cookieBannerContent.message}</p>\n        <div className=\"flex flex-wrap gap-2\">\n          <button\n            onClick={acceptAll}\n            className=\"bg-blue-500 text-white px-4 py-2 rounded\"\n          >\n            {cookieBannerContent.acceptAllText}\n          </button>\n          <button\n            onClick={acceptNecessary}\n            className=\"bg-gray-200 px-4 py-2 rounded\"\n          >\n            {cookieBannerContent.acceptNecessaryText}\n          </button>\n          <Link\n            href=\"/legal/privacy\"\n            className=\"text-blue-500 underline px-4 py-2\"\n          >\n            {cookieBannerContent.privacyLinkText}\n          </Link>\n        </div>\n      </div>\n    </div>\n  );\n}\n```",
         "testStrategy": "1. Verify that legal content is correctly stored and retrieved from Payload Globals\n2. Test rendering of rich text content in legal pages\n3. Verify that the cookie banner appears on first visit\n4. Test cookie consent storage in localStorage\n5. Verify that the cookie banner links to the privacy policy\n6. Test that the cookie banner does not appear after consent is given\n7. Verify that editors can update legal content through Payload\n8. Test the responsive design of legal pages and cookie banner",
         "priority": "medium",
-        "dependencies": ["1", "2"],
+        "dependencies": [
+          "1",
+          "2"
+        ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "Implement admin tools and data export",
         "description": "Create admin tools for managing the system, including CSV export functionality for submissions and basic dashboard features.",
         "details": "⚠️ CRITICAL: Reference .cursor/rules/security-critical.mdc for Local API access control. Reference .cursor/rules/endpoints.md for admin-only endpoints, .cursor/rules/components.md for admin dashboard components. Implement admin tools with the following components:\n\n1. Create a CSV export functionality for submissions:\n   - Accessible only to admins\n   - Includes all submission data in a structured format\n   - Allows filtering by date range and postal code\n\n2. Implement basic dashboard features (optional for MVP):\n   - Total submissions count\n   - Distribution by postal code\n   - Averages over time\n\n3. Add admin configuration options:\n   - Scoring weights management\n   - System configuration\n   - Integration settings\n\nExample implementation for CSV export API:\n```typescript\n// app/api/admin/export/route.ts\nimport { NextResponse } from 'next/server';\nimport payload from 'payload';\nimport { stringify } from 'csv-stringify/sync';\n\nexport async function GET(req) {\n  try {\n    // Check admin authorization\n    const user = req.user;\n    if (!user || user.role !== 'admin') {\n      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });\n    }\n    \n    // Parse query parameters\n    const url = new URL(req.url);\n    const startDate = url.searchParams.get('startDate');\n    const endDate = url.searchParams.get('endDate');\n    const postalCode = url.searchParams.get('postalCode');\n    \n    // Build query\n    const query = {};\n    \n    if (startDate && endDate) {\n      query['metadata.timestamp'] = {\n        greater_than_equal: new Date(startDate).toISOString(),\n        less_than_equal: new Date(endDate).toISOString()\n      };\n    }\n    \n    if (postalCode) {\n      query['location.postal_code'] = postalCode;\n    }\n    \n    // Fetch submissions\n    const submissions = await payload.find({\n      collection: 'submissions',\n      where: query,\n      limit: 10000, // Adjust based on expected volume\n    });\n    \n    // Transform data for CSV\n    const csvData = submissions.docs.map(submission => {\n      return {\n        id: submission.id,\n        timestamp: submission.metadata.timestamp,\n        postal_code: submission.location.postal_code,\n        city: submission.location.city,\n        problem_index: submission.problem_index,\n        // Flatten answers into columns\n        ...Object.entries(submission.answers).reduce((acc, [key, value]) => {\n          acc[`answer_${key}`] = typeof value === 'object' ? JSON.stringify(value) : value;\n          return acc;\n        }, {}),\n        free_text: submission.user_text,\n        ai_summary: submission.ai_summary_de,\n      };\n    });\n    \n    // Generate CSV\n    const csv = stringify(csvData, {\n      header: true,\n      columns: Object.keys(csvData[0] || {})\n    });\n    \n    // Return as downloadable file\n    return new NextResponse(csv, {\n      headers: {\n        'Content-Type': 'text/csv',\n        'Content-Disposition': `attachment; filename=\"submissions-export-${new Date().toISOString().split('T')[0]}.csv\"`\n      }\n    });\n  } catch (error) {\n    console.error('Export error:', error);\n    return NextResponse.json({ error: 'Failed to export data' }, { status: 500 });\n  }\n}\n```\n\nExample implementation for admin dashboard component:\n```typescript\n// components/admin/Dashboard.tsx\nimport { useState, useEffect } from 'react';\nimport { Card } from '@/components/ui/card';\nimport { Button } from '@/components/ui/button';\nimport { DateRangePicker } from '@/components/ui/date-range-picker';\nimport { BarChart, PieChart } from '@/components/ui/charts';\n\nexport function AdminDashboard() {\n  const [stats, setStats] = useState(null);\n  const [isLoading, setIsLoading] = useState(true);\n  const [dateRange, setDateRange] = useState({\n    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days\n    to: new Date()\n  });\n\n  useEffect(() => {\n    const fetchStats = async () => {\n      setIsLoading(true);\n      try {\n        const response = await fetch(`/api/admin/stats?startDate=${dateRange.from.toISOString()}&endDate=${dateRange.to.toISOString()}`);\n        if (!response.ok) throw new Error('Failed to fetch stats');\n        const data = await response.json();\n        setStats(data);\n      } catch (error) {\n        console.error('Error fetching stats:', error);\n      } finally {\n        setIsLoading(false);\n      }\n    };\n    \n    fetchStats();\n  }, [dateRange]);\n\n  const handleExport = () => {\n    window.open(`/api/admin/export?startDate=${dateRange.from.toISOString()}&endDate=${dateRange.to.toISOString()}`, '_blank');\n  };\n\n  if (isLoading) return <div className=\"p-4\">Loading dashboard data...</div>;\n\n  return (\n    <div className=\"p-4 space-y-6\">\n      <div className=\"flex justify-between items-center\">\n        <h2 className=\"text-2xl font-bold\">Admin Dashboard</h2>\n        <Button onClick={handleExport}>Export CSV</Button>\n      </div>\n      \n      <div className=\"mb-4\">\n        <DateRangePicker\n          value={dateRange}\n          onChange={setDateRange}\n        />\n      </div>\n      \n      <div className=\"grid grid-cols-1 md:grid-cols-3 gap-4\">\n        <Card className=\"p-4\">\n          <h3 className=\"font-medium mb-2\">Total Submissions</h3>\n          <p className=\"text-3xl font-bold\">{stats?.totalSubmissions || 0}</p>\n        </Card>\n        \n        <Card className=\"p-4\">\n          <h3 className=\"font-medium mb-2\">Average Problem Index</h3>\n          <p className=\"text-3xl font-bold\">{stats?.avgProblemIndex?.toFixed(1) || 0}</p>\n        </Card>\n        \n        <Card className=\"p-4\">\n          <h3 className=\"font-medium mb-2\">AI Recommendations Generated</h3>\n          <p className=\"text-3xl font-bold\">{stats?.aiRecommendationsCount || 0}</p>\n        </Card>\n      </div>\n      \n      <div className=\"grid grid-cols-1 md:grid-cols-2 gap-6 mt-6\">\n        <Card className=\"p-4\">\n          <h3 className=\"font-medium mb-4\">Submissions by Postal Code</h3>\n          <div className=\"h-80\">\n            {stats?.postalCodeDistribution && (\n              <BarChart\n                data={stats.postalCodeDistribution}\n                xKey=\"postalCode\"\n                yKey=\"count\"\n                xLabel=\"Postal Code\"\n                yLabel=\"Submissions\"\n              />\n            )}\n          </div>\n        </Card>\n        \n        <Card className=\"p-4\">\n          <h3 className=\"font-medium mb-4\">Problem Index Distribution</h3>\n          <div className=\"h-80\">\n            {stats?.problemIndexDistribution && (\n              <PieChart\n                data={stats.problemIndexDistribution}\n                nameKey=\"range\"\n                valueKey=\"count\"\n              />\n            )}\n          </div>\n        </Card>\n      </div>\n    </div>\n  );\n}\n```\n\nExample implementation for admin scoring weights management:\n```typescript\n// components/admin/ScoringWeights.tsx\nimport { useState, useEffect } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Card } from '@/components/ui/card';\n\nexport function ScoringWeights() {\n  const [questions, setQuestions] = useState([]);\n  const [isLoading, setIsLoading] = useState(true);\n  const [isSaving, setIsSaving] = useState(false);\n\n  useEffect(() => {\n    const fetchQuestions = async () => {\n      setIsLoading(true);\n      try {\n        const response = await fetch('/api/admin/questions');\n        if (!response.ok) throw new Error('Failed to fetch questions');\n        const data = await response.json();\n        setQuestions(data.docs);\n      } catch (error) {\n        console.error('Error fetching questions:', error);\n      } finally {\n        setIsLoading(false);\n      }\n    };\n    \n    fetchQuestions();\n  }, []);\n\n  const handleWeightChange = (questionId, weight) => {\n    setQuestions(questions.map(q => {\n      if (q.id === questionId) {\n        return { ...q, adminScoring: { ...q.adminScoring, weight: parseFloat(weight) } };\n      }\n      return q;\n    }));\n  };\n\n  const handleSave = async () => {\n    setIsSaving(true);\n    try {\n      // Update each question's scoring weights\n      await Promise.all(questions.map(question => {\n        return fetch(`/api/admin/questions/${question.id}`, {\n          method: 'PATCH',\n          headers: { 'Content-Type': 'application/json' },\n          body: JSON.stringify({\n            adminScoring: question.adminScoring\n          })\n        });\n      }));\n    } catch (error) {\n      console.error('Error saving weights:', error);\n    } finally {\n      setIsSaving(false);\n    }\n  };\n\n  if (isLoading) return <div className=\"p-4\">Loading questions...</div>;\n\n  return (\n    <div className=\"p-4 space-y-6\">\n      <div className=\"flex justify-between items-center\">\n        <h2 className=\"text-2xl font-bold\">Scoring Weights</h2>\n        <Button onClick={handleSave} disabled={isSaving}>\n          {isSaving ? 'Saving...' : 'Save Changes'}\n        </Button>\n      </div>\n      \n      <div className=\"space-y-4\">\n        {questions.map(question => (\n          <Card key={question.id} className=\"p-4\">\n            <div className=\"font-medium mb-2\">{question.title_de}</div>\n            <div className=\"text-sm text-gray-500 mb-4\">{question.key}</div>\n            \n            <div className=\"flex items-center\">\n              <label className=\"mr-2\">Weight:</label>\n              <Input\n                type=\"number\"\n                min=\"0\"\n                max=\"10\"\n                step=\"0.1\"\n                value={question.adminScoring?.weight || 1}\n                onChange={e => handleWeightChange(question.id, e.target.value)}\n                className=\"w-24\"\n              />\n            </div>\n            \n            {/* Additional scoring configuration based on question type */}\n          </Card>\n        ))}\n      </div>\n    </div>\n  );\n}\n```",
         "testStrategy": "1. Test CSV export with various filter combinations\n2. Verify that the exported data includes all required fields\n3. Test admin dashboard with different date ranges\n4. Verify that the statistics are calculated correctly\n5. Test scoring weights management UI\n6. Verify that weight changes are correctly saved and applied\n7. Test admin access control to ensure only admins can access these features\n8. Verify that the dashboard visualizations render correctly",
         "priority": "low",
-        "dependencies": ["1", "5"],
+        "dependencies": [
+          "1",
+          "5"
+        ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "Implement QR code entry and deployment configuration",
         "description": "Set up QR code generation, configure deployment environments, and implement final production optimizations.",
         "details": "Implement QR code entry and deployment configuration with the following components:\n\n1. Create a QR code generation system:\n   - Generate QR codes that link to the web app\n   - Support optional parameters (e.g., campaign ID, location hint)\n   - Provide downloadable QR codes for printing\n\n2. Configure deployment environments:\n   - Set up Fly.io for the main web app\n   - Configure Hostinger for n8n\n   - Set up MongoDB Atlas with appropriate indexes and scaling\n\n3. Implement production optimizations:\n   - Performance optimizations (code splitting, image optimization)\n   - Error monitoring and logging\n   - Security hardening (CSP, rate limiting)\n\nExample implementation for QR code generation:\n```typescript\n// app/api/qr/generate/route.ts\nimport { NextResponse } from 'next/server';\nimport QRCode from 'qrcode';\n\nexport async function GET(req) {\n  try {\n    const url = new URL(req.url);\n    const baseUrl = url.searchParams.get('baseUrl') || process.env.NEXT_PUBLIC_APP_URL;\n    const campaignId = url.searchParams.get('campaignId');\n    const locationHint = url.searchParams.get('locationHint');\n    \n    // Build target URL with optional parameters\n    let targetUrl = baseUrl;\n    const params = new URLSearchParams();\n    \n    if (campaignId) params.append('campaign', campaignId);\n    if (locationHint) params.append('location', locationHint);\n    \n    if (params.toString()) {\n      targetUrl += `?${params.toString()}`;\n    }\n    \n    // Generate QR code\n    const qrDataUrl = await QRCode.toDataURL(targetUrl, {\n      errorCorrectionLevel: 'H',\n      margin: 1,\n      width: 300,\n      color: {\n        dark: '#000000',\n        light: '#ffffff'\n      }\n    });\n    \n    // Return QR code as image or JSON\n    const format = url.searchParams.get('format') || 'json';\n    \n    if (format === 'image') {\n      const qrBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');\n      return new NextResponse(qrBuffer, {\n        headers: {\n          'Content-Type': 'image/png',\n          'Content-Disposition': 'attachment; filename=\"qrcode.png\"'\n        }\n      });\n    }\n    \n    return NextResponse.json({ qrDataUrl, targetUrl });\n  } catch (error) {\n    console.error('QR generation error:', error);\n    return NextResponse.json({ error: 'Failed to generate QR code' }, { status: 500 });\n  }\n}\n```\n\nExample implementation for QR code admin UI:\n```typescript\n// components/admin/QRCodeGenerator.tsx\nimport { useState } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Card } from '@/components/ui/card';\n\nexport function QRCodeGenerator() {\n  const [campaignId, setCampaignId] = useState('');\n  const [locationHint, setLocationHint] = useState('');\n  const [qrCode, setQrCode] = useState(null);\n  const [isLoading, setIsLoading] = useState(false);\n\n  const generateQR = async () => {\n    setIsLoading(true);\n    try {\n      const params = new URLSearchParams();\n      if (campaignId) params.append('campaignId', campaignId);\n      if (locationHint) params.append('locationHint', locationHint);\n      \n      const response = await fetch(`/api/qr/generate?${params.toString()}`);\n      if (!response.ok) throw new Error('Failed to generate QR code');\n      \n      const data = await response.json();\n      setQrCode(data);\n    } catch (error) {\n      console.error('Error generating QR code:', error);\n    } finally {\n      setIsLoading(false);\n    }\n  };\n\n  const downloadQR = () => {\n    window.open(`/api/qr/generate?campaignId=${encodeURIComponent(campaignId)}&locationHint=${encodeURIComponent(locationHint)}&format=image`, '_blank');\n  };\n\n  return (\n    <div className=\"p-4 space-y-6\">\n      <h2 className=\"text-2xl font-bold\">QR Code Generator</h2>\n      \n      <Card className=\"p-4\">\n        <div className=\"space-y-4\">\n          <div>\n            <label className=\"block mb-1\">Campaign ID (optional)</label>\n            <Input\n              value={campaignId}\n              onChange={e => setCampaignId(e.target.value)}\n              placeholder=\"summer-2023\"\n            />\n          </div>\n          \n          <div>\n            <label className=\"block mb-1\">Location Hint (optional)</label>\n            <Input\n              value={locationHint}\n              onChange={e => setLocationHint(e.target.value)}\n              placeholder=\"berlin-mitte\"\n            />\n          </div>\n          \n          <Button onClick={generateQR} disabled={isLoading}>\n            {isLoading ? 'Generating...' : 'Generate QR Code'}\n          </Button>\n        </div>\n      </Card>\n      \n      {qrCode && (\n        <Card className=\"p-4\">\n          <div className=\"text-center\">\n            <img src={qrCode.qrDataUrl} alt=\"QR Code\" className=\"mx-auto mb-4\" />\n            <p className=\"mb-4 text-sm break-all\">{qrCode.targetUrl}</p>\n            <Button onClick={downloadQR}>Download QR Code</Button>\n          </div>\n        </Card>\n      )}\n    </div>\n  );\n}\n```\n\nFor deployment configuration, create the following files:\n\n1. `fly.toml` for Fly.io deployment:\n```toml\napp = \"heat-reporting-app\"\nkill_signal = \"SIGINT\"\nkill_timeout = 5\nprimary_region = \"fra\"\n\n[env]\n  PORT = \"8080\"\n  NODE_ENV = \"production\"\n\n[http_service]\n  internal_port = 8080\n  force_https = true\n  auto_stop_machines = true\n  auto_start_machines = true\n  min_machines_running = 1\n  processes = [\"app\"]\n\n[[vm]]\n  cpu_kind = \"shared\"\n  cpus = 1\n  memory_mb = 1024\n```\n\n2. `Dockerfile` for containerization:\n```dockerfile\nFROM node:18-alpine AS base\n\n# Install dependencies only when needed\nFROM base AS deps\nWORKDIR /app\n\n# Install dependencies based on the preferred package manager\nCOPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./\nRUN \\\n  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \\\n  elif [ -f package-lock.json ]; then npm ci; \\\n  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \\\n  else echo \"Lockfile not found.\" && exit 1; \\\n  fi\n\n# Rebuild the source code only when needed\nFROM base AS builder\nWORKDIR /app\nCOPY --from=deps /app/node_modules ./node_modules\nCOPY . .\n\nENV NEXT_TELEMETRY_DISABLED 1\n\nRUN npm run build\n\n# Production image, copy all the files and run next\nFROM base AS runner\nWORKDIR /app\n\nENV NODE_ENV production\nENV NEXT_TELEMETRY_DISABLED 1\n\nRUN addgroup --system --gid 1001 nodejs\nRUN adduser --system --uid 1001 nextjs\n\nCOPY --from=builder /app/public ./public\n\n# Set the correct permission for prerender cache\nRUN mkdir .next\nRUN chown nextjs:nodejs .next\n\n# Automatically leverage output traces to reduce image size\nCOPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./\nCOPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static\n\nUSER nextjs\n\nEXPOSE 8080\n\nENV PORT 8080\n\nCMD [\"node\", \"server.js\"]\n```\n\n3. `next.config.js` with production optimizations:\n```javascript\n/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  output: 'standalone',\n  poweredByHeader: false,\n  reactStrictMode: true,\n  images: {\n    domains: ['your-domain.com'],\n    formats: ['image/avif', 'image/webp'],\n  },\n  experimental: {\n    serverComponentsExternalPackages: ['payload'],\n  },\n  headers: async () => [\n    {\n      source: '/(.*)',\n      headers: [\n        {\n          key: 'Content-Security-Policy',\n          value: \"default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.your-domain.com;\",\n        },\n        {\n          key: 'X-Frame-Options',\n          value: 'DENY',\n        },\n        {\n          key: 'X-Content-Type-Options',\n          value: 'nosniff',\n        },\n        {\n          key: 'Referrer-Policy',\n          value: 'origin-when-cross-origin',\n        },\n        {\n          key: 'Permissions-Policy',\n          value: 'camera=(), microphone=(), geolocation=(self)',\n        },\n      ],\n    },\n  ],\n};\n\nmodule.exports = nextConfig;\n```\n\n4. MongoDB Atlas configuration recommendations:\n- Create indexes on frequently queried fields (postal_code, timestamp)\n- Set up Vector Search for the knowledge base collection\n- Configure appropriate scaling and backup policies",
         "testStrategy": "1. Test QR code generation with various parameters\n2. Verify that QR codes correctly link to the web app\n3. Test deployment to Fly.io and Hostinger environments\n4. Verify that the app works correctly in production\n5. Test performance using Lighthouse and other tools\n6. Verify that security headers are correctly set\n7. Test error monitoring and logging\n8. Verify that the app works correctly when accessed via QR code on mobile devices",
         "priority": "medium",
-        "dependencies": ["2", "3", "4", "5", "6", "7", "8", "9"],
+        "dependencies": [
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ],
         "status": "pending",
         "subtasks": []
       }
@@ -480,7 +592,11 @@
       "lastModified": "2025-12-20T11:41:56.458Z",
       "taskCount": 10,
       "completedCount": 4,
-      "tags": ["master"]
+      "tags": [
+        "master"
+      ],
+      "created": "2025-12-28T14:51:20.749Z",
+      "description": "Tasks for master context"
     }
   }
 }
