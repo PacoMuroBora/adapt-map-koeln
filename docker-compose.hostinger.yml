@@ -15,6 +15,8 @@ services:
       - --certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}
       - --certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json
     restart: always
+    mem_limit: 200M
+    mem_reservation: 100M
     ports:
       - '80:80'
       - '443:443'
@@ -28,7 +30,16 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: always
-    command: ['redis-server', '--appendonly', 'yes']
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--maxmemory',
+        '512mb',
+        '--maxmemory-policy',
+        'allkeys-lru',
+      ]
     volumes:
       - redis_data:/data
     healthcheck:
@@ -37,7 +48,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    mem_limit: 512M
+    mem_limit: 600M
     mem_reservation: 256M
     networks:
       - app-network
@@ -74,13 +85,15 @@ services:
       - NODE_FUNCTION_ALLOW_EXTERNAL=mongodb
       # MongoDB connection for vector database
       - VECTOR_DATABASE_URI=${VECTOR_DATABASE_URI:-}
+      # Limit Node.js heap size to match container limit
+      - NODE_OPTIONS=--max-old-space-size=1400
     restart: always
     ports:
       - '127.0.0.1:5678:5678'
     volumes:
       - n8n_data:/home/node/.n8n
-    mem_limit: 512M
-    mem_reservation: 256M
+    mem_limit: 1.5G
+    mem_reservation: 512M
     networks:
       - app-network
 
@@ -88,8 +101,8 @@ services:
     image: adaptmap-app:latest
     container_name: adaptmap-app
     restart: always
-    mem_limit: 768M
-    mem_reservation: 384M
+    mem_limit: 2G
+    mem_reservation: 512M
     labels:
       - traefik.enable=true
       - traefik.http.routers.app.rule=Host(`${DOMAIN_NAME}`)
