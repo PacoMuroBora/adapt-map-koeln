@@ -68,9 +68,6 @@ services:
       - WEBHOOK_URL=https://n8n.${DOMAIN_NAME}/
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-Europe/Berlin}
       - N8N_PROXY_HOPS=1
-      - QUEUE_BULL_REDIS_HOST=redis
-      - QUEUE_BULL_REDIS_PORT=6379
-      - EXECUTIONS_MODE=queue
       # Enable MongoDB module for Code nodes (KB sync workflow)
       - NODE_FUNCTION_ALLOW_EXTERNAL=mongodb
       # MongoDB connection for vector database
@@ -82,9 +79,6 @@ services:
       - n8n_data:/home/node/.n8n
     mem_limit: 512M
     mem_reservation: 256M
-    depends_on:
-      redis:
-        condition: service_healthy
     networks:
       - app-network
 
