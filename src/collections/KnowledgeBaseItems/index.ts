@@ -3,6 +3,14 @@ import type { CollectionConfig } from 'payload'
 import { adminOrEditor } from '../../access/adminOrEditor'
 import { anyone } from '../../access/anyone'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
+import {
+  deleteKnowledgeBaseFromVectorDB,
+  syncKnowledgeBaseToVectorDB,
+} from './hooks/syncToVectorDB'
+import {
+  getKbItemWithApiKey,
+  updateKbItemMetadataWithApiKey,
+} from './endpoints/apiKeyAccess'
 
 export const KnowledgeBaseItems: CollectionConfig = {
   slug: 'knowledge-base-items',
@@ -154,5 +162,10 @@ export const KnowledgeBaseItems: CollectionConfig = {
       ],
     },
   ],
+  endpoints: [getKbItemWithApiKey, updateKbItemMetadataWithApiKey],
+  hooks: {
+    afterChange: [syncKnowledgeBaseToVectorDB],
+    afterDelete: [deleteKnowledgeBaseFromVectorDB],
+  },
   timestamps: true,
 }

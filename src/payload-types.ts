@@ -2247,6 +2247,19 @@ export interface SiteSetting {
     lng?: number | null;
     zoom?: number | null;
   };
+  /**
+   * n8n webhook URLs. In development, use full URL (https://n8n.adaptmap.de/...). In production, use path only for internal routing (/webhook/...).
+   */
+  n8nWebhooks: {
+    /**
+     * n8n webhook URL for AI recommendation generation. Dev: https://n8n.adaptmap.de/webhook/ai/recommendation | Prod: /webhook/ai/recommendation
+     */
+    aiRecommendation: string;
+    /**
+     * n8n webhook URL for knowledge base synchronization. Dev: https://n8n.adaptmap.de/webhook/kb/sync | Prod: /webhook/kb/sync
+     */
+    kbSync: string;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2415,6 +2428,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         lat?: T;
         lng?: T;
         zoom?: T;
+      };
+  n8nWebhooks?:
+    | T
+    | {
+        aiRecommendation?: T;
+        kbSync?: T;
       };
   updatedAt?: T;
   createdAt?: T;

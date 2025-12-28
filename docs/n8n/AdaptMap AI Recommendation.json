@@ -1,0 +1,235 @@
+{
+  "name": "AdaptMap AI Recommendation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai/recommendation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        16
+      ],
+      "id": "0a4fbd9c-9dcf-4f17-a116-40fd3a75cd8f",
+      "name": "Webhook",
+      "webhookId": "2fc04f4d-bee8-40c5-9245-c8b19320f84d"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1408,
+        16
+      ],
+      "id": "3fe30eec-f9fc-46be-9247-2accd4ae7f95",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=== ZIEL ===\nDu bist ein Experte für Hitzeanpassung, Stadtplanung und Klimaresilienz in deutschen Städten. Deine Aufgabe ist es, basierend auf einer Umfrage zur Hitzebelastung personalisierte, umsetzbare Empfehlungen auf Deutsch zu generieren.\n\n=== EINGABEDATEN ===\n\n**Submission ID:** {{ $json.submissionId }}\n**Problem Index:** {{ $json.problemIndex }}/100\n  - Interpretation: 0-30 = niedrige Belastung, 31-60 = mittlere Belastung, 61-80 = hohe Belastung, 81-100 = sehr hohe Belastung\n\n**Standort:**\n- Stadt: {{ $json.location.city || 'Unbekannt' }}\n- Postleitzahl: {{ $json.location.postal_code }}\n- Koordinaten: {{ $json.location.lat }}, {{ $json.location.lng }}\n\n**Umfrage-Antworten:**\n{{ JSON.stringify($json.answers, null, 2) }}\n  - Format: Schlüssel-Wert-Paare, wobei der Schlüssel die Frage-ID ist\n  - Werte können Strings, Zahlen, Arrays oder Objekte sein\n\n{{ $json.freeText ? `**Zusätzliche Informationen (Freitext):**\n${$json.freeText}` : '**Zusätzliche Informationen:** Keine' }}\n\n{{ $json.personalFields ? `**Persönliche Angaben (optional):**\n- Alter: ${$json.personalFields.age || 'Nicht angegeben'}\n- Geschlecht: ${$json.personalFields.gender || 'Nicht angegeben'}\n- Haushaltsgröße: ${$json.personalFields.householdSize || 'Nicht angegeben'}` : '**Persönliche Angaben:** Nicht angegeben' }}\n\n=== REASONING PROZESS ===\n\nFühre die folgende Analyse durch:\n\n1. **Situationsanalyse:**\n   - Interpretiere den Problem Index im Kontext der gegebenen Antworten\n   - Identifiziere die Hauptprobleme basierend auf den Umfrage-Antworten\n   - Berücksichtige den Standort (Stadt, Postleitzahl) für lokale Relevanz\n   - Analysiere den Freitext auf zusätzliche Kontextinformationen\n\n2. **Priorisierung:**\n   - Bestimme, welche Probleme am dringendsten sind (hoher Problem Index = hohe Priorität)\n   - Berücksichtige die persönlichen Umstände (Alter, Haushaltsgröße) für maßgeschneiderte Empfehlungen\n   - Identifiziere kurzfristige vs. langfristige Maßnahmen\n\n3. **Empfehlungsentwicklung:**\n   - Erstelle 3-8 konkrete, umsetzbare Empfehlungen\n   - Jede Empfehlung sollte:\n     * Spezifisch auf die gegebene Situation eingehen\n     * Praktisch und umsetzbar sein\n     * Einen klaren Titel und eine detaillierte Beschreibung haben\n     * Eine angemessene Priorität haben (high/medium/low)\n   - Berücksichtige:\n     * Sofortmaßnahmen (z.B. Trinkwasser, Schattenplätze)\n     * Mittelfristige Maßnahmen (z.B. Raumklima, Verhaltensanpassungen)\n     * Langfristige Maßnahmen (z.B. bauliche Maßnahmen, Stadtplanung)\n\n4. **Zusammenfassung:**\n   - Fasse die Situation des Nutzers in 2-3 prägnanten Sätzen zusammen\n   - Stelle den Problem Index in einen verständlichen Kontext\n   - Erwähne die wichtigsten identifizierten Probleme\n\n=== ERWARTETE AUSGABE ===\n\nDie Ausgabe muss exakt dem folgenden JSON-Schema entsprechen:\n\n```json\n{\n  \"summary\": \"string (2-3 Sätze auf Deutsch)\",\n  \"recommendations\": [\n    {\n      \"title\": \"string (kurz, prägnant, max. 60 Zeichen)\",\n      \"description\": \"string (detailliert, 2-3 Sätze, max. 300 Zeichen)\",\n      \"priority\": \"high\" | \"medium\" | \"low\",\n      \"kbItemId\": \"string | null (optional, wenn relevantes Knowledge Base Item existiert)\"\n    }\n  ],\n  \"referencedKbIds\": [\"string\"] (Array von Knowledge Base Item IDs, die als Referenz verwendet wurden)\n}\n```\n\n**WICHTIG:**\n- Alle Texte müssen auf Deutsch sein\n- Die Zusammenfassung sollte empathisch und verständlich sein\n- Empfehlungen müssen konkret und umsetzbar sein\n- Prioritäten sollten sinnvoll verteilt sein (nicht alle \"high\")\n- Mindestens 3, maximal 8 Empfehlungen\n- Wenn keine Knowledge Base Items referenziert werden, verwende leeres Array für referencedKbIds",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Du bist ein Experte für Hitzeanpassung und Klimaresilienz in deutschen Städten. Deine Aufgabe ist es, basierend auf Umfragedaten zur Hitzebelastung personalisierte, umsetzbare Empfehlungen zu generieren.\n\n**Deine Rolle:**\n- Experte für Stadtplanung und Hitzeanpassung\n- Berater für klimaresiliente Maßnahmen\n- Empathischer Kommunikator, der komplexe Informationen verständlich vermittelt\n\n**Deine Fähigkeiten:**\n- Analyse von Hitzebelastungsdaten\n- Entwicklung von maßgeschneiderten Lösungen\n- Priorisierung von Maßnahmen nach Dringlichkeit und Wirksamkeit\n- Berücksichtigung lokaler Gegebenheiten und persönlicher Umstände\n\n**Deine Ausgabe:**\n- Immer auf Deutsch\n- Präzise, praktisch und umsetzbar\n- Empathisch und verständlich\n- Strukturiert nach dem vorgegebenen Schema\n\n**Qualitätskriterien:**\n- Empfehlungen müssen konkret und umsetzbar sein\n- Prioritäten müssen sinnvoll verteilt sein\n- Zusammenfassung muss die Situation klar und verständlich beschreiben\n- Alle Informationen müssen auf den gegebenen Daten basieren"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        16
+      ],
+      "id": "08ffb5e1-05dd-40d8-aa62-a63b2c6e3a47",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract webhook body from n8n webhook format\nconst webhookData = $input.first().json;\n\n// n8n webhook sends data in body property\nconst body = webhookData.body || webhookData;\n\n// Validate required fields\nif (!body.submissionId) {\n  throw new Error('Missing submissionId in request body');\n}\n\nif (!body.answers) {\n  throw new Error('Missing answers in request body');\n}\n\nif (typeof body.problemIndex !== 'number') {\n  throw new Error('Missing or invalid problemIndex in request body');\n}\n\nif (!body.location || !body.location.lat || !body.location.lng || !body.location.postal_code) {\n  throw new Error('Missing or invalid location data in request body');\n}\n\n// Return formatted data for AI agent\nreturn {\n  json: {\n    submissionId: body.submissionId,\n    answers: body.answers,\n    problemIndex: body.problemIndex,\n    location: {\n      lat: body.location.lat,\n      lng: body.location.lng,\n      postal_code: body.location.postal_code,\n      city: body.location.city || null\n    },\n    freeText: body.freeText || body.user_text || null,\n    personalFields: body.personalFields || null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        16
+      ],
+      "id": "cf6fe4e1-4fb8-416c-a6e8-34e4bb6ff503",
+      "name": "Format Body"
+    },
+    {
+      "parameters": {
+        "schema": "={\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"AI Recommendation Output Schema\",\n  \"description\": \"Schema für die Ausgabe der KI-Empfehlungen basierend auf Umfragedaten zur Hitzebelastung\",\n  \"properties\": {\n    \"summary\": {\n      \"type\": \"string\",\n      \"title\": \"Zusammenfassung\",\n      \"description\": \"Eine prägnante, empathische Zusammenfassung der Situation des Nutzers auf Deutsch. Sollte 2-3 Sätze lang sein und den Problem Index in einen verständlichen Kontext setzen. Muss die wichtigsten identifizierten Probleme erwähnen.\",\n      \"minLength\": 50,\n      \"maxLength\": 500,\n      \"examples\": [\n        \"Basierend auf Ihren Angaben zeigt sich eine mittlere bis hohe Hitzebelastung (Problem Index: 65/100) in Köln. Die Hauptprobleme betreffen die thermische Behaglichkeit in Ihrer Wohnung und den eingeschränkten Zugang zu kühlen Räumen. Besonders die hohen Temperaturen während der Nachtstunden beeinträchtigen Ihre Lebensqualität.\"\n      ]\n    },\n    \"recommendations\": {\n      \"type\": \"array\",\n      \"title\": \"Empfehlungen\",\n      \"description\": \"Liste von konkreten, umsetzbaren Handlungsempfehlungen zur Reduzierung der Hitzebelastung. Sollte zwischen 3 und 8 Empfehlungen enthalten, die auf die spezifische Situation des Nutzers zugeschnitten sind.\",\n      \"minItems\": 3,\n      \"maxItems\": 8,\n      \"items\": {\n        \"type\": \"object\",\n        \"title\": \"Empfehlung\",\n        \"description\": \"Eine einzelne, konkrete Empfehlung zur Hitzeanpassung\",\n        \"properties\": {\n          \"title\": {\n            \"type\": \"string\",\n            \"title\": \"Titel\",\n            \"description\": \"Kurzer, prägnanter Titel der Empfehlung. Sollte max. 60 Zeichen lang sein und die Hauptmaßnahme klar benennen.\",\n            \"minLength\": 10,\n            \"maxLength\": 60,\n            \"examples\": [\n              \"Nachtlüftung optimieren\",\n              \"Verschattung für Südfenster installieren\",\n              \"Trinkwasserzufuhr sicherstellen\"\n            ]\n          },\n          \"description\": {\n            \"type\": \"string\",\n            \"title\": \"Beschreibung\",\n            \"description\": \"Detaillierte Beschreibung der Empfehlung auf Deutsch. Sollte 2-3 Sätze lang sein (max. 300 Zeichen) und konkrete, umsetzbare Schritte oder Maßnahmen beschreiben. Muss spezifisch auf die Situation des Nutzers eingehen.\",\n            \"minLength\": 50,\n            \"maxLength\": 300,\n            \"examples\": [\n              \"Öffnen Sie nachts alle Fenster, sobald die Außentemperatur unter der Innentemperatur liegt. Nutzen Sie Querlüftung durch gegenüberliegende Fenster für optimale Luftzirkulation. Schließen Sie die Fenster am frühen Morgen, bevor die Außentemperatur wieder steigt.\",\n              \"Installieren Sie außenliegende Verschattungselemente (z.B. Markisen, Rollläden) an Südfenstern. Diese reduzieren die direkte Sonneneinstrahlung um bis zu 80% und verhindern die Aufheizung der Räume.\"\n            ]\n          },\n          \"priority\": {\n            \"type\": \"string\",\n            \"title\": \"Priorität\",\n            \"description\": \"Die Dringlichkeit und Wichtigkeit dieser Empfehlung. 'high' = sofort umsetzbar und sehr wirksam, 'medium' = wichtig aber nicht dringend, 'low' = langfristige Maßnahme oder weniger kritisch.\",\n            \"enum\": [\"high\", \"medium\", \"low\"],\n            \"examples\": [\"high\", \"medium\", \"low\"]\n          },\n          \"kbItemId\": {\n            \"type\": [\"string\", \"null\"],\n            \"title\": \"Knowledge Base Item ID\",\n            \"description\": \"Optional: Die ID eines relevanten Knowledge Base Items, das zusätzliche Informationen zu dieser Empfehlung enthält. Nur angeben, wenn ein passendes Knowledge Base Item existiert.\",\n            \"default\": null,\n            \"examples\": [null, \"kb_12345\", \"kb_67890\"]\n          }\n        },\n        \"required\": [\"title\", \"description\", \"priority\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"referencedKbIds\": {\n      \"type\": \"array\",\n      \"title\": \"Referenzierte Knowledge Base Item IDs\",\n      \"description\": \"Liste von Knowledge Base Item IDs, die als Referenz oder Quelle für die generierten Empfehlungen verwendet wurden. Kann leer sein, wenn keine Knowledge Base Items verfügbar sind oder verwendet wurden.\",\n      \"items\": {\n        \"type\": \"string\",\n        \"description\": \"Eine Knowledge Base Item ID\",\n        \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n      },\n      \"default\": [],\n      \"uniqueItems\": true,\n      \"examples\": [[], [\"kb_12345\"], [\"kb_12345\", \"kb_67890\"]]\n    }\n  },\n  \"required\": [\"summary\", \"recommendations\"],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        288
+      ],
+      "id": "c7782574-3335-4854-aa44-cdb5cf6550fb",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        288
+      ],
+      "id": "7f4805cf-938e-4090-bd20-9f737eb7dd95",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "AmDv0XgXbiVbFCU1",
+          "name": "Soter Studio Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        480
+      ],
+      "id": "8efec388-0388-4426-a7ad-5de694d254a6",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "AmDv0XgXbiVbFCU1",
+          "name": "Soter Studio Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get AI output from previous node\nconst aiOutput = $input.first().json;\n\n// Get original input data for metadata\nconst originalInput = $('Format Body').first().json;\n\n// Extract model information\nconst modelInfo = {\n  model: 'gpt-4.1-mini',\n  temperature: 0.7,\n  timestamp: new Date().toISOString()\n};\n\n// Format response to match backend expectations\n// The AI output should already match the schema, but we ensure proper formatting\nconst response = {\n  summary: (aiOutput.summary || '').trim(),\n  recommendations: (aiOutput.recommendations || []).map(rec => ({\n    title: (rec.title || '').trim(),\n    description: (rec.description || '').trim(),\n    priority: rec.priority || 'medium',\n    kbItemId: rec.kbItemId || null\n  })).filter(rec => rec.title && rec.description), // Filter out invalid recommendations\n  referencedKbIds: (aiOutput.referencedKbIds || []).filter(id => id && typeof id === 'string'),\n  modelMetadata: {\n    ...modelInfo,\n    // Add token usage if available from AI response\n    tokensUsed: aiOutput.tokensUsed || null\n  }\n};\n\n// Validate response structure\nif (!response.summary || response.summary.length < 50) {\n  throw new Error(`AI did not generate a valid summary. Got: ${response.summary}`);\n}\n\nif (!response.recommendations || response.recommendations.length < 3) {\n  throw new Error(`AI did not generate enough recommendations. Got ${response.recommendations?.length || 0}, expected at least 3`);\n}\n\nif (response.recommendations.length > 8) {\n  // Truncate to 8 if more were generated\n  response.recommendations = response.recommendations.slice(0, 8);\n}\n\n// Validate each recommendation\nresponse.recommendations.forEach((rec, index) => {\n  if (!rec.title || rec.title.length < 10) {\n    throw new Error(`Recommendation ${index + 1} has invalid title: ${rec.title}`);\n  }\n  if (!rec.description || rec.description.length < 50) {\n    throw new Error(`Recommendation ${index + 1} has invalid description: ${rec.description}`);\n  }\n  if (!['high', 'medium', 'low'].includes(rec.priority)) {\n    throw new Error(`Recommendation ${index + 1} has invalid priority: ${rec.priority}`);\n  }\n});\n\nreturn response;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        16
+      ],
+      "id": "4a18640e-1237-44cc-817b-342fe6d36a4a",
+      "name": "Set body"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Format Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Set body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Body": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set body": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ad5a7c9e-ebec-4b93-a142-d63567b8d734",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b965f1b1f353f12e1f5972bc6fbf945dbfe06182ae524b0cb4a5b1c93ccbc132"
+  },
+  "id": "NRakx64zBkspKCsU",
+  "tags": []
+}

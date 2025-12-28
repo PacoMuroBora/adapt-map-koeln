@@ -1,0 +1,180 @@
+{
+  "description": "Sample outputs from the Format Body node for testing the n8n workflow",
+  "samples": [
+    {
+      "name": "Complete sample with all fields",
+      "description": "Full submission with all optional fields filled",
+      "data": {
+        "json": {
+          "submissionId": "67a1b2c3d4e5f6g7h8i9j0k1",
+          "answers": {
+            "heat_comfort": "very_hot",
+            "indoor_temperature_day": 32,
+            "indoor_temperature_night": 28,
+            "cooling_access": "none",
+            "shade_access": "limited",
+            "ventilation": "poor",
+            "health_impact": ["sleep_disturbance", "fatigue"],
+            "adaptation_measures": ["fans", "curtains"],
+            "building_type": "apartment",
+            "floor_level": 5,
+            "window_orientation": ["south", "west"]
+          },
+          "problemIndex": 72,
+          "location": {
+            "lat": 50.9375,
+            "lng": 6.9603,
+            "postal_code": "50667",
+            "city": "Köln"
+          },
+          "freeText": "Die Wohnung heizt sich besonders in den Nachmittagsstunden extrem auf. Nachts kühlt es kaum ab, was zu Schlafproblemen führt. Wir haben keine Klimaanlage und die Fenster sind nur nach Süden und Westen ausgerichtet.",
+          "personalFields": {
+            "age": 42,
+            "gender": "female",
+            "householdSize": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Minimal sample without optional fields",
+      "description": "Submission with only required fields, no freeText or personalFields",
+      "data": {
+        "json": {
+          "submissionId": "67b2c3d4e5f6g7h8i9j0k1l2",
+          "answers": {
+            "heat_comfort": "hot",
+            "indoor_temperature_day": 28,
+            "cooling_access": "fans_only",
+            "ventilation": "moderate"
+          },
+          "problemIndex": 45,
+          "location": {
+            "lat": 50.9414,
+            "lng": 6.9583,
+            "postal_code": "50668",
+            "city": "Köln"
+          },
+          "freeText": null,
+          "personalFields": null
+        }
+      }
+    },
+    {
+      "name": "High problem index sample",
+      "description": "Submission with very high problem index (85) indicating severe heat stress",
+      "data": {
+        "json": {
+          "submissionId": "67c3d4e5f6g7h8i9j0k1l2m3",
+          "answers": {
+            "heat_comfort": "extremely_hot",
+            "indoor_temperature_day": 38,
+            "indoor_temperature_night": 32,
+            "cooling_access": "none",
+            "shade_access": "none",
+            "ventilation": "very_poor",
+            "health_impact": ["sleep_disturbance", "fatigue", "headaches", "dizziness"],
+            "adaptation_measures": [],
+            "building_type": "apartment",
+            "floor_level": 8,
+            "window_orientation": ["south"],
+            "roof_access": false,
+            "outdoor_space": false
+          },
+          "problemIndex": 85,
+          "location": {
+            "lat": 50.9333,
+            "lng": 6.9500,
+            "postal_code": "50670",
+            "city": "Köln"
+          },
+          "freeText": "Die Situation ist unerträglich. Wir können nachts nicht schlafen und tagsüber ist es kaum auszuhalten. Besonders für unsere ältere Mutter ist es sehr belastend.",
+          "personalFields": {
+            "age": 35,
+            "gender": "male",
+            "householdSize": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "Low problem index sample",
+      "description": "Submission with low problem index (25) indicating minimal heat stress",
+      "data": {
+        "json": {
+          "submissionId": "67d4e5f6g7h8i9j0k1l2m3n4",
+          "answers": {
+            "heat_comfort": "comfortable",
+            "indoor_temperature_day": 24,
+            "indoor_temperature_night": 22,
+            "cooling_access": "air_conditioning",
+            "shade_access": "good",
+            "ventilation": "excellent",
+            "health_impact": [],
+            "adaptation_measures": ["air_conditioning", "blinds", "ventilation"],
+            "building_type": "house",
+            "floor_level": 1,
+            "window_orientation": ["north", "east"],
+            "outdoor_space": true
+          },
+          "problemIndex": 25,
+          "location": {
+            "lat": 50.9450,
+            "lng": 6.9650,
+            "postal_code": "50669",
+            "city": "Köln"
+          },
+          "freeText": "Wir haben gute Möglichkeiten zur Kühlung und sind zufrieden mit der Situation.",
+          "personalFields": {
+            "age": 28,
+            "gender": "diverse",
+            "householdSize": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "Sample with array answers",
+      "description": "Submission with multiple choice answers (arrays)",
+      "data": {
+        "json": {
+          "submissionId": "67e5f6g7h8i9j0k1l2m3n4o5",
+          "answers": {
+            "heat_comfort": "hot",
+            "indoor_temperature_day": 30,
+            "cooling_access": "fans_only",
+            "health_impact": ["sleep_disturbance", "fatigue", "irritability"],
+            "adaptation_measures": ["fans", "curtains", "ventilation"],
+            "affected_rooms": ["bedroom", "living_room", "kitchen"],
+            "time_of_day_most_affected": ["afternoon", "evening", "night"]
+          },
+          "problemIndex": 58,
+          "location": {
+            "lat": 50.9390,
+            "lng": 6.9620,
+            "postal_code": "50667",
+            "city": "Köln"
+          },
+          "freeText": "Besonders das Schlafzimmer ist nachts sehr warm. Wir haben Ventilatoren, aber die helfen nur bedingt.",
+          "personalFields": {
+            "age": 38,
+            "gender": "prefer_not_to_say",
+            "householdSize": 2
+          }
+        }
+      }
+    }
+  ],
+  "usage": {
+    "description": "How to use these samples in n8n",
+    "steps": [
+      "1. Copy the 'data' object from any sample",
+      "2. In n8n, go to the Format Body node",
+      "3. Use 'Execute Workflow' or 'Test workflow' feature",
+      "4. Set the input to match the sample data structure",
+      "5. The node should output the same structure (wrapped in 'json' property)"
+    ],
+    "note": "The Format Body node expects input from the Webhook node. In n8n's test mode, you can manually set the input to match the webhook's expected format."
+  }
+}
+

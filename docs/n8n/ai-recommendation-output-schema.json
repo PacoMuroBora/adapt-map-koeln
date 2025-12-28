@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://adaptmap.de/schemas/ai-recommendation-output.json",
+  "title": "AI Recommendation Output Schema",
+  "description": "Schema für die Ausgabe der KI-Empfehlungen basierend auf Umfragedaten zur Hitzebelastung",
+  "type": "object",
+  "required": ["summary", "recommendations"],
+  "properties": {
+    "summary": {
+      "type": "string",
+      "title": "Zusammenfassung",
+      "description": "Eine prägnante, empathische Zusammenfassung der Situation des Nutzers auf Deutsch. Sollte 2-3 Sätze lang sein und den Problem Index in einen verständlichen Kontext setzen.",
+      "minLength": 50,
+      "maxLength": 500,
+      "examples": [
+        "Basierend auf Ihren Angaben zeigt sich eine mittlere bis hohe Hitzebelastung (Problem Index: 65/100) in Köln. Die Hauptprobleme betreffen die thermische Behaglichkeit in Ihrer Wohnung und den eingeschränkten Zugang zu kühlen Räumen. Besonders die hohen Temperaturen während der Nachtstunden beeinträchtigen Ihre Lebensqualität."
+      ]
+    },
+    "recommendations": {
+      "type": "array",
+      "title": "Empfehlungen",
+      "description": "Liste von konkreten, umsetzbaren Handlungsempfehlungen zur Reduzierung der Hitzebelastung. Sollte zwischen 3 und 8 Empfehlungen enthalten, die auf die spezifische Situation des Nutzers zugeschnitten sind.",
+      "minItems": 3,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "title": "Empfehlung",
+        "description": "Eine einzelne, konkrete Empfehlung zur Hitzeanpassung",
+        "required": ["title", "description", "priority"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Titel",
+            "description": "Kurzer, prägnanter Titel der Empfehlung. Sollte max. 60 Zeichen lang sein und die Hauptmaßnahme klar benennen.",
+            "minLength": 10,
+            "maxLength": 60,
+            "examples": [
+              "Nachtlüftung optimieren",
+              "Verschattung für Südfenster installieren",
+              "Trinkwasserzufuhr sicherstellen"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "title": "Beschreibung",
+            "description": "Detaillierte Beschreibung der Empfehlung auf Deutsch. Sollte 2-3 Sätze lang sein (max. 300 Zeichen) und konkrete, umsetzbare Schritte oder Maßnahmen beschreiben.",
+            "minLength": 50,
+            "maxLength": 300,
+            "examples": [
+              "Öffnen Sie nachts alle Fenster, sobald die Außentemperatur unter der Innentemperatur liegt. Nutzen Sie Querlüftung durch gegenüberliegende Fenster für optimale Luftzirkulation. Schließen Sie die Fenster am frühen Morgen, bevor die Außentemperatur wieder steigt.",
+              "Installieren Sie außenliegende Verschattungselemente (z.B. Markisen, Rollläden) an Südfenstern. Diese reduzieren die direkte Sonneneinstrahlung um bis zu 80% und verhindern die Aufheizung der Räume."
+            ]
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priorität",
+            "description": "Die Dringlichkeit und Wichtigkeit dieser Empfehlung. 'high' = sofort umsetzbar und sehr wirksam, 'medium' = wichtig aber nicht dringend, 'low' = langfristige Maßnahme oder weniger kritisch.",
+            "enum": ["high", "medium", "low"],
+            "examples": ["high", "medium", "low"]
+          },
+          "kbItemId": {
+            "type": ["string", "null"],
+            "title": "Knowledge Base Item ID",
+            "description": "Optional: Die ID eines relevanten Knowledge Base Items, das zusätzliche Informationen zu dieser Empfehlung enthält. Nur angeben, wenn ein passendes Knowledge Base Item existiert.",
+            "default": null,
+            "examples": [null, "kb_12345", "kb_67890"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "referencedKbIds": {
+      "type": "array",
+      "title": "Referenzierte Knowledge Base Item IDs",
+      "description": "Liste von Knowledge Base Item IDs, die als Referenz oder Quelle für die generierten Empfehlungen verwendet wurden. Kann leer sein, wenn keine Knowledge Base Items verfügbar sind oder verwendet wurden.",
+      "items": {
+        "type": "string",
+        "description": "Eine Knowledge Base Item ID",
+        "pattern": "^[a-zA-Z0-9_-]+$"
+      },
+      "default": [],
+      "uniqueItems": true,
+      "examples": [[], ["kb_12345"], ["kb_12345", "kb_67890"]]
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "summary": "Basierend auf Ihren Angaben zeigt sich eine mittlere bis hohe Hitzebelastung (Problem Index: 65/100) in Köln. Die Hauptprobleme betreffen die thermische Behaglichkeit in Ihrer Wohnung und den eingeschränkten Zugang zu kühlen Räumen. Besonders die hohen Temperaturen während der Nachtstunden beeinträchtigen Ihre Lebensqualität.",
+      "recommendations": [
+        {
+          "title": "Nachtlüftung optimieren",
+          "description": "Öffnen Sie nachts alle Fenster, sobald die Außentemperatur unter der Innentemperatur liegt. Nutzen Sie Querlüftung durch gegenüberliegende Fenster für optimale Luftzirkulation. Schließen Sie die Fenster am frühen Morgen, bevor die Außentemperatur wieder steigt.",
+          "priority": "high",
+          "kbItemId": null
+        },
+        {
+          "title": "Verschattung für Südfenster installieren",
+          "description": "Installieren Sie außenliegende Verschattungselemente (z.B. Markisen, Rollläden) an Südfenstern. Diese reduzieren die direkte Sonneneinstrahlung um bis zu 80% und verhindern die Aufheizung der Räume.",
+          "priority": "medium",
+          "kbItemId": "kb_12345"
+        },
+        {
+          "title": "Trinkwasserzufuhr sicherstellen",
+          "description": "Stellen Sie sicher, dass Sie ausreichend Wasser zur Verfügung haben. Trinken Sie regelmäßig kleine Mengen, auch wenn Sie noch keinen Durst verspüren. Vermeiden Sie koffeinhaltige Getränke und Alkohol.",
+          "priority": "high",
+          "kbItemId": null
+        }
+      ],
+      "referencedKbIds": ["kb_12345"]
+    }
+  ]
+}
+

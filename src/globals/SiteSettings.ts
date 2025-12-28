@@ -64,5 +64,37 @@ export const SiteSettings: GlobalConfig = {
         },
       ],
     },
+    {
+      name: 'n8nWebhooks',
+      type: 'group',
+      admin: {
+        description:
+          'n8n webhook URLs. In development, use full URL (https://n8n.adaptmap.de/...). In production, use path only for internal routing (/webhook/...).',
+      },
+      fields: [
+        {
+          name: 'aiRecommendation',
+          type: 'text',
+          required: true,
+          admin: {
+            description:
+              'n8n webhook URL for AI recommendation generation. Dev: https://n8n.adaptmap.de/webhook/ai/recommendation | Prod: /webhook/ai/recommendation',
+            placeholder: '/webhook/ai/recommendation',
+          },
+          defaultValue: '/webhook/ai/recommendation',
+        },
+        {
+          name: 'kbSync',
+          type: 'text',
+          required: true,
+          admin: {
+            description:
+              'n8n webhook URL for knowledge base synchronization. Dev: https://n8n.adaptmap.de/webhook/kb/sync | Prod: /webhook/kb/sync',
+            placeholder: '/webhook/kb/sync',
+          },
+          defaultValue: '/webhook/kb/sync',
+        },
+      ],
+    },
   ],
 }
