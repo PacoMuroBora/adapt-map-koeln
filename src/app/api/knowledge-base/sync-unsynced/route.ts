@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import config from '@payload-config'
 import type { PayloadRequest } from 'payload'
-import { getN8nWebhookUrl } from '@/utilities/getN8nWebhookUrl'
+import { triggerKBSync } from '@/utilities/triggerKBSync'
 
 export async function POST(request: Request) {
   try {
@@ -65,7 +65,6 @@ export async function POST(request: Request) {
     }
     unsyncedItems.totalDocs = unsyncedItems.docs.length
 
-    const webhookUrl = await getN8nWebhookUrl('kbSync')
     const synced: string[] = []
     const skipped: string[] = []
     const errors: string[] = []
@@ -79,30 +78,14 @@ export async function POST(request: Request) {
           continue
         }
 
-        // Trigger sync via n8n webhook - wait for completion
-        const response = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'update', // Use 'update' to trigger sync check
-            kbItemId: String(item.id),
-            trigger: 'manual',
-          }),
+        // Trigger sync via shared utility - wait for completion
+        await triggerKBSync('update', String(item.id), payload, {
+          trigger: 'manual',
+          updateMetadata: true,
         })
 
-        // Wait for response body to ensure request is fully processed
-        const responseText = await response.text()
-
-        if (!response.ok) {
-          const errorMsg = `${item.id}: ${response.status} ${response.statusText}${responseText ? ` - ${responseText}` : ''}`
-          errors.push(errorMsg)
-          console.error(`KB sync failed for ${item.id}:`, errorMsg)
-        } else {
-          synced.push(String(item.id))
-          console.log(`KB sync successful for ${item.id}`)
-        }
+        synced.push(String(item.id))
+        console.log(`KB sync successful for ${item.id}`)
 
         // Small delay between requests to avoid overwhelming n8n
         await new Promise((resolve) => setTimeout(resolve, 100))

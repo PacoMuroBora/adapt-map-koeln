@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import config from '@payload-config'
 import type { PayloadRequest } from 'payload'
-import { getN8nWebhookUrl } from '@/utilities/getN8nWebhookUrl'
+import { triggerKBSync } from '@/utilities/triggerKBSync'
 
 export async function POST(request: Request) {
   try {
@@ -60,39 +60,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Knowledge Base item not found' }, { status: 404 })
     }
 
-    // Trigger sync via n8n webhook
-    const webhookUrl = await getN8nWebhookUrl('kbSync')
-
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'update', // Use 'update' to trigger sync check
-        kbItemId: String(kbItemId),
-        trigger: 'manual',
-      }),
+    // Trigger sync via n8n webhook using shared utility
+    const result = await triggerKBSync('update', String(kbItemId), payload, {
+      trigger: 'manual',
+      updateMetadata: true,
     })
 
-    // Wait for response body to ensure request is fully processed
-    const responseText = await response.text()
-
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          error: `Sync failed: ${response.status} ${response.statusText}`,
-          details: responseText,
-        },
-        { status: response.status },
-      )
-    }
-
     return NextResponse.json({
-      success: true,
-      message: 'Sync triggered successfully',
+      success: result.success,
+      message: result.message,
       kbItemId: String(kbItemId),
-      response: responseText,
+      embeddingMetadata: result.embeddingMetadata,
     })
   } catch (error) {
     console.error('Sync KB item error:', error)
