@@ -66,7 +66,7 @@ export const SyncKBItemButton: UIFieldClientComponent = () => {
       <Button
         onClick={handleSync}
         disabled={isLoading || !id}
-        buttonStyle={status === 'success' ? 'success' : status === 'error' ? 'danger' : 'primary'}
+        buttonStyle={status === 'success' ? 'primary' : status === 'error' ? 'error' : 'primary'}
       >
         {isLoading ? 'Syncing...' : 'Sync to Vector DB'}
       </Button>

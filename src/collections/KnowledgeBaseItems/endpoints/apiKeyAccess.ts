@@ -55,7 +55,8 @@ export const updateKbItemMetadataWithApiKey: Endpoint = {
     // Parse request body
     let body: any
     try {
-      body = await req.json()
+      // req extends Request which has json() method
+      body = await (req as Request).json()
     } catch (error) {
       throw new APIError('Invalid JSON in request body', 400)
     }
