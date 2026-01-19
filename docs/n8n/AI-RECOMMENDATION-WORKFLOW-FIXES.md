@@ -113,10 +113,14 @@ Respond to Webhook
 
 Extracts and formats:
 - `_id`: KB item ID
-- `title_de`: German title
-- `content_de`: German content
-- `category`: Item category
-- `tags`: Array of tags
+- `title`: From `companyOrTip.company` or `companyOrTip.tip`
+- `company`: Company name (if available)
+- `tip`: Tip content (if available)
+- `description`: Detailed description
+- `problemsSolved`: Problems solved by the solution
+- `applicableWhen`: When the solution is applicable
+- `categories`: Array of category values
+- `keywords`: Array of keyword values
 - `score`: Relevance score from vector search
 
 ### AI Agent Prompt

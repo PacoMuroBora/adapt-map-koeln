@@ -1060,47 +1060,156 @@ export interface Submission {
 export interface KnowledgeBaseItem {
   id: string;
   /**
-   * Title in German
+   * Enter either a company name or a tip. If company is left blank, this entry is treated as a generic universal tip.
    */
-  title_de: string;
+  companyOrTip?: {
+    /**
+     * The name of the company. Leave blank if this is a tip.
+     */
+    company?: string | null;
+    /**
+     * Generic universal tip content. Used when company is left blank.
+     */
+    tip?: string | null;
+  };
   /**
-   * Content in German (plain text for embeddings)
+   * Auto-generated title from company or tip
    */
-  content_de: string;
+  displayTitle?: string | null;
   /**
-   * Tags for categorization and search
+   * The main thematic focus of the solution
    */
-  tags?:
+  theme?:
+    | (
+        | 'cool-on-demand'
+        | 'hitze-in-stadt-gebaeuden'
+        | 'hitzeschutz-infrastruktur-cool-pavement'
+        | 'personelle-kuehlung'
+        | 'wearable-hitzeschutz-personen'
+        | 'air-quality'
+        | 'hitze'
+        | 'hitze-an-der-person'
+        | 'hitzeschutz-von-gebaeuden'
+      )
+    | null;
+  /**
+   * A detailed description of the technology or solution
+   */
+  description?: string | null;
+  /**
+   * The problems that are solved by the solution
+   */
+  problems_solved?: string | null;
+  /**
+   * The company's location
+   */
+  location?: string | null;
+  /**
+   * Contextual number from the source data
+   */
+  additional_context?: number | null;
+  /**
+   * The type of solution (e.g., "startup")
+   */
+  solution_type?: string | null;
+  /**
+   * Link to the company or product website
+   */
+  link?: string | null;
+  /**
+   * The categories the solution belongs to (e.g., "Hitzeschutz", "Gebaeude")
+   */
+  categories?:
+    | (
+        | 'abwaermenutzung'
+        | 'algen'
+        | 'alltag'
+        | 'arbeitsschutz'
+        | 'begruenung'
+        | 'beschichtung'
+        | 'beschichtung-farbe'
+        | 'blue-green-infrastructure'
+        | 'cool-pavement'
+        | 'dachbegruenung'
+        | 'daemmung-material'
+        | 'daten-forecast'
+        | 'effizienz'
+        | 'energie'
+        | 'energieeffizienz'
+        | 'entfeuchtung'
+        | 'ernaehrung'
+        | 'fenster-sonnenschutz'
+        | 'fruehwarnung'
+        | 'gebaeude'
+        | 'gebaeude-industrie'
+        | 'gebaeude-stadt'
+        | 'gesundheit'
+        | 'gruendach'
+        | 'gruene-fassade'
+        | 'gruenwand'
+        | 'haushalt'
+        | 'hitzeschutz'
+        | 'hydration'
+        | 'infrastruktur'
+        | 'innenraumklima'
+        | 'kaeltemittelarm'
+        | 'kleidung-textil'
+        | 'klimatisierung'
+        | 'koerper'
+        | 'komfort'
+        | 'kommune'
+        | 'kritische-infrastruktur'
+        | 'kuehlkleidung'
+        | 'kuehlung'
+        | 'kuehlung-ohne-strom'
+        | 'kuehlwesten-module'
+        | 'lueftung'
+        | 'luftqualitaet'
+        | 'mikroklima'
+        | 'monitoring'
+        | 'passive-kuehlung'
+        | 'person'
+        | 'regenwasser'
+        | 'resilienz'
+        | 'retrofit'
+        | 'risikogruppe'
+        | 'safety-software'
+        | 'schlaf'
+        | 'smart-glas-beschichtung'
+        | 'sofortmassnahme'
+        | 'solid-state'
+        | 'soziales'
+        | 'sport-arbeitsschutz'
+        | 'stadt'
+        | 'stadtplanung'
+        | 'technik'
+        | 'technik-light'
+        | 'uv-schutz'
+        | 'verdunstungskuehlung'
+        | 'verhalten'
+        | 'vorsorge'
+        | 'waermepumpe-hvac'
+        | 'wearable'
+        | 'wellness'
+      )[]
+    | null;
+  /**
+   * The primary use case for the solution
+   */
+  use_case?: string | null;
+  /**
+   * Conditions under which the solution is applicable
+   */
+  applicable_when?: string | null;
+  /**
+   * Relevant keywords for search and tagging
+   */
+  keywords?:
     | {
-        tag: string;
+        keyword: string;
         id?: string | null;
       }[]
     | null;
-  /**
-   * Category for grouping items
-   */
-  category?: ('health' | 'infrastructure' | 'comfort' | 'resources' | 'other') | null;
-  /**
-   * Contact information for this item
-   */
-  contact?: {
-    /**
-     * Contact person or organization name
-     */
-    name?: string | null;
-    /**
-     * Contact email
-     */
-    email?: string | null;
-    /**
-     * Contact phone number
-     */
-    phone?: string | null;
-    /**
-     * Contact website URL
-     */
-    website?: string | null;
-  };
   status: 'draft' | 'published' | 'archived';
   /**
    * Metadata for vector search embeddings
@@ -1839,22 +1948,28 @@ export interface SubmissionsSelect<T extends boolean = true> {
  * via the `definition` "knowledge-base-items_select".
  */
 export interface KnowledgeBaseItemsSelect<T extends boolean = true> {
-  title_de?: T;
-  content_de?: T;
-  tags?:
+  companyOrTip?:
     | T
     | {
-        tag?: T;
-        id?: T;
+        company?: T;
+        tip?: T;
       };
-  category?: T;
-  contact?:
+  displayTitle?: T;
+  theme?: T;
+  description?: T;
+  problems_solved?: T;
+  location?: T;
+  additional_context?: T;
+  solution_type?: T;
+  link?: T;
+  categories?: T;
+  use_case?: T;
+  applicable_when?: T;
+  keywords?:
     | T
     | {
-        name?: T;
-        email?: T;
-        phone?: T;
-        website?: T;
+        keyword?: T;
+        id?: T;
       };
   status?: T;
   embeddingMetadata?:

@@ -65,7 +65,7 @@ Webhook → Parse Input → Check Action
 
 #### Fetch KB Item from Payload
 - Fetches full KB item from Payload CMS API
-- Includes all fields: `title_de`, `content_de`, `tags`, `category`, `status`, `embeddingMetadata`
+- Includes all fields: `companyOrTip`, `description`, `problems_solved`, `applicable_when`, `categories`, `keywords`, `status`, `embeddingMetadata`
 
 #### Check Existing Vector (Parallel)
 - Queries MongoDB to see if vector already exists
@@ -85,7 +85,7 @@ Checks multiple conditions:
    - If item doesn't exist in MongoDB → `shouldSync: true`
 
 3. **Content Change Detection:**
-   - Creates content hash from: `title_de`, `content_de`, `tags`, `category`
+   - Creates content hash from: `companyOrTip` (company or tip), `description`, `problems_solved`, `applicable_when`, `categories`, `keywords`
    - Compares with existing vector's content hash
    - If different → `shouldSync: true`
 
@@ -112,9 +112,9 @@ Checks multiple conditions:
 - **If `true`:** Continues to embedding generation
 
 #### Prepare Text for Embedding
-- Extracts plain text from rich text content
-- Combines `title_de` + `content_de` for embedding
-- Extracts tags array
+- Extracts text from `companyOrTip` (company or tip) for title
+- Combines `description`, `problems_solved`, and `applicable_when` for content
+- Extracts `categories` and `keywords` arrays
 - Creates content hash for tracking
 - **Only runs if sync is needed**
 
@@ -128,7 +128,10 @@ Checks multiple conditions:
 - Combines all data into MongoDB document structure
 - Includes:
   - `_id`: Payload document ID
-  - `title_de`, `content_de`, `tags`, `category`, `status`
+  - `title`: From `companyOrTip.company` or `companyOrTip.tip`
+  - `contentText`: Combined `description`, `problems_solved`, `applicable_when`
+  - `categories`: Array of category values
+  - `keywords`: Array of keyword values
   - `contentHash`: For future change detection
   - `embedding`: Vector array
   - `embeddingModel`: Model used
@@ -227,11 +230,11 @@ Checks multiple conditions:
 ```json
 {
   "_id": "payload_document_id",
-  "title_de": "Nachtlüftung optimieren",
-  "content_de": "Plain text content...",
-  "contentHash": "title|content|tags|category",
-  "tags": ["ventilation", "cooling"],
-  "category": "comfort",
+  "title": "Company Name or Tip Text",
+  "contentText": "Combined description, problems_solved, applicable_when",
+  "contentHash": "title|content|categories|keywords",
+  "categories": ["hitzeschutz", "gebaeude"],
+  "keywords": ["ventilation", "cooling"],
   "status": "published",
   "embedding": [0.123, 0.456, ...],
   "embeddingModel": "text-embedding-3-small",

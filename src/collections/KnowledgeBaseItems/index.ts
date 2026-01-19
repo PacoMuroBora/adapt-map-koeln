@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, TextFieldSingleValidation } from 'payload'
 
 import { adminOrEditor } from '../../access/adminOrEditor'
 import { anyone } from '../../access/anyone'
@@ -8,12 +8,14 @@ import {
   syncKnowledgeBaseToVectorDB,
 } from './hooks/syncToVectorDB'
 import { getKbItemWithApiKey, updateKbItemMetadataWithApiKey } from './endpoints/apiKeyAccess'
+import { categoryOptions } from './categoryOptions'
+import { themeOptions } from './themeOptions'
 
 export const KnowledgeBaseItems: CollectionConfig = {
   slug: 'knowledge-base-items',
   admin: {
-    useAsTitle: 'title_de',
-    defaultColumns: ['title_de', 'category', 'status', 'createdAt'],
+    useAsTitle: 'displayTitle',
+    defaultColumns: ['displayTitle', 'theme', 'solution_type', 'status', 'createdAt'],
   },
   access: {
     read: authenticatedOrPublished,
@@ -23,85 +25,136 @@ export const KnowledgeBaseItems: CollectionConfig = {
   },
   fields: [
     {
-      name: 'title_de',
-      type: 'text',
-      required: true,
-      index: true,
-      admin: {
-        description: 'Title in German',
-      },
-    },
-    {
-      name: 'content_de',
-      type: 'textarea',
-      required: true,
-      admin: {
-        description: 'Content in German (plain text for embeddings)',
-      },
-    },
-    {
-      name: 'tags',
-      type: 'array',
-      admin: {
-        description: 'Tags for categorization and search',
-      },
-      fields: [
-        {
-          name: 'tag',
-          type: 'text',
-          required: true,
-        },
-      ],
-    },
-    {
-      name: 'category',
-      type: 'select',
-      options: [
-        { label: 'Health', value: 'health' },
-        { label: 'Infrastructure', value: 'infrastructure' },
-        { label: 'Comfort', value: 'comfort' },
-        { label: 'Resources', value: 'resources' },
-        { label: 'Other', value: 'other' },
-      ],
-      index: true,
-      admin: {
-        description: 'Category for grouping items',
-      },
-    },
-    {
-      name: 'contact',
+      name: 'companyOrTip',
       type: 'group',
       admin: {
-        description: 'Contact information for this item',
+        description:
+          'Enter either a company name or a tip. If company is left blank, this entry is treated as a generic universal tip.',
       },
       fields: [
         {
-          name: 'name',
+          name: 'company',
           type: 'text',
+          index: true,
           admin: {
-            description: 'Contact person or organization name',
+            description: 'The name of the company. Leave blank if this is a tip.',
           },
         },
         {
-          name: 'email',
-          type: 'email',
+          name: 'tip',
+          type: 'textarea',
           admin: {
-            description: 'Contact email',
+            description: 'Generic universal tip content. Used when company is left blank.',
           },
         },
+      ],
+    },
+    {
+      name: 'displayTitle',
+      type: 'text',
+      admin: {
+        hidden: true,
+        readOnly: true,
+        description: 'Auto-generated title from company or tip',
+      },
+    },
+    {
+      name: 'theme',
+      type: 'select',
+      options: themeOptions,
+      index: true,
+      admin: {
+        description: 'The main thematic focus of the solution',
+      },
+    },
+    {
+      name: 'description',
+      type: 'textarea',
+      admin: {
+        description: 'A detailed description of the technology or solution',
+      },
+    },
+    {
+      name: 'problems_solved',
+      type: 'textarea',
+      admin: {
+        description: 'The problems that are solved by the solution',
+      },
+    },
+    {
+      name: 'location',
+      type: 'text',
+      admin: {
+        description: "The company's location",
+      },
+    },
+    {
+      name: 'additional_context',
+      type: 'number',
+      admin: {
+        description: 'Contextual number from the source data',
+      },
+    },
+    {
+      name: 'solution_type',
+      type: 'text',
+      index: true,
+      admin: {
+        description: 'The type of solution (e.g., "startup")',
+      },
+    },
+    {
+      name: 'link',
+      type: 'text',
+      admin: {
+        description: 'Link to the company or product website',
+      },
+      validate: ((value) => {
+        if (value && typeof value === 'string' && value.length > 0) {
+          try {
+            new URL(value)
+            return true
+          } catch {
+            return 'Please enter a valid URL'
+          }
+        }
+        return true
+      }) as TextFieldSingleValidation,
+    },
+    {
+      name: 'categories',
+      type: 'select',
+      hasMany: true,
+      options: categoryOptions,
+      admin: {
+        description: 'The categories the solution belongs to (e.g., "Hitzeschutz", "Gebaeude")',
+      },
+    },
+    {
+      name: 'use_case',
+      type: 'text',
+      admin: {
+        description: 'The primary use case for the solution',
+      },
+    },
+    {
+      name: 'applicable_when',
+      type: 'textarea',
+      admin: {
+        description: 'Conditions under which the solution is applicable',
+      },
+    },
+    {
+      name: 'keywords',
+      type: 'array',
+      admin: {
+        description: 'Relevant keywords for search and tagging',
+      },
+      fields: [
         {
-          name: 'phone',
+          name: 'keyword',
           type: 'text',
-          admin: {
-            description: 'Contact phone number',
-          },
-        },
-        {
-          name: 'website',
-          type: 'text',
-          admin: {
-            description: 'Contact website URL',
-          },
+          required: true,
         },
       ],
     },
@@ -161,6 +214,23 @@ export const KnowledgeBaseItems: CollectionConfig = {
   ],
   endpoints: [getKbItemWithApiKey, updateKbItemMetadataWithApiKey],
   hooks: {
+    beforeChange: [
+      ({ data }) => {
+        // Auto-populate displayTitle from company or tip
+        if (data?.companyOrTip?.company) {
+          data.displayTitle = data.companyOrTip.company
+        } else if (data?.companyOrTip?.tip) {
+          const tipText =
+            typeof data.companyOrTip.tip === 'string'
+              ? data.companyOrTip.tip
+              : String(data.companyOrTip.tip)
+          data.displayTitle = tipText.length > 50 ? tipText.substring(0, 50) + '...' : tipText
+        } else {
+          data.displayTitle = 'Untitled'
+        }
+        return data
+      },
+    ],
     afterChange: [syncKnowledgeBaseToVectorDB],
     afterDelete: [deleteKnowledgeBaseFromVectorDB],
   },

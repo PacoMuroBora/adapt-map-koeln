@@ -12,7 +12,7 @@ The Knowledge Base (KB) sync system automatically synchronizes KB items from Pay
 1. A KB item is **created** and status is `published`
 2. A KB item is **updated** and:
    - Status changes to `published`
-   - Content actually changed (title, content, tags, or category)
+   - Content actually changed (company/tip, description, problems_solved, applicable_when, categories, or keywords)
 3. A KB item is **deleted** (removes from vector DB)
 4. A KB item status changes from `published` to `draft`/`archived` (removes from vector DB)
 
@@ -33,10 +33,12 @@ The hook checks if content actually changed before triggering sync:
 ```typescript
 const contentChanged =
   !previousDoc ||
-  doc.title_de !== previousDoc.title_de ||
-  JSON.stringify(doc.content_de) !== JSON.stringify(previousDoc.content_de) ||
-  JSON.stringify(doc.tags) !== JSON.stringify(previousDoc.tags) ||
-  doc.category !== previousDoc.category
+  doc.companyOrTip?.company !== previousDoc.companyOrTip?.company ||
+  doc.companyOrTip?.tip !== previousDoc.companyOrTip?.tip ||
+  doc.description !== previousDoc.description ||
+  doc.problems_solved !== previousDoc.problems_solved ||
+  JSON.stringify(doc.categories) !== JSON.stringify(previousDoc.categories) ||
+  JSON.stringify(doc.keywords) !== JSON.stringify(previousDoc.keywords)
 ```
 
 **Result:** Only syncs when content actually changes, not on every save.

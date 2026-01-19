@@ -64,10 +64,10 @@ Documents in `knowledge_base_vectors` should have this structure:
 ```json
 {
   "_id": "payload_document_id_here",
-  "title_de": "Nachtlüftung optimieren",
-  "content_de": "Rich text content here...",
-  "tags": ["ventilation", "cooling", "night"],
-  "category": "comfort",
+  "title": "Company Name or Tip Text",
+  "contentText": "Combined description, problems_solved, applicable_when",
+  "categories": ["hitzeschutz", "gebaeude"],
+  "keywords": ["ventilation", "cooling", "night"],
   "embedding": [0.123, 0.456, ...], // Array of 1536 numbers
   "lastSyncedAt": "2024-01-01T00:00:00.000Z",
   "status": "published"
@@ -103,10 +103,10 @@ Once set up, you can test Vector Search queries in MongoDB Atlas:
   },
   {
     $project: {
-      title_de: 1,
-      content_de: 1,
-      tags: 1,
-      category: 1,
+      title: 1,
+      contentText: 1,
+      categories: 1,
+      keywords: 1,
       score: { $meta: "vectorSearchScore" }
     }
   }

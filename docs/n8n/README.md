@@ -130,13 +130,13 @@ The Next.js app uses `getN8nWebhookUrl()` utility function which:
 
 1. **Fetch Knowledge Base Items** - Query Payload CMS API for all published KB items
    - Filter: `status: 'published'`
-   - Include: `title_de`, `content_de`, `tags`, `category`
+   - Include: `companyOrTip`, `description`, `problems_solved`, `applicable_when`, `categories`, `keywords`
 2. **Generate Embeddings** - Create vector embeddings for each item
    - Use the same embedding model as the search step
-   - Combine `title_de` + `content_de` for embedding
+   - Combine title (from `companyOrTip.company` or `companyOrTip.tip`) + `description` + `problems_solved` + `applicable_when` for embedding
 3. **Update MongoDB Atlas** - Store/update embeddings in Vector Search collection
    - Upsert based on Payload document ID
-   - Store metadata (tags, category, status)
+   - Store metadata (categories, keywords, status)
 
 ### Input (Webhook)
 
@@ -159,9 +159,10 @@ The Next.js app uses `getN8nWebhookUrl()` utility function which:
    ```json
    {
      "_id": "payload_document_id",
-     "title_de": "...",
-     "content_de": "...",
-     "tags": ["tag1", "tag2"],
+     "title": "...",
+     "contentText": "...",
+     "categories": ["category1", "category2"],
+     "keywords": ["keyword1", "keyword2"],
      "category": "category_name",
      "embedding": [0.123, 0.456, ...],
      "lastSyncedAt": "2024-01-01T00:00:00Z"

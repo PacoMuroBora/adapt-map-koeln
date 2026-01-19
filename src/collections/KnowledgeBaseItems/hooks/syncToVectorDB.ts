@@ -31,10 +31,12 @@ export const syncKnowledgeBaseToVectorDB: CollectionAfterChangeHook<KnowledgeBas
   // Check if content actually changed (to avoid unnecessary syncs)
   const contentChanged =
     !previousDoc ||
-    doc.title_de !== previousDoc.title_de ||
-    doc.content_de !== previousDoc.content_de ||
-    JSON.stringify(doc.tags) !== JSON.stringify(previousDoc.tags) ||
-    doc.category !== previousDoc.category
+    doc.companyOrTip?.company !== previousDoc.companyOrTip?.company ||
+    doc.companyOrTip?.tip !== previousDoc.companyOrTip?.tip ||
+    doc.description !== previousDoc.description ||
+    doc.problems_solved !== previousDoc.problems_solved ||
+    JSON.stringify(doc.categories) !== JSON.stringify(previousDoc.categories) ||
+    JSON.stringify(doc.keywords) !== JSON.stringify(previousDoc.keywords)
 
   // Only sync if content changed or it's a new item
   if (contentChanged || operation === 'create') {

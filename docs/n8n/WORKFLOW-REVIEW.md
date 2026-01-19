@@ -416,7 +416,8 @@ return deleteVector();
 ```json
 {
   "_id": "...",
-  "title_de": "...",
+  "title": "...",
+  "contentText": "...",
   "embedding": [...],
   // ... entire document
 }
