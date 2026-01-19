@@ -10,10 +10,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1392,
-        64
+        -512,
+        224
       ],
-      "id": "03bd559f-5bd7-4be0-9c9e-7ced8ffe5c2e",
+      "id": "ebc92c08-6b46-4381-a69a-91e0ab9f0a7d",
       "name": "Webhook",
       "webhookId": "kb-sync-webhook-id"
     },
@@ -24,23 +24,23 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2064,
-        128
+        2944,
+        288
       ],
-      "id": "310871b2-8980-4faf-8906-45e686ef15be",
+      "id": "b9955fd5-177b-47df-b857-c5c3b49f9042",
       "name": "Respond to Webhook"
     },
     {
       "parameters": {
-        "jsCode": "// Parse and validate webhook input\nconst webhookData = $input.first().json;\nconst body = webhookData.body || webhookData;\n\n// Validate input\nif (!body.action || !['create', 'update', 'delete'].includes(body.action)) {\n  throw new Error('Invalid action. Must be create, update, or delete');\n}\n\nif (!body.kbItemId) {\n  throw new Error('Missing kbItemId');\n}\n\n// Return formatted data\nreturn {\n  json: {\n    action: body.action,\n    kbItemId: body.kbItemId,\n    trigger: body.trigger || 'webhook'\n  }\n};"
+        "jsCode": "// Parse and validate webhook input\n// n8n webhook sends data in body property (see pinData example)\nconst webhookData = $input.first().json;\n\n// Extract body - n8n webhook wraps POST body in 'body' property\nconst body = webhookData.body || webhookData;\n\n// Validate input\nif (!body.action || !['create', 'update', 'delete'].includes(body.action)) {\n  throw new Error('Invalid action. Must be create, update, or delete');\n}\n\nif (!body.kbItemId) {\n  throw new Error('Missing kbItemId');\n}\n\n// Return formatted data\nreturn {\n  json: {\n    action: body.action,\n    kbItemId: body.kbItemId,\n    trigger: body.trigger || 'webhook'\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1152,
-        64
+        -272,
+        224
       ],
-      "id": "da7ba970-6b02-4e8d-a964-9716d9bcfdf6",
+      "id": "195ce252-aae3-4363-b4b7-449b4a1c886b",
       "name": "Parse Input"
     },
     {
@@ -70,10 +70,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -752,
-        64
+        128,
+        224
       ],
-      "id": "ee5c095e-865d-4330-a2ac-61136c90a76c",
+      "id": "18b7757c-e0d4-4e48-9436-2f41ed9f3901",
       "name": "Check Action"
     },
     {
@@ -86,29 +86,29 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -480,
-        112
+        400,
+        272
       ],
-      "id": "68f8fc4d-7c8c-4b73-8a02-8bd41e728f79",
+      "id": "9a798178-31ef-4c7a-b481-3b83cc05976f",
       "name": "Fetch KB Item from Payload",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "TwK5iljrSjFmglvT",
+          "id": "JykOcgXjIHhsyyC1",
           "name": "Payload API key"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Check if item should be synced\nconst kbItem = $input.first().json;\n\n// Only sync published items\nif (kbItem.status !== 'published') {\n  return {\n    json: {\n      shouldSync: false,\n      reason: 'Item is not published',\n      kbItem: kbItem\n    }\n  };\n}\n\n// Check if item exists in MongoDB\nconst existingVector = $('Check Existing Vector').first()?.json || null;\n\nif (!existingVector) {\n  // Item doesn't exist - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Item not found in vector DB',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item exists - check if content changed\n// Create content hash for comparison\nfunction createContentHash(item) {\n  // Extract company or tip for title\n  const title = item.companyOrTip?.company || item.companyOrTip?.tip || '';\n  // Combine all text content fields\n  const description = item.description || '';\n  const problemsSolved = item.problems_solved || '';\n  const applicableWhen = item.applicable_when || '';\n  const content = `${description}|${problemsSolved}|${applicableWhen}`;\n  // Extract categories and keywords\n  const categories = JSON.stringify((item.categories || []).sort());\n  const keywords = JSON.stringify((item.keywords || []).map(k => k.keyword || k).sort());\n  return `${title}|${content}|${categories}|${keywords}`;\n}\n\nconst currentHash = createContentHash(kbItem);\nconst existingHash = createContentHash(existingVector);\n\nif (currentHash !== existingHash) {\n  // Content changed - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Content changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Check if embedding model changed\nconst currentModel = $env.EMBEDDING_MODEL || 'text-embedding-3-small';\nif (existingVector.embeddingModel && existingVector.embeddingModel !== currentModel) {\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Embedding model changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item is up to date - skip sync\nreturn {\n  json: {\n    shouldSync: false,\n    reason: 'Item already synced and up to date',\n    kbItem: kbItem,\n    existingVector: existingVector\n  }\n};"
+        "jsCode": "// Check if item should be synced\n// Get data from Merge node which combines KB Item and Existing Vector\nconst mergeData = $input.all();\n\n// Find KB item data (from Fetch KB Item from Payload)\nconst kbItem = mergeData.find(item => item.json.id || item.json.companyOrTip)?.json || mergeData[0]?.json;\n\n// Find existing vector data (from Check Existing Vector)\nconst existingVector = mergeData.find(item => item.json._id && item.json.embedding)?.json || mergeData.find(item => item.json === null)?.json || null;\n\n// Only sync published items\nif (kbItem.status !== 'published') {\n  return {\n    json: {\n      shouldSync: false,\n      reason: 'Item is not published',\n      kbItem: kbItem\n    }\n  };\n}\n\nif (!existingVector) {\n  // Item doesn't exist - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Item not found in vector DB',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item exists - check if content changed\n// Create content hash for comparison\nfunction createContentHash(item) {\n  // Extract company or tip for title\n  const title = item.companyOrTip?.company || item.companyOrTip?.tip || '';\n  // Combine all text content fields\n  const description = item.description || '';\n  const problemsSolved = item.problems_solved || '';\n  const applicableWhen = item.applicable_when || '';\n  const content = `${description}|${problemsSolved}|${applicableWhen}`;\n  // Extract categories and keywords\n  const categories = JSON.stringify((item.categories || []).sort());\n  const keywords = JSON.stringify((item.keywords || []).map(k => k.keyword || k).sort());\n  return `${title}|${content}|${categories}|${keywords}`;\n}\n\nconst currentHash = createContentHash(kbItem);\nconst existingHash = createContentHash(existingVector);\n\nif (currentHash !== existingHash) {\n  // Content changed - needs sync\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Content changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Check if embedding model changed\nconst currentModel = 'text-embedding-3-small';\nif (existingVector.embeddingModel && existingVector.embeddingModel !== currentModel) {\n  return {\n    json: {\n      shouldSync: true,\n      reason: 'Embedding model changed',\n      kbItem: kbItem,\n      needsEmbedding: true\n    }\n  };\n}\n\n// Item is up to date - skip sync\nreturn {\n  json: {\n    shouldSync: false,\n    reason: 'Item already synced and up to date',\n    kbItem: kbItem,\n    existingVector: existingVector\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
-        112
+        656,
+        272
       ],
-      "id": "88248223-f333-4056-88bc-3033c6da674d",
+      "id": "8bcaba3b-cfab-498a-9dc0-ea6325aa62e1",
       "name": "Check If Sync Needed"
     },
     {
@@ -138,23 +138,23 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        384,
-        112
+        1264,
+        272
       ],
-      "id": "d5668418-6e12-464f-ad9f-8cb5eeae4a21",
+      "id": "4c3458f1-3fcc-4c3d-9415-ad4f97555def",
       "name": "Should Sync?"
     },
     {
       "parameters": {
-        "jsCode": "// Extract text content for embedding\nconst checkResult = $('Check If Sync Needed').first().json;\nconst kbItem = checkResult.kbItem;\n\n// Extract company or tip for title\nconst title = kbItem.companyOrTip?.company || kbItem.companyOrTip?.tip || '';\n\n// Combine all text content fields\nconst description = kbItem.description || '';\nconst problemsSolved = kbItem.problems_solved || '';\nconst applicableWhen = kbItem.applicable_when || '';\nconst contentText = `${description}\\n\\n${problemsSolved}\\n\\n${applicableWhen}`.trim();\n\nconst combinedText = `${title}\\n\\n${contentText}`.trim();\n\n// Extract categories and keywords\nconst categories = (kbItem.categories || []).filter(Boolean);\nconst keywords = (kbItem.keywords || []).map(k => k.keyword || k).filter(Boolean);\n\n// Create content hash for tracking\nfunction createContentHash(item) {\n  const title = item.companyOrTip?.company || item.companyOrTip?.tip || '';\n  const description = item.description || '';\n  const problemsSolved = item.problems_solved || '';\n  const applicableWhen = item.applicable_when || '';\n  const content = `${description}|${problemsSolved}|${applicableWhen}`;\n  const categories = JSON.stringify((item.categories || []).sort());\n  const keywords = JSON.stringify((item.keywords || []).map(k => k.keyword || k).sort());\n  return `${title}|${content}|${categories}|${keywords}`;\n}\n\nreturn {\n  json: {\n    kbItemId: kbItem.id,\n    title: title,\n    contentText: contentText,\n    combinedText: combinedText,\n    categories: categories,\n    keywords: keywords,\n    contentHash: createContentHash(kbItem)\n  }\n};"
+        "jsCode": "// Extract text content for embedding\n// Get KB item from Check If Sync Needed node\nconst checkResult = $('Check If Sync Needed').first().json;\nconst kbItem = checkResult.kbItem;\n\nif (!kbItem || !kbItem.id) {\n  throw new Error('KB item not found in check result');\n}\n\n// Extract company or tip for title\nconst title = kbItem.companyOrTip?.company || kbItem.companyOrTip?.tip || '';\n\n// Combine all text content fields for embedding\nconst description = kbItem.description || '';\nconst problemsSolved = kbItem.problems_solved || '';\nconst applicableWhen = kbItem.applicable_when || '';\nconst additionalContext = kbItem.additional_context || '';\nconst useCase = kbItem.use_case || '';\nconst theme = kbItem.theme || '';\nconst solutionType = kbItem.solution_type || '';\nconst location = kbItem.location || '';\n\n// Build content text with all relevant fields\nconst contentParts = [];\nif (description) contentParts.push(description);\nif (problemsSolved) contentParts.push(`Problems solved: ${problemsSolved}`);\nif (applicableWhen) contentParts.push(`Applicable when: ${applicableWhen}`);\nif (additionalContext) contentParts.push(`Additional context: ${additionalContext}`);\nif (useCase) contentParts.push(`Use case: ${useCase}`);\nif (theme) contentParts.push(`Theme: ${theme}`);\nif (solutionType) contentParts.push(`Solution type: ${solutionType}`);\nif (location) contentParts.push(`Location: ${location}`);\n\nconst contentText = contentParts.join('\\n\\n').trim();\nconst combinedText = title ? `${title}\\n\\n${contentText}`.trim() : contentText;\n\n// Extract categories and keywords\nconst categories = Array.isArray(kbItem.categories) \n  ? kbItem.categories.filter(Boolean)\n  : [];\n\nconst keywords = Array.isArray(kbItem.keywords)\n  ? kbItem.keywords.map(k => {\n      // Handle both object format { keyword: '...' } and string format\n      if (typeof k === 'string') return k;\n      if (k && typeof k === 'object' && k.keyword) return k.keyword;\n      return String(k);\n    }).filter(Boolean)\n  : [];\n\n// Create content hash for tracking changes\n// Include all fields that affect the embedding\nfunction createContentHash(item) {\n  const title = item.companyOrTip?.company || item.companyOrTip?.tip || '';\n  const description = item.description || '';\n  const problemsSolved = item.problems_solved || '';\n  const applicableWhen = item.applicable_when || '';\n  const additionalContext = item.additional_context || '';\n  const useCase = item.use_case || '';\n  const theme = item.theme || '';\n  const solutionType = item.solution_type || '';\n  \n  const content = `${description}|${problemsSolved}|${applicableWhen}|${additionalContext}|${useCase}|${theme}|${solutionType}`;\n  \n  const categories = Array.isArray(item.categories) \n    ? JSON.stringify(item.categories.sort())\n    : '[]';\n  \n  const keywords = Array.isArray(item.keywords)\n    ? JSON.stringify(item.keywords.map(k => {\n        if (typeof k === 'string') return k;\n        if (k && typeof k === 'object' && k.keyword) return k.keyword;\n        return String(k);\n      }).sort())\n    : '[]';\n  \n  return `${title}|${content}|${categories}|${keywords}`;\n}\n\nreturn {\n  json: {\n    kbItemId: String(kbItem.id),\n    title: title,\n    contentText: contentText,\n    combinedText: combinedText,\n    categories: categories,\n    keywords: keywords,\n    contentHash: createContentHash(kbItem),\n    // Include metadata for reference\n    theme: theme,\n    solutionType: solutionType,\n    location: location\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        864,
-        352
+        1744,
+        512
       ],
-      "id": "ebdfed7f-3350-4395-a77e-6d14e67a460c",
+      "id": "28492006-7eed-44a4-82b0-024ca9638636",
       "name": "Prepare Text for Embedding"
     },
     {
@@ -164,10 +164,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1408,
-        352
+        2288,
+        512
       ],
-      "id": "78ecd439-bbb7-4be5-a8a4-d47c21197792",
+      "id": "51ac5d20-7ae7-4dad-818d-961900542c72",
       "name": "Prepare Document"
     },
     {
@@ -193,14 +193,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1600,
-        352
+        2480,
+        512
       ],
-      "id": "e1a42c5f-d326-4b50-ab80-bba1a4f230d1",
+      "id": "8da79392-365f-486b-842a-8bf833c212fe",
       "name": "Update Embedding Metadata",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "TwK5iljrSjFmglvT",
+          "id": "JykOcgXjIHhsyyC1",
           "name": "Payload API key"
         }
       }
@@ -212,10 +212,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1248,
-        128
+        2128,
+        288
       ],
-      "id": "1bf8e2d0-4818-41d3-b85b-ab9bf6081424",
+      "id": "caf4391b-35db-48fa-b224-5af9192f9ce9",
       "name": "Format Response"
     },
     {
@@ -225,15 +225,15 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        928,
-        640
+        1808,
+        800
       ],
-      "id": "aa8da63f-ce98-4495-93cf-e8ad1f957e38",
+      "id": "6986aa3e-1e57-4618-9ad0-4f82262843cc",
       "name": "Embeddings OpenAI",
       "credentials": {
         "openAiApi": {
-          "id": "AmDv0XgXbiVbFCU1",
-          "name": "Soter Studio Key"
+          "id": "wd5o4STXpbfsVMky",
+          "name": "Temporal Key (they should get their own)"
         }
       }
     },
@@ -251,15 +251,15 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreMongoDBAtlas",
       "typeVersion": 1.3,
       "position": [
-        1056,
-        352
+        1936,
+        512
       ],
-      "id": "7ff9841c-17af-4e4b-b083-b23494799f1a",
+      "id": "b89530a9-5ac7-47f2-b887-703eb288f845",
       "name": "MongoDB Atlas Vector Store",
       "credentials": {
         "mongoDb": {
-          "id": "71ZabfZ1nhAOCJRf",
-          "name": "MongoDB vectors"
+          "id": "QTke3XRCEMPQX33d",
+          "name": "MongoDB account"
         }
       }
     },
@@ -282,10 +282,10 @@
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        1136,
-        640
+        2016,
+        800
       ],
-      "id": "4290b00f-74b9-42bd-9549-a8b5f07fe37b",
+      "id": "e4e30a32-bcd6-4118-a0af-a077af133430",
       "name": "Default Data Loader"
     },
     {
@@ -295,10 +295,10 @@
       "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
       "typeVersion": 1,
       "position": [
-        1184,
-        800
+        2064,
+        960
       ],
-      "id": "0d43abfd-5453-4cf9-a70f-7064548bc66d",
+      "id": "7afe840f-0468-42c4-958b-ad358d656ba3",
       "name": "Token Splitter"
     },
     {
@@ -308,10 +308,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
-        304
+        656,
+        464
       ],
-      "id": "a5114f7c-d407-483e-aa5c-bceb6a9fd9ae",
+      "id": "b8d07486-3cc6-4983-a621-74f1f4ae8420",
       "name": "Check Existing Vector"
     },
     {
@@ -321,10 +321,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -288,
-        -144
+        592,
+        16
       ],
-      "id": "0a7b7459-0153-4f25-ad71-fc832c5f8ba9",
+      "id": "be328a33-c62c-4bea-9367-e4eae053b4db",
       "name": "Delete Vector"
     },
     {
@@ -334,10 +334,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        656,
-        352
+        1536,
+        512
       ],
-      "id": "dfd960e5-885a-48e2-9dc5-8d08a0c2c7c5",
+      "id": "4dff2bf0-5b0b-4567-8ea2-fffd9c54e754",
       "name": "Delete Before Embedding"
     },
     {
@@ -349,10 +349,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        112,
-        112
+        992,
+        272
       ],
-      "id": "e585f0b9-6f1a-44bd-ac2d-41bcab80f221",
+      "id": "584694e7-7188-4a9a-b91b-854a76811e80",
       "name": "Merge"
     }
   ],
@@ -406,7 +406,7 @@
             "index": 0
           },
           {
-            "node": "Check If Sync Needed",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -417,7 +417,7 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Should Sync?",
             "type": "main",
             "index": 0
           }
@@ -567,7 +567,7 @@
       "main": [
         [
           {
-            "node": "Should Sync?",
+            "node": "Check If Sync Needed",
             "type": "main",
             "index": 0
           }
@@ -581,25 +581,25 @@
         "headers": {
           "host": "n8n.adaptmap.de",
           "user-agent": "node",
-          "content-length": "77",
+          "content-length": "76",
           "accept": "*/*",
           "accept-encoding": "br, gzip, deflate",
           "accept-language": "*",
           "content-type": "application/json",
           "sec-fetch-mode": "cors",
-          "x-forwarded-for": "188.26.192.143",
+          "x-forwarded-for": "149.7.77.157",
           "x-forwarded-host": "n8n.adaptmap.de",
           "x-forwarded-port": "443",
           "x-forwarded-proto": "https",
-          "x-forwarded-server": "23901d2c61cc",
-          "x-real-ip": "188.26.192.143"
+          "x-forwarded-server": "30ad19236549",
+          "x-real-ip": "149.7.77.157"
         },
         "params": {},
         "query": {},
         "body": {
           "action": "update",
-          "kbItemId": "69519ffc974abdb08fb468d6",
-          "trigger": "webhook"
+          "kbItemId": "696e2f3219a807d08a1fa3b7",
+          "trigger": "manual"
         },
         "webhookUrl": "https://n8n.adaptmap.de/webhook/kb/sync",
         "executionMode": "production"
@@ -608,6 +608,6 @@
   },
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "b965f1b1f353f12e1f5972bc6fbf945dbfe06182ae524b0cb4a5b1c93ccbc132"
+    "instanceId": "b32eea9df48850b6574f57ade3758b33ead212ef1b948eeb63b86f46c7850224"
   }
 }

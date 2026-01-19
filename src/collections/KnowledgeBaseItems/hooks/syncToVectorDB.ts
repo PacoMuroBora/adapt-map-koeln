@@ -62,38 +62,98 @@ export const deleteKnowledgeBaseFromVectorDB: CollectionAfterDeleteHook<
 }
 
 /**
- * Trigger n8n webhook to sync KB item
+ * Queue to ensure sequential processing of KB sync requests
+ */
+const syncQueue: Array<{
+  action: 'create' | 'update' | 'delete'
+  kbItemId: string
+  payload: any
+  resolve: () => void
+  reject: (error: Error) => void
+}> = []
+
+let isProcessingQueue = false
+
+/**
+ * Process sync queue sequentially
+ */
+async function processSyncQueue(): Promise<void> {
+  if (isProcessingQueue || syncQueue.length === 0) {
+    return
+  }
+
+  isProcessingQueue = true
+
+  while (syncQueue.length > 0) {
+    const item = syncQueue.shift()
+    if (!item) break
+
+    try {
+      await triggerKBSyncInternal(item.action, item.kbItemId, item.payload)
+      item.resolve()
+    } catch (error) {
+      item.reject(error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  isProcessingQueue = false
+}
+
+/**
+ * Trigger n8n webhook to sync KB item (queued, sequential)
  */
 async function triggerKBSync(
   action: 'create' | 'update' | 'delete',
   kbItemId: string,
   payload: any,
 ): Promise<void> {
-  try {
-    const webhookUrl = await getN8nWebhookUrl('kbSync')
+  return new Promise((resolve, reject) => {
+    syncQueue.push({ action, kbItemId, payload, resolve, reject })
+    processSyncQueue().catch(reject)
+  })
+}
 
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action,
-        kbItemId,
-        trigger: 'webhook',
-      }),
-    })
+/**
+ * Internal function to actually send the webhook request
+ */
+async function triggerKBSyncInternal(
+  action: 'create' | 'update' | 'delete',
+  kbItemId: string,
+  payload: any,
+): Promise<void> {
+  const webhookUrl = await getN8nWebhookUrl('kbSync')
 
-    if (!response.ok) {
-      payload.logger.error(
-        `Failed to trigger KB sync for ${kbItemId}: ${response.status} ${response.statusText}`,
-      )
-      // Don't throw - we don't want to fail the Payload operation if sync fails
-    } else {
-      payload.logger.info(`KB sync triggered for ${kbItemId} (${action})`)
-    }
-  } catch (error: any) {
-    payload.logger.error(`Error triggering KB sync for ${kbItemId}: ${error.message}`)
-    // Don't throw - we don't want to fail the Payload operation if sync fails
+  const requestBody = {
+    action,
+    kbItemId,
+    trigger: 'webhook',
   }
+
+  payload.logger.info(
+    `Triggering KB sync for ${kbItemId} (${action}) - URL: ${webhookUrl}`,
+  )
+
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  })
+
+  const responseText = await response.text()
+
+  if (!response.ok) {
+    payload.logger.error(
+      `Failed to trigger KB sync for ${kbItemId}: ${response.status} ${response.statusText}`,
+    )
+    payload.logger.error(`Response body: ${responseText}`)
+    throw new Error(
+      `KB sync failed: ${response.status} ${response.statusText} - ${responseText}`,
+    )
+  }
+
+  payload.logger.info(
+    `KB sync triggered successfully for ${kbItemId} (${action}) - Response: ${responseText}`,
+  )
 }

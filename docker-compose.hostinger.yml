@@ -74,7 +74,7 @@ services:
       - traefik.http.middlewares.n8n.headers.forceSTSHeader=true
       - traefik.http.middlewares.n8n.headers.SSLHost=n8n.${DOMAIN_NAME}
       - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
-      - traefik.http.middlewares.n8n.headers.STSPreload=true
+      - traefik.http.middlewares.n8n.headers.STSPreload=false
     environment:
       - N8N_HOST=n8n.${DOMAIN_NAME}
       - N8N_PORT=5678

@@ -25,6 +25,15 @@ export const KnowledgeBaseItems: CollectionConfig = {
   },
   fields: [
     {
+      name: 'syncButton',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/SyncKBItemButton',
+        },
+      },
+    },
+    {
       name: 'companyOrTip',
       type: 'group',
       admin: {
@@ -90,9 +99,9 @@ export const KnowledgeBaseItems: CollectionConfig = {
     },
     {
       name: 'additional_context',
-      type: 'number',
+      type: 'textarea',
       admin: {
-        description: 'Contextual number from the source data',
+        description: 'Contextual data from the source data',
       },
     },
     {

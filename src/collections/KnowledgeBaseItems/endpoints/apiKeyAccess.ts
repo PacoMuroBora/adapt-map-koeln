@@ -47,26 +47,61 @@ export const updateKbItemMetadataWithApiKey: Endpoint = {
     validateApiKey(req)
 
     const id = req.routeParams?.id as string | undefined
-    const body = await (req as { json: () => Promise<any> }).json()
 
     if (!id) {
       throw new APIError('Missing KB item ID', 400)
+    }
+
+    // Parse request body
+    let body: any
+    try {
+      body = await req.json()
+    } catch (error) {
+      throw new APIError('Invalid JSON in request body', 400)
+    }
+
+    if (!body || typeof body !== 'object') {
+      throw new APIError('Invalid request body', 400)
     }
 
     if (!body.embeddingMetadata) {
       throw new APIError('Missing embeddingMetadata in request body', 400)
     }
 
+    // Extract only the embeddingMetadata fields we want to update
+    const embeddingMetadata = {
+      embedding_id: body.embeddingMetadata.embedding_id || undefined,
+      model: body.embeddingMetadata.model || undefined,
+      dimensions: body.embeddingMetadata.dimensions || undefined,
+      last_synced: body.embeddingMetadata.last_synced || undefined,
+    }
+
+    // Remove undefined values
+    Object.keys(embeddingMetadata).forEach((key) => {
+      if (embeddingMetadata[key as keyof typeof embeddingMetadata] === undefined) {
+        delete embeddingMetadata[key as keyof typeof embeddingMetadata]
+      }
+    })
+
     // Update KB item using Local API with overrideAccess (system operation)
+    // Only pass embeddingMetadata to ensure no other fields are accidentally updated
     const updated = await req.payload.update({
       collection: 'knowledge-base-items',
       id,
       data: {
-        embeddingMetadata: body.embeddingMetadata,
+        embeddingMetadata,
       },
       overrideAccess: true, // System operation - API key authenticated
     })
 
-    return Response.json(updated)
+    // Return 200 status code explicitly for n8n workflow success detection
+    return Response.json(
+      {
+        success: true,
+        message: 'Embedding metadata updated successfully',
+        data: updated,
+      },
+      { status: 200 },
+    )
   },
 }

@@ -12,6 +12,15 @@ export const SiteSettings: GlobalConfig = {
   },
   fields: [
     {
+      name: 'excelUpload',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/ExcelUpload',
+        },
+      },
+    },
+    {
       type: 'tabs',
       tabs: [
         {

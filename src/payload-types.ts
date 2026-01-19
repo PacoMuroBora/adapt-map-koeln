@@ -1105,9 +1105,9 @@ export interface KnowledgeBaseItem {
    */
   location?: string | null;
   /**
-   * Contextual number from the source data
+   * Contextual data from the source data
    */
-  additional_context?: number | null;
+  additional_context?: string | null;
   /**
    * The type of solution (e.g., "startup")
    */
