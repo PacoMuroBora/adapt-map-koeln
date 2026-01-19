@@ -175,7 +175,7 @@ const ExcelUpload = () => {
             fontSize: '0.85rem',
           }}
         >
-          Sync all knowledge base items that haven't been synced to the vector database yet. Only
+          Sync all knowledge base items that haven&apos;t been synced to the vector database yet. Only
           published items will be synced.
         </p>
         <Button onClick={handleSyncUnsynced} disabled={syncing} size="small">
@@ -328,10 +328,10 @@ const ExcelUpload = () => {
           </p>
           <ol style={{ margin: 'calc(var(--base) / 2) 0', paddingLeft: 'var(--base)' }}>
             <li>
-              <strong>Company</strong> - Company name, or tip prefixed with "Tipp: " (e.g., "Tipp: Use shading during hot hours")
+              <strong>Company</strong> - Company name, or tip prefixed with &quot;Tipp: &quot; (e.g., &quot;Tipp: Use shading during hot hours&quot;)
             </li>
             <li>
-              <strong>theme</strong> - Theme dropdown value (e.g., "hitzeschutz von Gebäuden" or "hitzeschutz von Gebaeuden" both work)
+              <strong>theme</strong> - Theme dropdown value (e.g., &quot;hitzeschutz von Gebäuden&quot; or &quot;hitzeschutz von Gebaeuden&quot; both work)
             </li>
             <li>
               <strong>discription</strong> - Detailed description (note: typo in column name is expected)
@@ -365,7 +365,7 @@ const ExcelUpload = () => {
             </li>
           </ol>
           <p style={{ marginTop: 'var(--base)', fontStyle: 'italic', fontSize: '0.9rem' }}>
-            Note: All items will be imported with status "draft" by default. You can publish them individually after import.
+            Note: All items will be imported with status &quot;draft&quot; by default. You can publish them individually after import.
           </p>
         </div>
       </details>

@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     const normalizeTheme = (theme: string | undefined): string | undefined => {
       if (!theme) return undefined
 
-      let normalized = theme
+      const normalized = theme
         .toString()
         .trim()
         .toLowerCase()
@@ -191,8 +191,7 @@ export async function POST(request: Request) {
       limit: 10000, // Adjust if you have more items
       depth: 0,
       select: {
-        'companyOrTip.company': true,
-        'companyOrTip.tip': true,
+        companyOrTip: true,
       },
     })
 
