@@ -153,7 +153,50 @@ async function triggerKBSyncInternal(
     )
   }
 
-  payload.logger.info(
-    `KB sync triggered successfully for ${kbItemId} (${action}) - Response: ${responseText}`,
-  )
+  // Parse response to check for success and get embedding metadata
+  try {
+    const responseData = JSON.parse(responseText)
+    
+    // Check if workflow run was successful
+    if (!responseData.success) {
+      payload.logger.error(
+        `KB sync workflow returned unsuccessful for ${kbItemId}: ${responseData.message || 'Unknown error'}`,
+      )
+      throw new Error(`KB sync workflow failed: ${responseData.message || 'Unknown error'}`)
+    }
+    
+    // If response contains embedding metadata, update the KB item
+    if (responseData.embeddingMetadata) {
+      await payload.update({
+        collection: 'knowledge-base-items',
+        id: kbItemId,
+        data: {
+          embeddingMetadata: {
+            embedding_id: responseData.embeddingMetadata.embedding_id || undefined,
+            model: responseData.embeddingMetadata.model || undefined,
+            dimensions: responseData.embeddingMetadata.dimensions || undefined,
+            last_synced: responseData.embeddingMetadata.last_synced || undefined,
+          },
+        },
+        overrideAccess: true, // System operation
+        context: { skipKBSync: true }, // Prevent infinite loop
+      })
+      
+      payload.logger.info(
+        `KB sync completed and metadata updated for ${kbItemId} (${action})`,
+      )
+    } else {
+      payload.logger.info(
+        `KB sync completed successfully for ${kbItemId} (${action}) - No metadata to update`,
+      )
+    }
+  } catch (parseError) {
+    // If response is not JSON, treat as error
+    payload.logger.error(
+      `KB sync response parsing failed for ${kbItemId}: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`,
+    )
+    throw new Error(
+      `KB sync response parsing failed: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`,
+    )
+  }
 }

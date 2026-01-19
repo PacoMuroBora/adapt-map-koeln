@@ -7,7 +7,7 @@ import {
   deleteKnowledgeBaseFromVectorDB,
   syncKnowledgeBaseToVectorDB,
 } from './hooks/syncToVectorDB'
-import { getKbItemWithApiKey, updateKbItemMetadataWithApiKey } from './endpoints/apiKeyAccess'
+import { getKbItemWithApiKey } from './endpoints/apiKeyAccess'
 import { categoryOptions } from './categoryOptions'
 import { themeOptions } from './themeOptions'
 
@@ -221,7 +221,7 @@ export const KnowledgeBaseItems: CollectionConfig = {
       ],
     },
   ],
-  endpoints: [getKbItemWithApiKey, updateKbItemMetadataWithApiKey],
+  endpoints: [getKbItemWithApiKey],
   hooks: {
     beforeChange: [
       ({ data }) => {
