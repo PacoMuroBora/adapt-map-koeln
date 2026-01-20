@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayloadClient } from '@/lib/payload'
 import { notFound } from 'next/navigation'
 import QuestionClient from './QuestionClient'
 
@@ -23,7 +22,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     notFound()
   }
 
-  const payload = await getPayload({ config: configPromise })
+  const payload = await getPayloadClient()
 
   // Get current questionnaire
   const questionnaires = await payload.find({

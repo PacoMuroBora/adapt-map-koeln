@@ -1,0 +1,146 @@
+---
+description: Always use getPayloadClient() instead of getPayload({ config }) to prevent MongoDB connection pool exhaustion in serverless environments
+globs: src/app/api/**/*.ts, src/lib/**/*.ts
+alwaysApply: true
+---
+
+# Payload CMS Connection Pooling Rule
+
+**CRITICAL**: Always use `getPayloadClient()` from `@/lib/payload` instead of calling `getPayload({ config })` directly.
+
+## The Problem
+
+Each `getPayload({ config })` call creates a **new Payload instance**, which creates a **new MongoDB connection pool**. In serverless environments (like Vercel), this quickly exhausts MongoDB Atlas connection limits:
+
+- MongoDB Atlas M0 tier: **500 connection limit**
+- Each `getPayload({ config })` call: Creates pool with default `maxPoolSize: 100`
+- Serverless functions: Many concurrent invocations → Many pools → Connection limit exceeded
+
+## The Solution
+
+**Always use `getPayloadClient()`** which:
+1. Caches the Payload instance at module level
+2. Reuses the same connection pool across function invocations
+3. Prevents concurrent initialization issues
+4. Works correctly in serverless environments (Vercel caches modules)
+
+## When Creating API Routes / Endpoints
+
+### ✅ DO: Use getPayloadClient()
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { getPayloadClient } from '@/lib/payload'
+
+export async function GET(request: NextRequest) {
+  try {
+    const payload = await getPayloadClient()
+    
+    // Use payload...
+    const result = await payload.find({
+      collection: 'concerts',
+      limit: 10,
+    })
+    
+    return NextResponse.json(result)
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### ❌ DON'T: Call getPayload({ config }) directly
+
+```typescript
+// ❌ WRONG - Creates new connection pool every time
+import { getPayload } from 'payload'
+import config from '@payload-config'
+
+export async function GET(request: NextRequest) {
+  const payload = await getPayload({ config }) // BAD!
+  // ...
+}
+```
+
+## When Creating Utility Functions
+
+For utility functions that need Payload access:
+
+### ✅ DO: Use getPayloadClient()
+
+```typescript
+import { getPayloadClient } from '@/lib/payload'
+import type { Payload } from 'payload'
+
+export interface MyResult {
+  payload: Payload
+  data: any
+}
+
+export async function myUtility(): Promise<MyResult> {
+  const payload = await getPayloadClient()
+  
+  // Use payload...
+  return { payload, data: result }
+}
+```
+
+### ❌ DON'T: Import config and call getPayload()
+
+```typescript
+// ❌ WRONG
+import { getPayload } from 'payload'
+import config from '@payload-config'
+
+export async function myUtility() {
+  const payload = await getPayload({ config }) // BAD!
+  // ...
+}
+```
+
+## Payload Configuration
+
+The Payload config (`src/payload.config.ts`) should have connection pooling configured for serverless:
+
+```typescript
+db: mongooseAdapter({
+  url: process.env.DATABASE_URI || '',
+  connectOptions: {
+    maxPoolSize: 50,
+    minPoolSize: 0,
+    maxIdleTimeMS: 30000,
+    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 5000,
+    autoIndex: process.env.NODE_ENV !== 'production',
+    autoCreate: process.env.NODE_ENV !== 'production',
+  },
+}),
+```
+
+## Code Review Checklist
+
+When reviewing or creating code that uses Payload:
+
+- [ ] Uses `getPayloadClient()` instead of `getPayload({ config })`
+- [ ] Imports from `@/lib/payload` not from `payload` + `@payload-config`
+- [ ] No direct `getPayload({ config })` calls in API routes
+- [ ] No direct `getPayload({ config })` calls in utility functions
+- [ ] Cron jobs use `getPayloadClient()`
+
+## Exceptions
+
+The only exception is `src/payload-node.ts` which is used for standalone Node.js scripts (outside of Next.js serverless context). This file can use `getPayload({ config })` directly.
+
+## Why This Matters
+
+**Without this rule**: 50 API routes × 10 concurrent invocations = 500+ connection pools = MongoDB connection limit exceeded
+
+**With this rule**: All routes share 1 cached Payload instance = 1 connection pool (max 50 connections) = Well within limits
+
+## References
+
+- Payload Client: [`src/lib/payload.ts`](mdc:src/lib/payload.ts)
+- Payload Config: [`src/payload.config.ts`](mdc:src/payload.config.ts)

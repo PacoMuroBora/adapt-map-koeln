@@ -1,13 +1,12 @@
-import { getPayload } from 'payload'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import config from '@payload-config'
 import type { PayloadRequest } from 'payload'
+import { getPayloadClient } from '@/lib/payload'
 import { triggerKBSync } from '@/utilities/triggerKBSync'
 
 export async function POST(request: Request) {
   try {
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
 
     // Check authentication via cookies
     const cookieStore = await cookies()

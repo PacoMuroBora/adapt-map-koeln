@@ -63,6 +63,15 @@ export default buildConfig({
   editor: defaultLexical,
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
+    connectOptions: {
+      maxPoolSize: 50,
+      minPoolSize: 0,
+      maxIdleTimeMS: 30000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 5000,
+      autoIndex: process.env.NODE_ENV !== 'production',
+      autoCreate: process.env.NODE_ENV !== 'production',
+    },
   }),
   collections: [
     Pages,

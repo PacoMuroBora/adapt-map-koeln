@@ -1,7 +1,5 @@
-import { getPayload } from 'payload'
 import { NextRequest, NextResponse } from 'next/server'
-
-import config from '@payload-config'
+import { getPayloadClient } from '@/lib/payload'
 import { getN8nWebhookUrl } from '@/utilities/getN8nWebhookUrl'
 
 export async function POST(req: NextRequest) {
@@ -12,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing submission ID' }, { status: 400 })
     }
 
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
 
     // Get the submission
     const submission = await payload.findByID({

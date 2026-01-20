@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server'
-
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayloadClient } from '@/lib/payload'
 
 export const revalidate = 600 // Cache for 10 minutes
 
 export async function GET() {
   try {
-    const payload = await getPayload({ config: configPromise })
+    const payload = await getPayloadClient()
 
     // Get current questionnaire
     const questionnaires = await payload.find({

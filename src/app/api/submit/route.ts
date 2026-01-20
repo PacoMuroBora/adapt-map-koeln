@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { APIError } from 'payload'
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayloadClient } from '@/lib/payload'
 
 import type { Question, Questionnaire } from '@/payload-types'
 
@@ -230,7 +229,7 @@ export async function POST(req: Request) {
       throw new APIError('Missing answers', 400)
     }
 
-    const payload = await getPayload({ config: configPromise })
+    const payload = await getPayloadClient()
 
     // Get the questionnaire
     const questionnaires = await payload.find({

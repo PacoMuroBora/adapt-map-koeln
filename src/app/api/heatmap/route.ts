@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
+import { getPayloadClient } from '@/lib/payload'
 
 import type { Submission } from '@/payload-types'
 
@@ -48,7 +47,7 @@ export async function GET() {
       })
     }
 
-    const payload = await getPayload({ config: configPromise })
+    const payload = await getPayloadClient()
 
     // Aggregate submissions by postal code
     // Using overrideAccess: true because this is public aggregated data
