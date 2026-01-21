@@ -41,24 +41,6 @@ export default function HeatmapPage() {
           </Card>
         )}
 
-        <Card className="p-6">
-          <h2 className="mb-4 text-lg font-semibold">Legende</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded bg-green-500" />
-              <span className="text-sm">Niedrig (0-40)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded bg-yellow-500" />
-              <span className="text-sm">Mittel (40-70)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded bg-red-500" />
-              <span className="text-sm">Hoch (70-100)</span>
-            </div>
-          </div>
-        </Card>
-
         <div className="flex flex-col gap-4 sm:flex-row">
           <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/">Zur Startseite</Link>

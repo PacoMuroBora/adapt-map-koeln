@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 import React, { useEffect, useState } from 'react'
 import Map from 'react-map-gl/maplibre'
-import { Source, Layer, Marker } from 'react-map-gl/maplibre'
+import { Source, Layer } from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 
 import type { Location } from '@/providers/Submission/types'
@@ -32,39 +32,140 @@ type HeatmapMapProps = {
   className?: string
 }
 
-// Heatmap layer configuration
-const heatmapLayer = {
-  id: 'heatmap',
-  type: 'heatmap' as const,
+// Color stops matching HeatIntensitySlider (0-9, 10 colors)
+const COLOR_STOPS = [
+  '#1a5f5f', // Dark Teal/Blue-Green
+  '#1e3a5f', // Dark Blue
+  '#2e5a8a', // Medium Blue
+  '#4a90c2', // Lighter Blue
+  '#87ceeb', // Pale Blue
+  '#fffacd', // Pale Yellow
+  '#ffd700', // Bright Yellow
+  '#ffb347', // Light Orange/Peach
+  '#cd853f', // Medium Orange/Reddish-Brown
+  '#8b4513', // Dark Brown/Reddish-Brown
+]
+
+// Circle layer - each point shows its value color fading to transparent
+// Gradients only appear naturally when multiple circles overlap
+const circleLayer = {
+  id: 'heatmap-circles',
+  type: 'circle' as const,
   paint: {
-    // Weight based on average_problem_index (0-100)
-    'heatmap-weight': ['interpolate', ['linear'], ['get', 'average_problem_index'], 0, 0, 100, 1],
-    // Intensity increases with zoom
-    'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3],
-    // Color gradient: blue (low) to red (high)
-    'heatmap-color': [
+    // Large radius for visibility
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 0, 40, 9, 100],
+    // Color based on average_problem_index value (0-100) mapped to COLOR_STOPS (0-9)
+    'circle-color': [
       'interpolate',
       ['linear'],
-      ['heatmap-density'],
+      ['get', 'average_problem_index'],
       0,
-      'rgba(33,102,172,0)', // Transparent blue
-      0.2,
-      'rgb(103,169,207)', // Light blue
-      0.4,
-      'rgb(209,229,240)', // Very light blue
-      0.6,
-      'rgb(253,219,199)', // Light orange
-      0.8,
-      'rgb(239,138,98)', // Orange
-      1,
-      'rgb(178,24,43)', // Red
+      COLOR_STOPS[0],
+      11.11,
+      COLOR_STOPS[1],
+      22.22,
+      COLOR_STOPS[2],
+      33.33,
+      COLOR_STOPS[3],
+      44.44,
+      COLOR_STOPS[4],
+      55.55,
+      COLOR_STOPS[5],
+      66.66,
+      COLOR_STOPS[6],
+      77.77,
+      COLOR_STOPS[7],
+      88.88,
+      COLOR_STOPS[8],
+      100,
+      COLOR_STOPS[9],
     ],
-    // Radius increases with zoom
-    'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],
-    // Opacity decreases slightly at higher zoom
-    'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0.7],
+    'circle-opacity': 1,
+    'circle-stroke-width': 0,
+    // Blur creates fade-to-transparent effect at edges
+    // Reduced blur so center stays more opaque
+    'circle-blur': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 2],
   } as any,
 }
+
+// Medium circle layer - adds more opacity at center
+const mediumCircleLayer = {
+  id: 'heatmap-medium-circles',
+  type: 'circle' as const,
+  paint: {
+    // Medium radius
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 0, 15, 9, 35],
+    'circle-color': [
+      'interpolate',
+      ['linear'],
+      ['get', 'average_problem_index'],
+      0,
+      COLOR_STOPS[0],
+      11.11,
+      COLOR_STOPS[1],
+      22.22,
+      COLOR_STOPS[2],
+      33.33,
+      COLOR_STOPS[3],
+      44.44,
+      COLOR_STOPS[4],
+      55.55,
+      COLOR_STOPS[5],
+      66.66,
+      COLOR_STOPS[6],
+      77.77,
+      COLOR_STOPS[7],
+      88.88,
+      COLOR_STOPS[8],
+      100,
+      COLOR_STOPS[9],
+    ],
+    'circle-opacity': 1,
+    'circle-stroke-width': 0,
+    'circle-blur': ['interpolate', ['linear'], ['zoom'], 0, 0.5, 9, 1], // Less blur for more solid center
+  } as any,
+}
+
+// Small solid circle layer - shows exact color-coded value at center
+const centerCircleLayer = {
+  id: 'heatmap-center-circles',
+  type: 'circle' as const,
+  paint: {
+    // Small radius for center point
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 0, 6, 9, 15],
+    // Color based on average_problem_index value (0-100) mapped to COLOR_STOPS (0-9)
+    'circle-color': [
+      'interpolate',
+      ['linear'],
+      ['get', 'average_problem_index'],
+      0,
+      COLOR_STOPS[0],
+      11.11,
+      COLOR_STOPS[1],
+      22.22,
+      COLOR_STOPS[2],
+      33.33,
+      COLOR_STOPS[3],
+      44.44,
+      COLOR_STOPS[4],
+      55.55,
+      COLOR_STOPS[5],
+      66.66,
+      COLOR_STOPS[6],
+      77.77,
+      COLOR_STOPS[7],
+      88.88,
+      COLOR_STOPS[8],
+      100,
+      COLOR_STOPS[9],
+    ],
+    'circle-opacity': 1,
+    'circle-stroke-width': 1,
+    'circle-stroke-color': '#ffffff',
+    'circle-blur': 0, // No blur - solid circle
+  } as any,
+}
+
 
 // Default center: Cologne, Germany
 const DEFAULT_CENTER = {
@@ -158,42 +259,32 @@ export function HeatmapMap({ userLocation, className }: HeatmapMapProps) {
         style={{ width: '100%', height: '100%' }}
         reuseMaps={true}
       >
-        {/* Heatmap layer */}
+        {/* Multiple circle layers for better opacity at center */}
         {heatmapData && (
           <Source type="geojson" data={heatmapData}>
-            <Layer {...heatmapLayer} />
+            <Layer {...circleLayer} />
+            <Layer {...mediumCircleLayer} />
+            <Layer {...centerCircleLayer} />
           </Source>
-        )}
-
-        {/* User location marker */}
-        {userLocation?.lat && userLocation?.lng && (
-          <Marker longitude={userLocation.lng} latitude={userLocation.lat} anchor="center">
-            <div className="relative">
-              {/* Outer pulse ring */}
-              <div className="absolute h-8 w-8 animate-ping rounded-full bg-primary opacity-75" />
-              {/* Inner marker */}
-              <div className="relative h-4 w-4 rounded-full border-2 border-white bg-primary shadow-lg" />
-            </div>
-          </Marker>
         )}
       </Map>
 
       {/* Legend overlay - mobile responsive */}
       <div className="absolute bottom-2 left-2 rounded-lg bg-white p-2 shadow-lg border border-border/50 sm:bottom-4 sm:left-4 sm:p-3">
         <h3 className="mb-1.5 text-xs font-bold text-gray-900 sm:mb-2 sm:text-sm">Legende</h3>
-        <div className="space-y-1 text-[10px] text-gray-900 sm:space-y-1.5 sm:text-xs">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="h-2.5 w-2.5 rounded bg-blue-500 sm:h-3 sm:w-3" />
-            <span className="text-gray-900">Niedrig (0-40)</span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="h-2.5 w-2.5 rounded bg-yellow-500 sm:h-3 sm:w-3" />
-            <span className="text-gray-900">Mittel (40-70)</span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="h-2.5 w-2.5 rounded bg-red-500 sm:h-3 sm:w-3" />
-            <span className="text-gray-900">Hoch (70-100)</span>
-          </div>
+        {/* Color gradient bar */}
+        <div className="mb-2 h-3 w-full overflow-hidden rounded border border-gray-300 sm:h-4 sm:mb-2.5">
+          <div
+            className="h-full w-full"
+            style={{
+              background: `linear-gradient(to right, ${COLOR_STOPS.join(', ')})`,
+            }}
+          />
+        </div>
+        {/* Labels */}
+        <div className="flex justify-between text-[10px] text-gray-600 sm:text-xs">
+          <span>Niedrig</span>
+          <span>Hoch</span>
         </div>
       </div>
     </div>
