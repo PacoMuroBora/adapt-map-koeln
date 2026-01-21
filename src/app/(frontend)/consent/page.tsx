@@ -30,14 +30,15 @@ export default function ConsentPage() {
     }
 
     updateConsent(consentData)
-    updateCurrentStep('location')
+    updateCurrentStep('results')
 
     // Store cookie consent in localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('cookieConsent', 'necessary')
     }
 
-    router.push('/location')
+    // Redirect to results after consent
+    router.push('/results')
   }
 
   return (
@@ -46,7 +47,7 @@ export default function ConsentPage() {
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Einverständniserklärung</h1>
           <p className="text-muted-foreground">
-            Bevor Sie fortfahren, benötigen wir Ihr Einverständnis zur Datenerhebung und
+            Bevor Sie Ihre Ergebnisse sehen können, benötigen wir Ihr Einverständnis zur Datenerhebung und
             -verarbeitung.
           </p>
         </div>
@@ -99,13 +100,13 @@ export default function ConsentPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.back()}
+              onClick={() => router.push('/feedback')}
               className="w-full sm:w-auto"
             >
               Zurück
             </Button>
             <Button type="submit" className="w-full sm:w-auto sm:ml-auto">
-              Akzeptieren und fortfahren
+              Akzeptieren und Ergebnisse anzeigen
             </Button>
           </div>
         </form>

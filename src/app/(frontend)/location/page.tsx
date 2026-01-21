@@ -3,14 +3,14 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import ProgressBar from '@/components/questionnaire/ProgressBar'
 import { useSubmission } from '@/providers/Submission'
 import { useDebounce } from '@/utilities/useDebounce'
 import { Loader2, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect, useRef } from 'react'
-
-type LocationMethod = 'gps' | 'manual' | null
+import { STEP_LOCATION, TOTAL_STEPS } from '../questionnaire/constants'
 
 interface AddressSuggestion {
   name: string
@@ -25,7 +25,6 @@ interface AddressSuggestion {
 export default function LocationPage() {
   const router = useRouter()
   const { state, updateLocation, updateCurrentStep } = useSubmission()
-  const [method, setMethod] = useState<LocationMethod>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -76,6 +75,7 @@ export default function LocationPage() {
                 lng: cached.lng,
                 postal_code: data.postal_code,
                 city: data.city,
+                street: data.street || undefined,
               })
               updateCurrentStep('personal')
               router.push('/personal')
@@ -182,6 +182,7 @@ export default function LocationPage() {
         lng: longitude,
         postal_code: data.postal_code,
         city: data.city,
+        street: data.street || undefined,
       })
 
       updateCurrentStep('personal')
@@ -346,12 +347,15 @@ export default function LocationPage() {
 
       const data = await response.json()
 
+      // Combine street and housenumber for the street field
+      const fullStreet = housenumber ? `${street} ${housenumber}`.trim() : street
+      
       updateLocation({
         lat: data.lat,
         lng: data.lng,
         postal_code: data.postal_code || postalcode,
         city: data.city || city,
-        street,
+        street: fullStreet,
         housenumber,
       })
 
@@ -367,6 +371,9 @@ export default function LocationPage() {
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8 md:py-16">
       <div className="space-y-6">
+        {/* Progress bar */}
+        <ProgressBar currentStep={STEP_LOCATION} totalSteps={TOTAL_STEPS} />
+
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Standort erfassen</h1>
           <p className="text-muted-foreground">
@@ -375,75 +382,42 @@ export default function LocationPage() {
           </p>
         </div>
 
-        {!method && (
-          <div className="space-y-4">
-            <Button
-              type="button"
-              onClick={() => setMethod('gps')}
-              className="w-full"
-              size="lg"
-              disabled={isLoading}
-            >
-              <MapPin className="mr-2 h-5 w-5" />
-              Standort automatisch ermitteln (GPS)
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setMethod('manual')}
-              variant="outline"
-              className="w-full"
-              size="lg"
-              disabled={isLoading}
-            >
-              Adresse manuell eingeben
-            </Button>
-          </div>
-        )}
-
-        {method === 'gps' && (
-          <div className="space-y-4 rounded-lg border bg-card p-6">
-            <h2 className="text-lg font-semibold">Standort automatisch ermitteln</h2>
+        {/* GPS Button */}
+        <div className="space-y-4 rounded-lg border bg-card p-6">
+          <div>
+            <h2 className="mb-2 text-lg font-semibold">Standort automatisch ermitteln</h2>
             <p className="text-sm text-muted-foreground">
               Wir benötigen Ihre Erlaubnis, um Ihren Standort zu ermitteln. Ihre genauen Koordinaten
               werden nicht gespeichert, nur die Postleitzahl.
             </p>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Button
-                type="button"
-                onClick={handleGPSLocation}
-                disabled={isLoading}
-                className="w-full sm:w-auto"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Standort wird ermittelt...
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="mr-2 h-4 w-4" />
-                    Standort ermitteln
-                  </>
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setMethod(null)
-                  setError(null)
-                }}
-                disabled={isLoading}
-                className="w-full sm:w-auto"
-              >
-                Zurück
-              </Button>
-            </div>
           </div>
-        )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button
+            type="button"
+            onClick={handleGPSLocation}
+            disabled={isLoading}
+            className="w-full"
+            size="lg"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Standort wird ermittelt...
+              </>
+            ) : (
+              <>
+                <MapPin className="mr-2 h-4 w-4" />
+                Standort automatisch ermitteln (GPS)
+              </>
+            )}
+          </Button>
+        </div>
 
-        {method === 'manual' && (
+        {/* Manual Form */}
+        <div className="space-y-4">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">oder</p>
+          </div>
           <form onSubmit={handleManualSubmit} className="space-y-6">
             <div className="space-y-4 rounded-lg border bg-card p-6">
               <h2 className="text-lg font-semibold">Adresse eingeben</h2>
@@ -551,25 +525,6 @@ export default function LocationPage() {
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setMethod(null)
-                  setError(null)
-                  setStreet('')
-                  setHousenumber('')
-                  setPostalcode('')
-                  setCity('')
-                  setAutocompleteQuery('')
-                  setSuggestions([])
-                  setShowSuggestions(false)
-                }}
-                disabled={isLoading}
-                className="w-full sm:w-auto"
-              >
-                Zurück
-              </Button>
               <Button type="submit" disabled={isLoading} className="w-full sm:w-auto sm:ml-auto">
                 {isLoading ? (
                   <>
@@ -582,7 +537,7 @@ export default function LocationPage() {
               </Button>
             </div>
           </form>
-        )}
+        </div>
 
         <div className="text-center">
           <Link href="/" className="text-sm text-muted-foreground underline hover:no-underline">

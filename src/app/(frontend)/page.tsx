@@ -34,7 +34,7 @@ export default async function LandingPage() {
         )}
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Button asChild size="lg" className="w-full sm:w-auto">
-            <Link href="/consent">{ctaButton}</Link>
+            <Link href="/location">{ctaButton}</Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
             <Link href="/heatmap">Heatmap anzeigen</Link>

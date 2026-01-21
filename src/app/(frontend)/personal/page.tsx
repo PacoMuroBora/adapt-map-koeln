@@ -10,9 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import ProgressBar from '@/components/questionnaire/ProgressBar'
 import { useSubmission } from '@/providers/Submission'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { STEP_PERSONAL, TOTAL_STEPS } from '../questionnaire/constants'
 
 export default function PersonalPage() {
   const router = useRouter()
@@ -39,6 +41,9 @@ export default function PersonalPage() {
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8 md:py-16">
       <div className="space-y-6">
+        {/* Progress bar */}
+        <ProgressBar currentStep={STEP_PERSONAL} totalSteps={TOTAL_STEPS} />
+
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Persönliche Angaben</h1>
           <p className="text-muted-foreground">
@@ -97,7 +102,7 @@ export default function PersonalPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.back()}
+              onClick={() => router.push('/location')}
               className="w-full sm:w-auto"
             >
               Zurück

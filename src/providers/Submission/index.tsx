@@ -48,7 +48,8 @@ export const SubmissionProvider = ({ children }: { children: React.ReactNode }) 
         if (storedTime && Date.now() - storedTime < 24 * 60 * 60 * 1000) {
           // Remove the timestamp before setting state
           const { _timestamp, ...restoredState } = parsed
-          setState(restoredState)
+          // Merge with initial state to ensure defaults (like questionnaireVersion) are set
+          setState({ ...initialSubmissionState, ...restoredState })
         } else {
           // Clear old state
           localStorage.removeItem(STORAGE_KEY)

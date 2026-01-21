@@ -934,10 +934,6 @@ export interface Submission {
      * User agent string from browser
      */
     user_agent?: string | null;
-    /**
-     * Version of consent form accepted
-     */
-    consent_version?: string | null;
   };
   location: {
     /**
@@ -956,6 +952,10 @@ export interface Submission {
      * City name
      */
     city?: string | null;
+    /**
+     * Street name (with or without house number)
+     */
+    street?: string | null;
   };
   /**
    * Optional personal information
@@ -971,18 +971,58 @@ export interface Submission {
      */
     householdSize?: number | null;
   };
-  questionnaireVersion: string | Questionnaire;
   /**
-   * Answers keyed by question key
+   * Questionnaire version identifier
    */
-  answers:
+  questionnaireVersion: string;
+  /**
+   * Frequency of heat days per year
+   */
+  heatFrequency: '1-3' | '4-10' | '11-20' | '21-40' | '>40';
+  /**
+   * Intensity of heat (0-9 slider value)
+   */
+  heatIntensity: number;
+  livingSituation: {
+    /**
+     * Apartment or house
+     */
+    housingType: 'apartment' | 'house';
+    /**
+     * Is the neighborhood open and green?
+     */
+    greenNeighborhood: 'yes' | 'no' | 'unsure';
+    /**
+     * Inner city or outer area
+     */
+    cityArea: 'inner' | 'outer';
+  };
+  climateAdaptationKnowledge: {
+    /**
+     * Knows the term "Klimawandelanpassung"
+     */
+    knowsTerm: boolean;
+    /**
+     * Optional description of what they know
+     */
+    description?: string | null;
+  };
+  /**
+   * Selected icons for desired changes (greening, water, shadow, etc.)
+   */
+  desiredChanges?:
     | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
+        icon:
+          | 'greening'
+          | 'water'
+          | 'shadow'
+          | 'shading'
+          | 'cooling'
+          | 'roof_greening'
+          | 'facade_greening'
+          | 'water_fountain';
+        id?: string | null;
+      }[]
     | null;
   /**
    * Calculated problem index (0-100)
@@ -1904,7 +1944,6 @@ export interface SubmissionsSelect<T extends boolean = true> {
     | {
         timestamp?: T;
         user_agent?: T;
-        consent_version?: T;
       };
   location?:
     | T
@@ -1913,6 +1952,7 @@ export interface SubmissionsSelect<T extends boolean = true> {
         lng?: T;
         postal_code?: T;
         city?: T;
+        street?: T;
       };
   personalFields?:
     | T
@@ -1922,7 +1962,27 @@ export interface SubmissionsSelect<T extends boolean = true> {
         householdSize?: T;
       };
   questionnaireVersion?: T;
-  answers?: T;
+  heatFrequency?: T;
+  heatIntensity?: T;
+  livingSituation?:
+    | T
+    | {
+        housingType?: T;
+        greenNeighborhood?: T;
+        cityArea?: T;
+      };
+  climateAdaptationKnowledge?:
+    | T
+    | {
+        knowsTerm?: T;
+        description?: T;
+      };
+  desiredChanges?:
+    | T
+    | {
+        icon?: T;
+        id?: T;
+      };
   problem_index?: T;
   sub_scores?: T;
   user_text?: T;

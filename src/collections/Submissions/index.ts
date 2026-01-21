@@ -38,13 +38,6 @@ export const Submissions: CollectionConfig = {
             description: 'User agent string from browser',
           },
         },
-        {
-          name: 'consent_version',
-          type: 'text',
-          admin: {
-            description: 'Version of consent form accepted',
-          },
-        },
       ],
     },
     {
@@ -84,6 +77,13 @@ export const Submissions: CollectionConfig = {
             description: 'City name',
           },
         },
+        {
+          name: 'street',
+          type: 'text',
+          admin: {
+            description: 'Street name (with or without house number)',
+          },
+        },
       ],
     },
     {
@@ -121,18 +121,128 @@ export const Submissions: CollectionConfig = {
     },
     {
       name: 'questionnaireVersion',
-      type: 'relationship',
-      relationTo: 'questionnaires',
+      type: 'text',
       required: true,
+      defaultValue: 'v1.0',
       index: true,
+      admin: {
+        description: 'Questionnaire version identifier',
+      },
     },
     {
-      name: 'answers',
-      type: 'json',
+      name: 'heatFrequency',
+      type: 'select',
       required: true,
+      options: [
+        { label: '1 – 3 Tage', value: '1-3' },
+        { label: '4 – 10 Tage', value: '4-10' },
+        { label: '11 – 20 Tage', value: '11-20' },
+        { label: '21 – 40 Tage', value: '21-40' },
+        { label: '> 40 Tage', value: '>40' },
+      ],
       admin: {
-        description: 'Answers keyed by question key',
+        description: 'Frequency of heat days per year',
       },
+    },
+    {
+      name: 'heatIntensity',
+      type: 'number',
+      required: true,
+      min: 0,
+      max: 9,
+      admin: {
+        description: 'Intensity of heat (0-9 slider value)',
+      },
+    },
+    {
+      name: 'livingSituation',
+      type: 'group',
+      required: true,
+      fields: [
+        {
+          name: 'housingType',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Wohnung', value: 'apartment' },
+            { label: 'Haus', value: 'house' },
+          ],
+          admin: {
+            description: 'Apartment or house',
+          },
+        },
+        {
+          name: 'greenNeighborhood',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Ja', value: 'yes' },
+            { label: 'Nein', value: 'no' },
+            { label: 'Weiß nicht', value: 'unsure' },
+          ],
+          admin: {
+            description: 'Is the neighborhood open and green?',
+          },
+        },
+        {
+          name: 'cityArea',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Innenstadt', value: 'inner' },
+            { label: 'Äußerer Bereich', value: 'outer' },
+          ],
+          admin: {
+            description: 'Inner city or outer area',
+          },
+        },
+      ],
+    },
+    {
+      name: 'climateAdaptationKnowledge',
+      type: 'group',
+      required: true,
+      fields: [
+        {
+          name: 'knowsTerm',
+          type: 'checkbox',
+          required: true,
+          admin: {
+            description: 'Knows the term "Klimawandelanpassung"',
+          },
+        },
+        {
+          name: 'description',
+          type: 'textarea',
+          admin: {
+            description: 'Optional description of what they know',
+          },
+        },
+      ],
+    },
+    {
+      name: 'desiredChanges',
+      type: 'array',
+      admin: {
+        description: 'Selected icons for desired changes (greening, water, shadow, etc.)',
+      },
+      fields: [
+        {
+          name: 'icon',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Begrünung', value: 'greening' },
+            { label: 'Wasser', value: 'water' },
+            { label: 'Schatten', value: 'shadow' },
+            { label: 'Verschattung', value: 'shading' },
+            { label: 'Kühlung', value: 'cooling' },
+            { label: 'Dachbegrünung', value: 'roof_greening' },
+            { label: 'Fassadenbegrünung', value: 'facade_greening' },
+            { label: 'Wasserspender', value: 'water_fountain' },
+          ],
+        },
+      ],
     },
     {
       name: 'problem_index',

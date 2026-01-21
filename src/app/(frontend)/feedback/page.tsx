@@ -1,18 +1,23 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import ProgressBar from '@/components/questionnaire/ProgressBar'
 import { useSubmission } from '@/providers/Submission'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { STEP_FEEDBACK, TOTAL_STEPS } from '../questionnaire/constants'
 
 const MAX_LENGTH = 2000
 
 export default function FeedbackPage() {
   const router = useRouter()
-  const { state, updateUserText, updateCurrentStep, updateResults } = useSubmission()
+  const { state, updateUserText, updateConsent, updateCurrentStep, updateResults } = useSubmission()
   const [text, setText] = useState(state.userText || '')
+  const [dataCollection, setDataCollection] = useState(state.consent?.dataCollection || false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const remaining = MAX_LENGTH - text.length
@@ -22,6 +27,13 @@ export default function FeedbackPage() {
     setError(null)
 
     try {
+      // Validate consent
+      if (!dataCollection) {
+        setError('Bitte akzeptieren Sie die Datenerhebung, um fortzufahren.')
+        setIsSubmitting(false)
+        return
+      }
+
       // Validate required data
       if (
         !state.location ||
@@ -32,25 +44,39 @@ export default function FeedbackPage() {
         throw new Error('Standort fehlt. Bitte kehren Sie zur Standortseite zurück.')
       }
 
-      if (!state.questionnaireVersion) {
-        throw new Error('Fragebogen-Version fehlt. Bitte starten Sie die Umfrage neu.')
-      }
-
       if (!state.answers || Object.keys(state.answers).length === 0) {
         throw new Error('Keine Antworten gefunden. Bitte beantworten Sie die Fragen.')
       }
 
+      // Update consent in state
+      const consentData = {
+        dataCollection: true,
+        cookieConsent: 'necessary' as const,
+        consentVersion: '1.0',
+        timestamp: new Date().toISOString(),
+      }
+      updateConsent(consentData)
+
+      // Store cookie consent in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cookieConsent', 'necessary')
+      }
+
+      // Merge location answer with location state
+      const locationAnswer = state.answers.location || {}
+      const mergedLocation = {
+        lat: state.location.lat,
+        lng: state.location.lng,
+        postal_code: state.location.postal_code,
+        city: state.location.city || locationAnswer.city || undefined,
+        street: locationAnswer.street || state.location.street || undefined,
+      }
+
       // Prepare submission payload
       const payload = {
-        location: {
-          lat: state.location.lat,
-          lng: state.location.lng,
-          postal_code: state.location.postal_code,
-          city: state.location.city || undefined,
-        },
-        questionnaireVersion: state.questionnaireVersion,
+        location: mergedLocation,
+        questionnaireVersion: state.questionnaireVersion || 'v1.0',
         answers: state.answers,
-        consentVersion: state.consent?.consentVersion || '1.0',
         personalFields: state.personalFields || undefined,
         freeText: text || undefined,
       }
@@ -96,6 +122,11 @@ export default function FeedbackPage() {
   }
 
   const handleSkip = async () => {
+    // Still need consent even when skipping comments
+    if (!dataCollection) {
+      setError('Bitte akzeptieren Sie die Datenerhebung, um fortzufahren.')
+      return
+    }
     updateUserText('')
     await submitToAPI()
   }
@@ -103,6 +134,9 @@ export default function FeedbackPage() {
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8 md:py-16">
       <div className="space-y-6">
+        {/* Progress bar */}
+        <ProgressBar currentStep={STEP_FEEDBACK} totalSteps={TOTAL_STEPS} />
+
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Zusätzliche Kommentare</h1>
           <p className="text-muted-foreground">
@@ -139,6 +173,48 @@ export default function FeedbackPage() {
             </div>
           </div>
 
+          {/* Consent Section */}
+          <div className="space-y-4 rounded-lg border bg-card p-6">
+            <h2 className="text-lg font-semibold">Einverständniserklärung</h2>
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="data-collection"
+                checked={dataCollection}
+                onCheckedChange={(checked) => {
+                  setDataCollection(checked === true)
+                  setError(null)
+                }}
+                className="mt-1"
+              />
+              <div className="space-y-1">
+                <Label htmlFor="data-collection" className="text-base font-medium leading-none">
+                  Datenerhebung akzeptieren <span className="text-destructive">*</span>
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Ich stimme der Erhebung und Verarbeitung meiner anonymen Daten für die Zwecke
+                  dieser Umfrage zu. Meine Daten werden anonymisiert gespeichert und nur für
+                  statistische Zwecke verwendet.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Weitere Informationen finden Sie in unserer{' '}
+                <Link href="/legal/privacy" className="text-primary underline hover:no-underline">
+                  Datenschutzerklärung
+                </Link>
+                .
+              </p>
+              <p>
+                Lesen Sie auch unsere{' '}
+                <Link href="/legal/terms" className="text-primary underline hover:no-underline">
+                  Nutzungsbedingungen
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-4 sm:flex-row">
             <Button
               type="button"
@@ -156,10 +232,10 @@ export default function FeedbackPage() {
                 disabled={isSubmitting}
                 className="w-full sm:w-auto"
               >
-                Überspringen
+                Kommentare überspringen
               </Button>
               <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-                {isSubmitting ? 'Wird gespeichert...' : 'Weiter'}
+                {isSubmitting ? 'Wird gespeichert...' : 'Absenden und Ergebnisse anzeigen'}
               </Button>
             </div>
           </div>
