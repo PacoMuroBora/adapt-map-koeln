@@ -10,10 +10,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -320,
-        -48
+        -208,
+        -192
       ],
-      "id": "271cde43-0367-4514-94a3-bb941f75e30d",
+      "id": "6ccf79d7-9a61-4122-835e-a3bc4cfee5a0",
       "name": "Webhook",
       "webhookId": "2fc04f4d-bee8-40c5-9245-c8b19320f84d"
     },
@@ -24,10 +24,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1600,
-        -48
+        1712,
+        -192
       ],
-      "id": "c904801c-1c84-4087-a575-7aed9dcc3669",
+      "id": "83143aed-5b08-4089-b061-3a50205a9a0e",
       "name": "Respond to Webhook"
     },
     {
@@ -42,23 +42,23 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        912,
-        -48
+        1024,
+        -192
       ],
-      "id": "fb4d92fb-e723-4f40-bb9b-588536484a24",
+      "id": "6426ce76-e083-455a-a084-a699df8ea2ae",
       "name": "AI Agent"
     },
     {
       "parameters": {
-        "jsCode": "// Extract webhook body from n8n webhook format\nconst webhookData = $input.first().json;\n\n// n8n webhook sends data in body property\nconst body = webhookData.body || webhookData;\n\n// Validate required fields\nif (!body.submissionId) {\n  throw new Error('Missing submissionId in request body');\n}\n\nif (!body.answers) {\n  throw new Error('Missing answers in request body');\n}\n\nif (typeof body.problemIndex !== 'number') {\n  throw new Error('Missing or invalid problemIndex in request body');\n}\n\nif (!body.location || !body.location.lat || !body.location.lng || !body.location.postal_code) {\n  throw new Error('Missing or invalid location data in request body');\n}\n\n// Return formatted data for AI agent\nreturn {\n  json: {\n    submissionId: body.submissionId,\n    answers: body.answers,\n    problemIndex: body.problemIndex,\n    location: {\n      lat: body.location.lat,\n      lng: body.location.lng,\n      postal_code: body.location.postal_code,\n      city: body.location.city || null\n    },\n    freeText: body.freeText || body.user_text || null,\n    personalFields: body.personalFields || null\n  }\n};"
+        "jsCode": "// n8n Webhook -> Code node: normalize + enrich submission for vector search + AI prompt\n\nconst webhookData = $input.first().json;\nconst body = webhookData.body || webhookData;\n\n// ---------- helpers ----------\nconst isNum = (v) => typeof v === \"number\" && Number.isFinite(v);\n\nconst heatFrequencyMap = {\n  \"1-3\": { label: \"1–3 Tage/Jahr\", score: 20 },\n  \"4-10\": { label: \"4–10 Tage/Jahr\", score: 40 },\n  \"11-20\": { label: \"11–20 Tage/Jahr\", score: 60 },\n  \"21-40\": { label: \"21–40 Tage/Jahr\", score: 80 },\n  \">40\": { label: \"> 40 Tage/Jahr\", score: 100 },\n};\n\nconst intensityLevel = (v0to9) => {\n  if (!isNum(v0to9)) return { label: \"unbekannt\", bucket: \"unknown\" };\n  if (v0to9 <= 2) return { label: \"niedrig\", bucket: \"low\" };\n  if (v0to9 <= 5) return { label: \"mittel\", bucket: \"medium\" };\n  if (v0to9 <= 7) return { label: \"hoch\", bucket: \"high\" };\n  return { label: \"sehr hoch\", bucket: \"very_high\" };\n};\n\nconst housingTypeMap = { apartment: \"Wohnung\", house: \"Haus\" };\nconst greenNeighborhoodMap = { yes: \"Ja\", no: \"Nein\", unsure: \"Weiß nicht\" };\nconst cityAreaMap = { inner: \"Innenstadt\", outer: \"Äußerer Bereich\" };\n\nconst desiredChangesMap = {\n  greening: \"Begrünung\",\n  water: \"Wasser\",\n  shadow: \"Schatten\",\n  shading: \"Verschattung\",\n  cooling: \"Kühlung\",\n  roof_greening: \"Dachbegrünung\",\n  facade_greening: \"Fassadenbegrünung\",\n  water_fountain: \"Wasserspender\",\n};\n\nconst severityFromProblemIndex = (pi) => {\n  // mirrors src/app/api/submit/route.ts\n  if (!isNum(pi)) return \"unbekannt\";\n  if (pi >= 70) return \"hoch\";\n  if (pi >= 40) return \"mittel\";\n  return \"niedrig\";\n};\n\nconst classifyScore = (score0to100) => {\n  // mirrors src/app/api/submit/route.ts insights\n  if (!isNum(score0to100)) return \"unbekannt\";\n  if (score0to100 >= 70) return \"Kritisch\";\n  if (score0to100 >= 40) return \"Problematisch\";\n  return \"Unauffällig\";\n};\n\n// ---------- validate minimal ----------\nif (!body?.submissionId) throw new Error(\"Missing submissionId in request body\");\n\nif (!body.location || !isNum(body.location.lat) || !isNum(body.location.lng) || !body.location.postal_code) {\n  throw new Error(\"Missing/invalid location (lat,lng,postal_code)\");\n}\n\nif (!isNum(body.problemIndex)) throw new Error(\"Missing/invalid problemIndex\");\n\n// ---------- normalize input ----------\nconst submissionId = body.submissionId;\n\nconst location = {\n  lat: body.location.lat,\n  lng: body.location.lng,\n  postal_code: body.location.postal_code,\n  city: body.location.city || null,\n  street: body.location.street || null,\n};\n\nconst personalFields = body.personalFields || null;\n\nconst heatFrequencyValue = body.heatFrequency ?? null;\nconst heatFrequency = heatFrequencyMap[heatFrequencyValue] || { label: String(heatFrequencyValue || \"unbekannt\"), score: null };\n\nconst heatIntensityValue = body.heatIntensity;\nconst intensity = {\n  value: isNum(heatIntensityValue) ? heatIntensityValue : null, // 0..9\n  level: intensityLevel(heatIntensityValue).label,\n  score: isNum(heatIntensityValue) ? (heatIntensityValue / 9) * 100 : null, // mirrors backend mapping\n};\n\nconst livingSituation = body.livingSituation || {};\nconst livingSituationHuman = {\n  housingType: livingSituation.housingType ? (housingTypeMap[livingSituation.housingType] || livingSituation.housingType) : \"unbekannt\",\n  greenNeighborhood: livingSituation.greenNeighborhood\n    ? (greenNeighborhoodMap[livingSituation.greenNeighborhood] || livingSituation.greenNeighborhood)\n    : \"unbekannt\",\n  cityArea: livingSituation.cityArea ? (cityAreaMap[livingSituation.cityArea] || livingSituation.cityArea) : \"unbekannt\",\n};\n\nconst climate = body.climateAdaptationKnowledge || {};\nconst knowsTerm =\n  typeof climate.knowsTerm === \"boolean\"\n    ? climate.knowsTerm\n    : climate.knowsTerm === \"true\"\n      ? true\n      : climate.knowsTerm === \"false\"\n        ? false\n        : null;\n\nconst desiredChangesRaw = Array.isArray(body.desiredChanges) ? body.desiredChanges : [];\nconst desiredChanges = desiredChangesRaw\n  .map((x) => (typeof x === \"string\" ? x : x?.icon))\n  .filter(Boolean)\n  .map((icon) => ({\n    value: icon,\n    label: desiredChangesMap[icon] || icon,\n  }));\n\nconst subScores = body.subScores || null;\nconst subScoresHuman = subScores\n  ? {\n      frequency: { score: subScores.frequency, label: classifyScore(subScores.frequency) },\n      intensity: { score: subScores.intensity, label: classifyScore(subScores.intensity) },\n    }\n  : null;\n\nconst problemIndex = body.problemIndex;\nconst severity = severityFromProblemIndex(problemIndex);\n\n// Backwards-compat “answers” object (so your existing prompt templates don’t break)\nconst answers = {\n  heatFrequency: { value: heatFrequencyValue, label: heatFrequency.label, score: heatFrequency.score },\n  heatIntensity: { value: intensity.value, level: intensity.level, score: intensity.score },\n  livingSituation: {\n    housingType: { value: livingSituation.housingType || null, label: livingSituationHuman.housingType },\n    greenNeighborhood: { value: livingSituation.greenNeighborhood || null, label: livingSituationHuman.greenNeighborhood },\n    cityArea: { value: livingSituation.cityArea || null, label: livingSituationHuman.cityArea },\n  },\n  climateAdaptationKnowledge: {\n    knowsTerm,\n    description: climate.description || null,\n  },\n  desiredChanges,\n  location,\n  personalFields,\n  freeText: body.freeText || body.user_text || null,\n  questionnaireVersion: body.questionnaireVersion || null,\n  subScores,\n};\n\n// ---------- build “good” german context text for vector search ----------\nconst lines = [];\n\nlines.push(`Standort: ${location.city || \"unbekannt\"} (${location.postal_code}), ${location.street ? location.street + \", \" : \"\"}Koordinaten ${location.lat}, ${location.lng}`);\nlines.push(`Wohnsituation: ${livingSituationHuman.housingType}; Nachbarschaft offen/grün: ${livingSituationHuman.greenNeighborhood}; Lage: ${livingSituationHuman.cityArea}`);\n\nlines.push(\n  `Hitzebelastung: Häufigkeit ${heatFrequency.label}  + Intensität ${intensity.value ?? \"?\"}/9 (${intensity.level}, ${intensity.score !== null ? intensity.score.toFixed(1) : \"?\"}/100)`\n);\n\nlines.push(`Problem-Index: ${Math.round(problemIndex)}/100 (${severity})`);\n\nif (subScoresHuman) {\n  lines.push(\n    `Teil-Scores: Häufigkeit ${Math.round(subScoresHuman.frequency.score)}/100 (${subScoresHuman.frequency.label}), Intensität ${Math.round(subScoresHuman.intensity.score)}/100 (${subScoresHuman.intensity.label})`\n  );\n}\n\nif (desiredChanges.length) {\n  lines.push(`Gewünschte Änderungen: ${desiredChanges.map((d) => d.label).join(\", \")}`);\n}\n\nif (knowsTerm !== null) {\n  lines.push(`Wissen zu „Klimawandelanpassung“: ${knowsTerm ? \"kennt den Begriff\" : \"kennt den Begriff nicht\"}${climate.description ? `; eigene Beschreibung: ${climate.description}` : \"\"}`);\n}\n\nconst freeText = (body.freeText || body.user_text || \"\").trim();\nif (freeText) lines.push(`Freitext: ${freeText}`);\n\nif (personalFields && (personalFields.age || personalFields.gender || personalFields.householdSize)) {\n  lines.push(\n    `Person: Alter ${personalFields.age ?? \"n/a\"}, Geschlecht ${personalFields.gender ?? \"n/a\"}, Haushalt ${personalFields.householdSize ?? \"n/a\"}`\n  );\n}\n\nconst contextText = lines.join(\"\\n\");\n\n// A slightly “query-optimized” vector prompt (shorter, dense keywords)\nconst vectorQuery = [\n  \"Hitzeanpassung, Kühlung, Stadtklima, Hitzestress, Hitzeschutz, Verschattung, Begrünung, Wasser, Innenraumkühlung, Verhaltenstipps, bauliche Maßnahmen.\",\n  `Kontext:\\n${contextText}`,\n  \"Bitte liefere Knowledge-Base-Einträge mit konkreten Maßnahmen/Produkten/Tipps passend zu Wohnsituation, Stadtlage und gewünschtem Fokus.\",\n].join(\"\\n\\n\");\n\nreturn {\n  json: {\n    submissionId,\n    location,\n    personalFields,\n    freeText: freeText || null,\n    questionnaireVersion: body.questionnaireVersion || null,\n\n    heatFrequency: heatFrequencyValue,\n    heatIntensity: intensity.value,\n    livingSituation: body.livingSituation || null,\n    climateAdaptationKnowledge: body.climateAdaptationKnowledge || null,\n    desiredChanges: desiredChangesRaw,\n\n    problemIndex,\n    subScores,\n\n    // enriched + backwards compat\n    answers,\n    severity,\n    contextText,\n    vectorQuery,\n  },\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -80,
-        -48
+        32,
+        -192
       ],
-      "id": "fc6217ef-8edd-4843-89ff-3e65977d8493",
+      "id": "231442bf-89a7-4e53-a2de-5acc755c2a84",
       "name": "Format Body"
     },
     {
@@ -70,10 +70,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1088,
-        192
+        1200,
+        48
       ],
-      "id": "a5724ddd-bb8b-4651-a415-173b88c5367f",
+      "id": "ff9f8175-b4cc-4230-9c6a-92bc454ee58b",
       "name": "Structured Output Parser"
     },
     {
@@ -90,15 +90,15 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        816,
-        224
+        928,
+        80
       ],
-      "id": "12c04073-bb5c-4d0d-9865-7b5759a82be4",
+      "id": "31cafa37-042d-4d7a-a036-9023dad268ce",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "AmDv0XgXbiVbFCU1",
-          "name": "Soter Studio Key"
+          "id": "wd5o4STXpbfsVMky",
+          "name": "Temporal Key (they should get their own)"
         }
       }
     },
@@ -115,15 +115,15 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        1152,
-        416
+        1264,
+        272
       ],
-      "id": "163b42ab-a291-4a7b-bd56-fe58831ce5b2",
+      "id": "2ea09ad6-77ec-48a2-bcb1-68d11919f173",
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
-          "id": "AmDv0XgXbiVbFCU1",
-          "name": "Soter Studio Key"
+          "id": "wd5o4STXpbfsVMky",
+          "name": "Temporal Key (they should get their own)"
         }
       }
     },
@@ -134,10 +134,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1360,
-        -48
+        1472,
+        -192
       ],
-      "id": "25b13a01-54a3-4708-ae33-b38731eb89c1",
+      "id": "cf2abd54-3b7c-45be-9c18-31c360e6fde0",
       "name": "Set body"
     },
     {
@@ -155,15 +155,15 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreMongoDBAtlas",
       "typeVersion": 1.3,
       "position": [
-        96,
-        64
+        320,
+        -192
       ],
-      "id": "7fcd771e-5d5e-43fc-ac33-8907ecc42609",
+      "id": "8869c313-ce35-492c-bb51-5aae6c3b37ef",
       "name": "MongoDB Atlas Vector Store",
       "credentials": {
         "mongoDb": {
-          "id": "71ZabfZ1nhAOCJRf",
-          "name": "MongoDB vectors"
+          "id": "QTke3XRCEMPQX33d",
+          "name": "MongoDB account"
         }
       }
     },
@@ -174,15 +174,15 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        80,
-        256
+        192,
+        112
       ],
-      "id": "c4ace951-3c0e-4e5e-9444-e9c5c13b2702",
+      "id": "79affee0-2363-4b70-bf9f-a8bf968dbcbd",
       "name": "Embeddings OpenAI",
       "credentials": {
         "openAiApi": {
-          "id": "AmDv0XgXbiVbFCU1",
-          "name": "Soter Studio Key"
+          "id": "wd5o4STXpbfsVMky",
+          "name": "Temporal Key (they should get their own)"
         }
       }
     },
@@ -193,10 +193,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        432,
-        64
+        704,
+        -192
       ],
-      "id": "bdeb815d-4033-4162-84ee-e0f3a8809807",
+      "id": "f3f80135-7b62-48ed-9ef3-598452bdf7b9",
       "name": "Format KB Results"
     }
   ],
@@ -315,57 +315,83 @@
   "pinData": {
     "Webhook": [
       {
-        "name": "First item",
-        "code": 1
-      },
-      {
-        "name": "Second item",
-        "code": 2
-      }
-    ],
-    "Format Body": [
-      {
-        "submissionId": "67a1b2c3d4e5f6g7h8i9j0k1",
-        "answers": {
-          "heat_comfort": "very_hot",
-          "indoor_temperature_day": 32,
-          "indoor_temperature_night": 28,
-          "cooling_access": "none",
-          "shade_access": "limited",
-          "ventilation": "poor",
-          "health_impact": [
-            "sleep_disturbance",
-            "fatigue"
-          ],
-          "adaptation_measures": [
-            "fans",
-            "curtains"
-          ],
-          "building_type": "apartment",
-          "floor_level": 5,
-          "window_orientation": [
-            "south",
-            "west"
-          ]
+        "headers": {
+          "host": "n8n.adaptmap.de",
+          "user-agent": "node",
+          "content-length": "992",
+          "accept": "*/*",
+          "accept-encoding": "br, gzip, deflate",
+          "accept-language": "*",
+          "content-type": "application/json",
+          "sec-fetch-mode": "cors",
+          "x-forwarded-for": "149.7.77.157",
+          "x-forwarded-host": "n8n.adaptmap.de",
+          "x-forwarded-port": "443",
+          "x-forwarded-proto": "https",
+          "x-forwarded-server": "30ad19236549",
+          "x-real-ip": "149.7.77.157"
         },
-        "problemIndex": 72,
-        "location": {
-          "lat": 50.9375,
-          "lng": 6.9603,
-          "postal_code": "50667",
-          "city": "Köln"
+        "params": {},
+        "query": {},
+        "body": {
+          "submissionId": "6970ea2f16e4d954bc41b5ed",
+          "metadata": {
+            "timestamp": "2026-01-21T15:01:03.170Z",
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+          },
+          "location": {
+            "lat": 50.94674215,
+            "lng": 6.914981081147541,
+            "postal_code": "50823",
+            "city": "Köln",
+            "street": "Sömmeringstrasse 73"
+          },
+          "personalFields": {},
+          "questionnaireVersion": "v1.0",
+          "heatFrequency": "4-10",
+          "heatIntensity": 7,
+          "livingSituation": {
+            "housingType": "house",
+            "greenNeighborhood": "no",
+            "cityArea": "inner"
+          },
+          "climateAdaptationKnowledge": {
+            "knowsTerm": true
+          },
+          "desiredChanges": [
+            {
+              "icon": "greening",
+              "id": "6970ea2fd29db3829c0442c8"
+            },
+            {
+              "icon": "cooling",
+              "id": "6970ea2fd29db3829c0442c9"
+            },
+            {
+              "icon": "shadow",
+              "id": "6970ea2fd29db3829c0442ca"
+            },
+            {
+              "icon": "shading",
+              "id": "6970ea2fd29db3829c0442cb"
+            }
+          ],
+          "problemIndex": 58.88888888888889,
+          "subScores": {
+            "frequency": 40,
+            "intensity": 77.77777777777779
+          },
+          "freeText": "nice app bro\n",
+          "createdAt": "2026-01-21T15:01:03.180Z",
+          "updatedAt": "2026-01-21T15:01:03.180Z"
         },
-        "freeText": "Die Wohnung heizt sich besonders in den Nachmittagsstunden extrem auf. Nachts kühlt es kaum ab, was zu Schlafproblemen führt. Wir haben keine Klimaanlage und die Fenster sind nur nach Süden und Westen ausgerichtet. Wie wäre es mit Solar Panels?",
-        "personalFields": {
-          "age": 42,
-          "gender": "female",
-          "householdSize": 3
-        }
+        "webhookUrl": "https://n8n.adaptmap.de/webhook/ai/recommendation",
+        "executionMode": "production"
       }
     ]
   },
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "b965f1b1f353f12e1f5972bc6fbf945dbfe06182ae524b0cb4a5b1c93ccbc132"
+    "instanceId": "b32eea9df48850b6574f57ade3758b33ead212ef1b948eeb63b86f46c7850224"
   }
 }
