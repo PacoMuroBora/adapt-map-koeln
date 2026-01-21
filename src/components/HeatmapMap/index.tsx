@@ -255,7 +255,13 @@ export function HeatmapMap({ userLocation, className }: HeatmapMapProps) {
         ref={mapRef}
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
-        mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+        mapStyle={
+          process.env.NEXT_PUBLIC_MAPTILER_API_KEY
+            ? `https://api.maptiler.com/maps/basic-v2/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}&lang=de`
+            : // Fallback: Use Positron style (minimal, modern, shows green areas)
+              // Note: Labels will be in local language (German for German locations)
+              'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
+        }
         style={{ width: '100%', height: '100%' }}
         reuseMaps={true}
       >

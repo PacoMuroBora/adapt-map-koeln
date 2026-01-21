@@ -6,6 +6,7 @@ declare global {
       DATABASE_URI: string
       NEXT_PUBLIC_SERVER_URL: string
       VERCEL_PROJECT_PRODUCTION_URL: string
+      NEXT_PUBLIC_MAPTILER_API_KEY?: string // Optional: MapTiler API key for German labels
     }
   }
 }
