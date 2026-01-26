@@ -1,6 +1,7 @@
 'use client'
 
 import { Label } from '@/components/ui/label'
+import { Slider } from '@/components/ui/slider'
 import React from 'react'
 
 interface HeatIntensitySliderProps {
@@ -32,9 +33,8 @@ export default function HeatIntensitySlider({
   max = 9,
   required = false,
 }: HeatIntensitySliderProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseInt(e.target.value, 10)
-    onChange(newValue)
+  const handleValueChange = (values: number[]) => {
+    onChange(values[0])
   }
 
   // Calculate position for pointer indicator
@@ -53,48 +53,50 @@ export default function HeatIntensitySlider({
           </span>
         </div>
 
-        {/* Color gradient bar */}
-        <div className="relative h-12 w-full overflow-hidden rounded-lg border-2 border-gray-800">
-          {/* Gradient background */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to right, ${COLOR_STOPS.join(', ')})`,
-            }}
-          />
-
-          {/* Pointer indicator */}
-          <div
-            className="absolute top-0 h-full w-0.5 bg-black transition-all duration-150"
-            style={{
-              left: `${percentage}%`,
-              transform: 'translateX(-50%)',
-            }}
-          >
-            {/* Triangle pointer */}
+        {/* Container for gradient bar and slider */}
+        <div className="relative">
+          {/* Color gradient bar */}
+          <div className="relative h-12 w-full overflow-hidden rounded-lg border-2 border-gray-800 pointer-events-none">
+            {/* Gradient background */}
             <div
-              className="absolute -top-2 left-1/2 h-0 w-0 border-x-4 border-b-4 border-x-transparent border-b-black"
+              className="absolute inset-0"
               style={{
+                background: `linear-gradient(to right, ${COLOR_STOPS.join(', ')})`,
+              }}
+            />
+
+            {/* Pointer indicator */}
+            <div
+              className="absolute top-0 h-full w-0.5 bg-black transition-all duration-150 z-10"
+              style={{
+                left: `${percentage}%`,
                 transform: 'translateX(-50%)',
               }}
+            >
+              {/* Triangle pointer */}
+              <div
+                className="absolute -top-2 left-1/2 h-0 w-0 border-x-4 border-b-4 border-x-transparent border-b-black"
+                style={{
+                  transform: 'translateX(-50%)',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Slider positioned behind gradient bar */}
+          <div className="absolute inset-0 flex items-center">
+            <Slider
+              id="heat-intensity-slider"
+              value={[value]}
+              onValueChange={handleValueChange}
+              min={min}
+              max={max}
+              step={1}
+              showMarks={false}
+              className="w-full"
             />
           </div>
         </div>
-
-        {/* Slider input */}
-        <input
-          id="heat-intensity-slider"
-          type="range"
-          min={min}
-          max={max}
-          step={1}
-          value={value}
-          onChange={handleChange}
-          className="w-full cursor-pointer"
-          style={{
-            background: 'transparent',
-          }}
-        />
 
         {/* Labels */}
         <div className="flex justify-between text-xs text-muted-foreground">

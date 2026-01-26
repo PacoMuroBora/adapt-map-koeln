@@ -119,19 +119,15 @@ void main() {
   }
   
   // Radial falloff: linear from center to rim
-  // At center (dist=0): alpha = 0.7-0.8 (high but not fully opaque, map visible)
-  // At rim (dist=radius): alpha = 0.0 (fully transparent)
-  // This ensures the map is always visible even at the center
   float falloff = 1.0 - (dist / u_radius);
-  // Use minAlpha as the maximum alpha at center (0.7-0.8), fade to 0 at rim
-  // This gives good visibility while keeping map visible
-  float maxAlpha = u_minAlpha;
-  float alpha = maxAlpha * falloff;
+  float alpha = u_minAlpha * falloff;
   
-  // Accumulate: color * weight * alpha (RGB), and weight * alpha (A)
-  // This allows weighted color blending when circles overlap
-  // Note: weight modulates the alpha, so low weights make circles more transparent
-  gl_FragColor = vec4(u_color * u_weight * alpha, u_weight * alpha);
+  // Halfway between full weight effect and no weight effect on alpha
+  // This gives partial transparency control: alpha * (0.5 + 0.5 * weight)
+  float alphaWithWeight = alpha * (0.5 + 0.5 * u_weight);
+  
+  // Accumulate: color * weight * alpha (RGB), and weighted alpha (A)
+  gl_FragColor = vec4(u_color * u_weight * alpha, alphaWithWeight);
 }
 `
 
@@ -150,19 +146,20 @@ void main() {
   // accum.rgb = sum(color * weight * alpha)
   // accum.a = sum(weight * alpha)
   
-  // Discard pixels with no data (use higher threshold to avoid floating point precision issues)
+  // Discard pixels with no data
   if (accum.a < 0.01) {
-    discard; // No data here - fully transparent, don't affect map
+    discard;
   }
   
   // Weighted average color: divide accumulated color by accumulated weight
   vec3 finalColor = accum.rgb / max(accum.a, 0.001);
   
-  // Final alpha: boost accumulated weight to ensure visibility
-  // For single circles with low weight, multiply by factor to make them visible
-  // Clamp to reasonable range and apply layer opacity
-  float boostedAlpha = accum.a * 3.0; // Boost low values (e.g., 0.2 weight * 0.75 alpha = 0.15, boosted to 0.45)
-  float finalAlpha = min(boostedAlpha, 1.0) * u_opacity;
+  // Clamp color values to [0, 1] to show true colors without extra brightness
+  finalColor = clamp(finalColor, 0.0, 1.0);
+  
+  // Use accumulated alpha directly (no boost to avoid extra brightness)
+  // Just clamp to valid range and apply layer opacity
+  float finalAlpha = min(accum.a, 1.0) * u_opacity;
   
   gl_FragColor = vec4(finalColor, finalAlpha);
 }
@@ -211,8 +208,8 @@ export class InfluenceDiskLayer implements CustomLayerInterface {
     this.id = options.id
     this.data = options.data
     this.radiusMeters = options.radiusMeters ?? 5000 // Default 5000m (5km) radius
-    this.opacity = options.opacity ?? 0.8
-    this.minAlpha = options.minAlpha ?? 0.75 // Default 0.75 (75% max opacity at center, map always visible)
+    this.opacity = options.opacity ?? 1.0 // Full layer opacity for true color visibility
+    this.minAlpha = options.minAlpha ?? 0.975 // Very high alpha (97.5%) - halfway between 0.95 and 1.0
   }
 
   onAdd(map: MapLibreMap, gl: WebGLRenderingContext): void {
