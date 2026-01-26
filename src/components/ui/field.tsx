@@ -39,12 +39,13 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
         <div className={cn('flex-1', layout === 'horizontal' && 'md:flex-1')}>
           {React.Children.map(children, (child) => {
             if (React.isValidElement(child)) {
-              return React.cloneElement(child as React.ReactElement<any>, {
+              const childElement = child as React.ReactElement<React.HTMLAttributes<HTMLElement> & { className?: string }>
+              return React.cloneElement(childElement, {
                 id: fieldId,
                 'aria-invalid': error ? true : undefined,
                 'aria-describedby': ariaDescribedBy,
-                ...(error && { className: cn(child.props.className, 'border-error focus-visible:ring-error') }),
-              })
+                ...(error && { className: cn(childElement.props.className, 'border-error focus-visible:border-error focus-visible:ring-error') }),
+              } as React.HTMLAttributes<HTMLElement>)
             }
             return child
           })}

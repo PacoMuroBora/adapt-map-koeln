@@ -28,7 +28,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { Plus, Edit, Trash2, Check, X, Search, Filter, ExternalLink } from 'lucide-react'
+import { InputGroup } from '@/components/ui/input-group'
+import { InputOTP } from '@/components/ui/input-otp'
+import { Combobox } from '@/components/ui/combobox'
+import { RadioFancyGroup, RadioFancyItem } from '@/components/ui/radio-fancy'
+import { Slider } from '@/components/ui/slider'
+import { Checkbox } from '@/components/ui/checkbox'
+import { StatefulInfoBoxExamples } from './StatefulInfoBoxExamples'
+import { InteractiveExamples } from './InteractiveExamples'
+import { Plus, Edit, Trash2, X, Search, ExternalLink, Home, Building } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -47,6 +55,145 @@ export default function ShowcasePage() {
           Component showcase with all variations and states
         </p>
       </div>
+
+      {/* ============================================
+          BASICS: Colors, Typography, Spacing
+          ============================================ */}
+
+      {/* Colors Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Colors
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <div className="h-20 bg-foreground rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Foreground</p>
+            <p className="font-body text-xs text-foreground-alt">#141418</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-20 bg-foreground-alt rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Foreground Alt</p>
+            <p className="font-body text-xs text-foreground-alt">#4a5768</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-20 border-2 border-border rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Border</p>
+            <p className="font-body text-xs text-foreground-alt">#9f94ff</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-20 bg-primary rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Primary</p>
+            <p className="font-body text-xs text-foreground-alt">Lime Green</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-20 bg-destructive rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Destructive</p>
+            <p className="font-body text-xs text-foreground-alt">Orange/Red</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-20 bg-success rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Success</p>
+            <p className="font-body text-xs text-foreground-alt">Green</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-20 bg-error rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Error</p>
+            <p className="font-body text-xs text-foreground-alt">Red</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-20 bg-warning rounded-lg"></div>
+            <p className="font-body text-sm font-semibold">Warning</p>
+            <p className="font-body text-xs text-foreground-alt">Yellow</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Typography Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Typography
+        </h2>
+
+        <div className="space-y-6">
+          <div>
+            <h1 className="font-headings text-[64px] font-semibold leading-[67px] tracking-[-1px] mb-4">
+              Heading 1
+            </h1>
+            <p className="font-body text-sm text-foreground-alt">64px, Semibold, -1px tracking</p>
+          </div>
+
+          <div>
+            <h3 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-4">
+              Heading 3
+            </h3>
+            <p className="font-body text-sm text-foreground-alt">46px, Semibold, -0.5px tracking</p>
+          </div>
+
+          <div>
+            <p className="font-body text-lg font-normal leading-6 mb-2">
+              Paragraph Regular - 18px, Regular weight, 24px line height
+            </p>
+            <p className="font-body text-base font-normal leading-[21px] mb-2">
+              Paragraph Small - 16px, Regular weight, 21px line height
+            </p>
+            <p className="font-body text-lg font-semibold leading-6">
+              Paragraph Bold - Same as Regular but Semibold weight
+            </p>
+          </div>
+
+          <div>
+            <p className="font-sans text-base font-normal leading-none tracking-[1px]">
+              Button Large - 16px, Regular, leading-none, 1px tracking
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Spacing Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Spacing
+        </h2>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-1 h-1 bg-foreground rounded-full"></div>
+            <span className="font-body text-sm">2xs: 4px</span>
+            <div className="w-2 h-2 bg-foreground rounded"></div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-2 h-2 bg-foreground rounded"></div>
+            <span className="font-body text-sm">xs: 8px</span>
+            <div className="w-2 h-2 bg-foreground rounded"></div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-4 h-4 bg-foreground rounded"></div>
+            <span className="font-body text-sm">md: 16px</span>
+            <div className="w-4 h-4 bg-foreground rounded"></div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-6 h-6 bg-foreground rounded"></div>
+            <span className="font-body text-sm">xl: 24px</span>
+            <div className="w-6 h-6 bg-foreground rounded"></div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 bg-foreground rounded"></div>
+            <span className="font-body text-sm">2xl: 32px</span>
+            <div className="w-8 h-8 bg-foreground rounded"></div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-foreground rounded"></div>
+            <span className="font-body text-sm">5xl: 64px</span>
+            <div className="w-16 h-16 bg-foreground rounded"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          SIMPLE COMPONENTS: Buttons, Inputs, Basic Form Elements
+          ============================================ */}
 
       {/* Buttons Section */}
       <section className="mb-16">
@@ -122,6 +269,30 @@ export default function ShowcasePage() {
         </div>
       </section>
 
+      {/* Link Buttons Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Link Buttons
+        </h2>
+
+        <div className="space-y-8">
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Variations</h3>
+            <div className="flex flex-wrap gap-4 items-center">
+              <LinkButton href="/">Default Link</LinkButton>
+              <LinkButton href="/" size="sm">Small Link</LinkButton>
+              <LinkButton href="/" size="lg">Large Link</LinkButton>
+              <LinkButton href="/" size="mini">Mini Link</LinkButton>
+              <LinkButton href="/" shape="round">Round Link</LinkButton>
+              <LinkButton href="https://example.com" external>
+                External Link
+                <ExternalLink className="ml-1 h-3 w-3 inline" />
+              </LinkButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Inputs Section */}
       <section className="mb-16">
         <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
@@ -183,6 +354,129 @@ export default function ShowcasePage() {
         </div>
       </section>
 
+      {/* Checkbox Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Checkbox
+        </h2>
+
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox id="check1" />
+            <label htmlFor="check1" className="font-body text-sm cursor-pointer">
+              Unchecked
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="check2" checked />
+            <label htmlFor="check2" className="font-body text-sm cursor-pointer">
+              Checked
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="check3" disabled />
+            <label htmlFor="check3" className="font-body text-sm text-muted-foreground cursor-not-allowed">
+              Disabled
+            </label>
+          </div>
+        </div>
+      </section>
+
+      {/* Radio Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Radio Buttons
+        </h2>
+
+        <div className="space-y-8">
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Radio Group</h3>
+            <RadioGroup defaultValue="option1" className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="option1" id="r1" />
+                <label htmlFor="r1" className="font-body text-sm cursor-pointer">
+                  Option 1
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="option2" id="r2" />
+                <label htmlFor="r2" className="font-body text-sm cursor-pointer">
+                  Option 2
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="option3" id="r3" disabled />
+                <label htmlFor="r3" className="font-body text-sm text-muted-foreground cursor-not-allowed">
+                  Option 3 (Disabled)
+                </label>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
+      </section>
+
+      {/* Select Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Select
+        </h2>
+
+        <div className="space-y-4 max-w-md">
+          <Select>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="option1">Option 1</SelectItem>
+              <SelectItem value="option2">Option 2</SelectItem>
+              <SelectItem value="option3">Option 3</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select>
+            <SelectTrigger>
+              <SelectValue placeholder="Select with groups" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="group1-item1">Group 1 - Item 1</SelectItem>
+              <SelectItem value="group1-item2">Group 1 - Item 2</SelectItem>
+              <SelectItem value="group2-item1">Group 2 - Item 1</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
+
+      {/* Skeletons Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Skeletons
+        </h2>
+
+        <div className="space-y-8">
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Variants</h3>
+            <div className="flex flex-wrap gap-4 items-center">
+              <Skeleton variant="block" />
+              <Skeleton variant="line" />
+              <Skeleton variant="object" />
+              <Skeleton variant="avatar" />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Avatar with Line</h3>
+            <div className="flex flex-col gap-4">
+              <SkeletonAvatar />
+              <SkeletonAvatar />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          MEDIUM COMPLEXITY: Cards, Alerts, Form Wrappers
+          ============================================ */}
+
       {/* Cards Section */}
       <section className="mb-16">
         <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
@@ -216,7 +510,7 @@ export default function ShowcasePage() {
           </Card>
 
           {/* Card with Color Variants */}
-          <Card className="bg-[#DBCBFD]/20 border-[#DBCBFD]">
+          <Card variant="purple">
             <CardHeader>
               <CardTitle>Purple Card</CardTitle>
               <CardDescription>Light purple background variant</CardDescription>
@@ -226,13 +520,23 @@ export default function ShowcasePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#FFD8BE]/20 border-[#FFD8BE]">
+          <Card variant="orange">
             <CardHeader>
               <CardTitle>Orange Card</CardTitle>
               <CardDescription>Light orange background variant</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="font-body text-sm">This card uses an orange background.</p>
+            </CardContent>
+          </Card>
+
+          <Card variant="white">
+            <CardHeader>
+              <CardTitle>White Card</CardTitle>
+              <CardDescription>White background with dashed border</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="font-body text-sm">This card uses a white background with dashed border.</p>
             </CardContent>
           </Card>
 
@@ -299,104 +603,6 @@ export default function ShowcasePage() {
         </div>
       </section>
 
-      {/* Link Buttons Section */}
-      <section className="mb-16">
-        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Link Buttons
-        </h2>
-
-        <div className="space-y-8">
-          <div>
-            <h3 className="font-body text-base font-semibold mb-4">Variations</h3>
-            <div className="flex flex-wrap gap-4 items-center">
-              <LinkButton href="/">Default Link</LinkButton>
-              <LinkButton href="/" size="sm">Small Link</LinkButton>
-              <LinkButton href="/" size="lg">Large Link</LinkButton>
-              <LinkButton href="/" size="mini">Mini Link</LinkButton>
-              <LinkButton href="/" shape="round">Round Link</LinkButton>
-              <LinkButton href="https://example.com" external>
-                External Link
-                <ExternalLink className="ml-1 h-3 w-3 inline" />
-              </LinkButton>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Skeletons Section */}
-      <section className="mb-16">
-        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Skeletons
-        </h2>
-
-        <div className="space-y-8">
-          <div>
-            <h3 className="font-body text-base font-semibold mb-4">Variants</h3>
-            <div className="flex flex-wrap gap-4 items-center">
-              <Skeleton variant="block" />
-              <Skeleton variant="line" />
-              <Skeleton variant="object" />
-              <Skeleton variant="avatar" />
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-body text-base font-semibold mb-4">Avatar with Line</h3>
-            <div className="flex flex-col gap-4">
-              <SkeletonAvatar />
-              <SkeletonAvatar />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Alert Dialogs Section */}
-      <section className="mb-16">
-        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Alert Dialogs
-        </h2>
-
-        <div className="space-y-4">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline">Open Alert Dialog</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction>Continue</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">Delete Item</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Item</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this item? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90">
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </section>
-
       {/* Fields Section */}
       <section className="mb-16">
         <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
@@ -454,67 +660,198 @@ export default function ShowcasePage() {
         </div>
       </section>
 
-      {/* Select Section */}
+      {/* Input Group Section */}
       <section className="mb-16">
         <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Select
+          Input Group
         </h2>
 
         <div className="space-y-4 max-w-md">
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an option" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="option1">Option 1</SelectItem>
-              <SelectItem value="option2">Option 2</SelectItem>
-              <SelectItem value="option3">Option 3</SelectItem>
-            </SelectContent>
-          </Select>
+          <InputGroup prefixIcon={<Search className="h-4 w-4" />}>
+            <Input placeholder="Search..." />
+          </InputGroup>
 
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select with groups" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="group1-item1">Group 1 - Item 1</SelectItem>
-              <SelectItem value="group1-item2">Group 1 - Item 2</SelectItem>
-              <SelectItem value="group2-item1">Group 2 - Item 1</SelectItem>
-            </SelectContent>
-          </Select>
+          <InputGroup prefix="$" suffix="USD">
+            <Input placeholder="0.00" type="number" />
+          </InputGroup>
+
+          <InputGroup prefix="https://" suffixIcon={<X className="h-4 w-4" />}>
+            <Input placeholder="example.com" />
+          </InputGroup>
         </div>
       </section>
 
-      {/* Radio Section */}
+      {/* Input OTP Section */}
       <section className="mb-16">
         <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Radio Buttons
+          Input OTP
         </h2>
 
         <div className="space-y-8">
           <div>
-            <h3 className="font-body text-base font-semibold mb-4">Radio Group</h3>
-            <RadioGroup defaultValue="option1" className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="option1" id="r1" />
-                <label htmlFor="r1" className="font-body text-sm cursor-pointer">
-                  Option 1
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="option2" id="r2" />
-                <label htmlFor="r2" className="font-body text-sm cursor-pointer">
-                  Option 2
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="option3" id="r3" disabled />
-                <label htmlFor="r3" className="font-body text-sm text-muted-foreground cursor-not-allowed">
-                  Option 3 (Disabled)
-                </label>
-              </div>
-            </RadioGroup>
+            <h3 className="font-body text-base font-semibold mb-4">Default (6 digits, round)</h3>
+            <InputOTP length={6} />
           </div>
+
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">With Separator</h3>
+            <InputOTP length={6} separator="-" separatorPosition={3} />
+          </div>
+
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Large Size</h3>
+            <InputOTP length={4} size="large" />
+          </div>
+
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Square Shape</h3>
+            <InputOTP length={4} shape="default" />
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          COMPLEX COMPONENTS: Dialogs, Advanced Form Elements
+          ============================================ */}
+
+      {/* Combobox Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Combobox
+        </h2>
+
+        <div className="space-y-4 max-w-md">
+          <Combobox
+            options={[
+              { value: 'option1', label: 'Option 1', description: 'First option' },
+              { value: 'option2', label: 'Option 2', description: 'Second option' },
+              { value: 'option3', label: 'Option 3', description: 'Third option' },
+            ]}
+            placeholder="Search and select..."
+            searchable
+            clearable
+          />
+        </div>
+      </section>
+
+      {/* Radio Fancy Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Radio Fancy
+        </h2>
+
+        <div className="space-y-8">
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Card-like Radio Buttons</h3>
+            <RadioFancyGroup defaultValue="house" name="location-type" className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <RadioFancyItem
+                value="house"
+                label="IN EINEM HAUS"
+                icon={<Home className="h-5 w-5" />}
+              />
+              <RadioFancyItem
+                value="apartment"
+                label="IN EINER WOHNUNG"
+                icon={<Building className="h-5 w-5" />}
+              />
+              <RadioFancyItem
+                value="other"
+                label="ANDERES"
+                icon={<Plus className="h-5 w-5" />}
+              />
+            </RadioFancyGroup>
+          </div>
+        </div>
+      </section>
+
+      {/* Slider Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Slider
+        </h2>
+
+        <div className="space-y-8 max-w-md">
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Horizontal Slider</h3>
+            <Slider defaultValue={[50]} max={100} step={1} />
+          </div>
+
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Vertical Slider</h3>
+            <div className="flex items-center gap-8">
+              <Slider
+                orientation="vertical"
+                defaultValue={[50]}
+                max={100}
+                step={1}
+                showLabels
+                labelTop="viel zu heiß"
+                labelBottom="angenehm"
+                className="h-[200px]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">Range Slider</h3>
+            <Slider defaultValue={[20, 80]} max={100} step={1} />
+          </div>
+        </div>
+      </section>
+
+      {/* Stateful Info Box Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Stateful Info Box
+        </h2>
+
+        <StatefulInfoBoxExamples />
+      </section>
+
+      {/* Alert Dialogs Section */}
+      <section className="mb-16">
+        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
+          Alert Dialogs
+        </h2>
+
+        <div className="space-y-4">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">Open Alert Dialog</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction>Continue</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete Item</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this item? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </section>
 
@@ -530,10 +867,10 @@ export default function ShowcasePage() {
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious href="#" />
+                  <PaginationPrevious />
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationNext href="#" />
+                  <PaginationNext />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
@@ -544,156 +881,30 @@ export default function ShowcasePage() {
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious href="#" />
+                  <PaginationPrevious />
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationLink href="#" isActive>1</PaginationLink>
+                  <PaginationLink isActive>1</PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationLink href="#">2</PaginationLink>
+                  <PaginationLink>2</PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationLink href="#">3</PaginationLink>
+                  <PaginationLink>3</PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
                   <PaginationEllipsis />
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationNext href="#" />
+                  <PaginationNext />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
           </div>
-        </div>
-      </section>
-
-      {/* Typography Section */}
-      <section className="mb-16">
-        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Typography
-        </h2>
-
-        <div className="space-y-6">
-          <div>
-            <h1 className="font-headings text-[64px] font-semibold leading-[67px] tracking-[-1px] mb-4">
-              Heading 1
-            </h1>
-            <p className="font-body text-sm text-foreground-alt">64px, Semibold, -1px tracking</p>
-          </div>
 
           <div>
-            <h3 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-4">
-              Heading 3
-            </h3>
-            <p className="font-body text-sm text-foreground-alt">46px, Semibold, -0.5px tracking</p>
-          </div>
-
-          <div>
-            <p className="font-body text-lg font-normal leading-6 mb-2">
-              Paragraph Regular - 18px, Regular weight, 24px line height
-            </p>
-            <p className="font-body text-base font-normal leading-[21px] mb-2">
-              Paragraph Small - 16px, Regular weight, 21px line height
-            </p>
-            <p className="font-body text-lg font-semibold leading-6">
-              Paragraph Bold - Same as Regular but Semibold weight
-            </p>
-          </div>
-
-          <div>
-            <p className="font-sans text-base font-normal leading-none tracking-[1px]">
-              Button Large - 16px, Regular, leading-none, 1px tracking
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Colors Section */}
-      <section className="mb-16">
-        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Colors
-        </h2>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <div className="h-20 bg-foreground rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Foreground</p>
-            <p className="font-body text-xs text-foreground-alt">#141418</p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-20 bg-foreground-alt rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Foreground Alt</p>
-            <p className="font-body text-xs text-foreground-alt">#4a5768</p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-20 border-2 border-border rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Border</p>
-            <p className="font-body text-xs text-foreground-alt">#9f94ff</p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-20 bg-primary rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Primary</p>
-            <p className="font-body text-xs text-foreground-alt">Lime Green</p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-20 bg-destructive rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Destructive</p>
-            <p className="font-body text-xs text-foreground-alt">Orange/Red</p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-20 bg-success rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Success</p>
-            <p className="font-body text-xs text-foreground-alt">Green</p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-20 bg-error rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Error</p>
-            <p className="font-body text-xs text-foreground-alt">Red</p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-20 bg-warning rounded-lg"></div>
-            <p className="font-body text-sm font-semibold">Warning</p>
-            <p className="font-body text-xs text-foreground-alt">Yellow</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Spacing Section */}
-      <section className="mb-16">
-        <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Spacing
-        </h2>
-
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-1 h-1 bg-foreground rounded-full"></div>
-            <span className="font-body text-sm">2xs: 4px</span>
-            <div className="w-2 h-2 bg-foreground rounded"></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-2 h-2 bg-foreground rounded"></div>
-            <span className="font-body text-sm">xs: 8px</span>
-            <div className="w-2 h-2 bg-foreground rounded"></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-4 h-4 bg-foreground rounded"></div>
-            <span className="font-body text-sm">md: 16px</span>
-            <div className="w-4 h-4 bg-foreground rounded"></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-6 h-6 bg-foreground rounded"></div>
-            <span className="font-body text-sm">xl: 24px</span>
-            <div className="w-6 h-6 bg-foreground rounded"></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 bg-foreground rounded"></div>
-            <span className="font-body text-sm">2xl: 32px</span>
-            <div className="w-8 h-8 bg-foreground rounded"></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-foreground rounded"></div>
-            <span className="font-body text-sm">5xl: 64px</span>
-            <div className="w-16 h-16 bg-foreground rounded"></div>
+            <h3 className="font-body text-base font-semibold mb-4">Load More Button</h3>
+            <InteractiveExamples />
           </div>
         </div>
       </section>

@@ -55,15 +55,28 @@ const RadioGroupItem = React.forwardRef<
       id={id}
       name={name}
       className={cn(
-        'aspect-square h-4 w-4 rounded-full border border-border text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-        checked && 'border-primary bg-primary',
+        'relative aspect-square h-4 w-4 rounded-full border-2 transition-colors ring-offset-background',
+        'focus:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)]',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        // Unchecked state
+        !checked && [
+          'border-border bg-background',
+          'hover:border-primary/50',
+          'disabled:border-gray-300 disabled:bg-gray-100',
+        ],
+        // Checked state
+        checked && [
+          'border-primary bg-primary',
+          'hover:bg-primary/90',
+          'disabled:border-primary/30 disabled:bg-primary/20',
+        ],
         className
       )}
       onClick={() => !disabled && onValueChange?.(itemValue)}
       {...props}
     >
       {checked && (
-        <Circle className="h-2.5 w-2.5 fill-current text-current mx-auto" />
+        <Circle className="absolute inset-0 m-auto h-2.5 w-2.5 fill-current text-primary-foreground" />
       )}
     </button>
   )

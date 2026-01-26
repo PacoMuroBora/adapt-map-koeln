@@ -56,7 +56,7 @@ export default async function LegalPage({ params: paramsPromise }: Args) {
     <article className="container mx-auto px-4 py-8 md:py-16">
       <div className="mx-auto max-w-4xl">
         <h1 className="mb-6 text-3xl font-bold tracking-tight sm:text-4xl md:mb-8">{title}</h1>
-        <div className="prose prose-lg max-w-none dark:prose-invert">
+        <div className="prose prose-lg max-w-none">
           <RichText data={content} enableGutter={false} />
         </div>
       </div>

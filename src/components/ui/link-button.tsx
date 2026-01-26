@@ -11,7 +11,7 @@ export interface LinkButtonProps extends React.AnchorHTMLAttributes<HTMLAnchorEl
 
 const LinkButton = React.forwardRef<HTMLAnchorElement, LinkButtonProps>(
   ({ className, href, shape = 'default', size = 'default', external, children, ...props }, ref) => {
-    const baseClasses = 'font-sans text-foreground no-underline transition-all hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+    const baseClasses = 'font-sans text-foreground no-underline transition-all hover:underline focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)]'
     
     const sizeClasses = {
       default: 'text-base',

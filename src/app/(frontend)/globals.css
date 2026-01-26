@@ -152,3 +152,10 @@
     font-family: var(--font-headings);
   }
 }
+
+@layer utilities {
+  /* Style selected select items - when they contain a visible check indicator */
+  [data-radix-select-item]:has(span:has(svg[class*="lucide-check"])) {
+    @apply bg-primary/20 border-b-2 border-dashed border-primary;
+  }
+}
