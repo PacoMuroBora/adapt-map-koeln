@@ -108,19 +108,38 @@ jobs:
             # Navigate to services directory (single compose file location)
             cd /docker/services || (echo "Error: /docker/services not found" && exit 1)
 
+            # Determine compose file name (check for both naming conventions)
+            COMPOSE_FILE="docker-compose.hostinger.yml"
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              COMPOSE_FILE="docker-compose.yml"
+            fi
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "Error: No docker-compose file found in /docker/services"
+              ls -la
+              exit 1
+            fi
+            echo "Using compose file: $COMPOSE_FILE"
+
             # Tag image with timestamp for versioning
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.IMAGE_NAME }}:$(date +%Y%m%d-%H%M%S)
 
-            # Restart only the app service (other services stay running)
-            echo "Restarting app service..."
-            docker compose restart app || docker compose up -d app
+            # Stop and recreate the app service with new image (other services stay running)
+            echo "Stopping existing app container..."
+            docker compose -f "$COMPOSE_FILE" stop app || true
+            
+            echo "Recreating app service with new image..."
+            docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-deps app
 
             # Wait a moment for container to start
-            sleep 5
+            sleep 10
 
             # Check if container is running
             echo "Checking container status..."
-            docker compose ps app
+            docker compose -f "$COMPOSE_FILE" ps app
+            
+            # Show recent logs if container exists
+            echo "=== Recent container logs ==="
+            docker compose -f "$COMPOSE_FILE" logs --tail=30 app || echo "Could not fetch logs"
 
             # Clean up old images (keep last 3 versions)
             docker images ${{ env.IMAGE_NAME }} --format "{{.ID}} {{.CreatedAt}}" | sort -rk 2 | tail -n +4 | awk '{print $1}' | xargs -r docker rmi -f || true
@@ -140,13 +159,23 @@ jobs:
             # Check container status
             echo "=== Container Status ==="
             cd /docker/services
-            docker compose ps app
+            
+            # Determine compose file name
+            COMPOSE_FILE="docker-compose.hostinger.yml"
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              COMPOSE_FILE="docker-compose.yml"
+            fi
+            
+            docker compose -f "$COMPOSE_FILE" ps app
             echo ""
-            echo "=== Container Logs (last 20 lines) ==="
-            docker compose logs --tail=20 app || echo "Container not found"
+            echo "=== Container Logs (last 50 lines) ==="
+            docker compose -f "$COMPOSE_FILE" logs --tail=50 app || echo "Container not found"
             echo ""
-            echo "=== Container Health ==="
-            docker ps | grep adaptmap-app || echo "Container not running"
+            echo "=== Container Health Check ==="
+            docker inspect adaptmap-app --format='{{.State.Status}} - Health: {{.State.Health.Status}}' 2>/dev/null || echo "Container not found"
+            echo ""
+            echo "=== Testing Health Endpoint ==="
+            docker exec adaptmap-app curl -f http://localhost:3000/api/health 2>/dev/null && echo "Health endpoint OK" || echo "Health endpoint failed"
             echo ""
             echo "=== Traefik Router Check ==="
             docker exec traefik wget -qO- http://localhost:8080/api/http/routers 2>/dev/null | python3 -m json.tool | grep -A 5 '"name": "app' || echo "App router not found in Traefik"
