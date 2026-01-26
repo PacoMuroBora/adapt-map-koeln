@@ -19,6 +19,7 @@ type GeoJSONFeature = {
     postalCode: string
     count: number
     average_problem_index: number
+    weight: number
   }
 }
 
@@ -46,123 +47,72 @@ const COLOR_STOPS = [
   '#8b4513', // Dark Brown/Reddish-Brown
 ]
 
-// Circle layer - each point shows its value color fading to transparent
-// Gradients only appear naturally when multiple circles overlap
-const circleLayer = {
-  id: 'heatmap-circles',
-  type: 'circle' as const,
+// Heatmap layer - creates a proper heatmap visualization without showing individual points
+// Uses heatmap-density for color per MapLibre best practices
+const heatmapLayer = {
+  id: 'heatmap-layer',
+  type: 'heatmap' as const,
   paint: {
-    // Large radius for visibility
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 0, 40, 9, 100],
-    // Color based on average_problem_index value (0-100) mapped to COLOR_STOPS (0-9)
-    'circle-color': [
+    // Intensity based on count and problem index
+    'heatmap-intensity': [
       'interpolate',
       ['linear'],
-      ['get', 'average_problem_index'],
+      ['zoom'],
       0,
-      COLOR_STOPS[0],
-      11.11,
-      COLOR_STOPS[1],
-      22.22,
-      COLOR_STOPS[2],
-      33.33,
-      COLOR_STOPS[3],
-      44.44,
-      COLOR_STOPS[4],
-      55.55,
-      COLOR_STOPS[5],
-      66.66,
-      COLOR_STOPS[6],
-      77.77,
-      COLOR_STOPS[7],
-      88.88,
-      COLOR_STOPS[8],
-      100,
-      COLOR_STOPS[9],
+      0.6,
+      9,
+      1.2,
     ],
-    'circle-opacity': 1,
-    'circle-stroke-width': 0,
-    // Blur creates fade-to-transparent effect at edges
-    // Reduced blur so center stays more opaque
-    'circle-blur': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 2],
-  } as any,
-}
-
-// Medium circle layer - adds more opacity at center
-const mediumCircleLayer = {
-  id: 'heatmap-medium-circles',
-  type: 'circle' as const,
-  paint: {
-    // Medium radius
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 0, 15, 9, 35],
-    'circle-color': [
+    // Weight based on count and problem index (pre-calculated in API)
+    'heatmap-weight': ['get', 'weight'],
+    // Color based on density (0-1) per MapLibre best practices
+    'heatmap-color': [
       'interpolate',
       ['linear'],
-      ['get', 'average_problem_index'],
+      ['heatmap-density'],
       0,
+      'rgba(26, 95, 95, 0)',
+      0.1,
       COLOR_STOPS[0],
-      11.11,
+      0.2,
       COLOR_STOPS[1],
-      22.22,
+      0.3,
       COLOR_STOPS[2],
-      33.33,
+      0.4,
       COLOR_STOPS[3],
-      44.44,
+      0.5,
       COLOR_STOPS[4],
-      55.55,
+      0.6,
       COLOR_STOPS[5],
-      66.66,
+      0.7,
       COLOR_STOPS[6],
-      77.77,
+      0.8,
       COLOR_STOPS[7],
-      88.88,
+      0.9,
       COLOR_STOPS[8],
-      100,
+      1,
       COLOR_STOPS[9],
     ],
-    'circle-opacity': 1,
-    'circle-stroke-width': 0,
-    'circle-blur': ['interpolate', ['linear'], ['zoom'], 0, 0.5, 9, 1], // Less blur for more solid center
-  } as any,
-}
-
-// Small solid circle layer - shows exact color-coded value at center
-const centerCircleLayer = {
-  id: 'heatmap-center-circles',
-  type: 'circle' as const,
-  paint: {
-    // Small radius for center point
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 0, 6, 9, 15],
-    // Color based on average_problem_index value (0-100) mapped to COLOR_STOPS (0-9)
-    'circle-color': [
+    // Radius increases with zoom level
+    'heatmap-radius': [
       'interpolate',
       ['linear'],
-      ['get', 'average_problem_index'],
+      ['zoom'],
       0,
-      COLOR_STOPS[0],
-      11.11,
-      COLOR_STOPS[1],
-      22.22,
-      COLOR_STOPS[2],
-      33.33,
-      COLOR_STOPS[3],
-      44.44,
-      COLOR_STOPS[4],
-      55.55,
-      COLOR_STOPS[5],
-      66.66,
-      COLOR_STOPS[6],
-      77.77,
-      COLOR_STOPS[7],
-      88.88,
-      COLOR_STOPS[8],
-      100,
-      COLOR_STOPS[9],
+      25,
+      9,
+      70,
     ],
-    'circle-opacity': 1,
-    'circle-stroke-width': 1,
-    'circle-stroke-color': '#ffffff',
-    'circle-blur': 0, // No blur - solid circle
+    // Opacity decreases with zoom to show underlying map
+    'heatmap-opacity': [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      0,
+      0.9,
+      9,
+      0.7,
+    ],
   } as any,
 }
 
@@ -265,12 +215,10 @@ export function HeatmapMap({ userLocation, className }: HeatmapMapProps) {
         style={{ width: '100%', height: '100%' }}
         reuseMaps={true}
       >
-        {/* Multiple circle layers for better opacity at center */}
+        {/* Heatmap layer - blends data for privacy, no individual points visible */}
         {heatmapData && (
           <Source type="geojson" data={heatmapData}>
-            <Layer {...circleLayer} />
-            <Layer {...mediumCircleLayer} />
-            <Layer {...centerCircleLayer} />
+            <Layer {...heatmapLayer} />
           </Source>
         )}
       </Map>

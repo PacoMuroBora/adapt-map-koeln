@@ -25,6 +25,7 @@ type GeoJSONFeature = {
     postalCode: string
     count: number
     average_problem_index: number
+    weight: number
   }
 }
 
@@ -52,9 +53,10 @@ export async function GET() {
     // Aggregate submissions by postal code
     // Using overrideAccess: true because this is public aggregated data
     // Individual submissions are still protected by access control
+    // Fetch ALL submissions (no limit) to ensure complete data
     const submissions = await payload.find({
       collection: 'submissions',
-      limit: 10000, // Adjust based on expected volume
+      limit: 0, // 0 means no limit - fetch all submissions
       depth: 0, // Only need location and problem_index
       select: {
         location: true,
@@ -79,8 +81,7 @@ export async function GET() {
         postalCodeData[postalCode] = {
           count: 0,
           totalProblemIndex: 0,
-          // Use a representative point for the postal code
-          // This could be improved with a postal code centroid database
+          // Initialize with first location, will be averaged
           lat: location.lat,
           lng: location.lng,
         }
@@ -88,11 +89,26 @@ export async function GET() {
 
       postalCodeData[postalCode].count += 1
       postalCodeData[postalCode].totalProblemIndex += submissionData.problem_index || 0
+      
+      // Average coordinates for privacy - prevents pinpointing exact locations
+      // This creates a centroid for the postal code area
+      const currentLat = postalCodeData[postalCode].lat
+      const currentLng = postalCodeData[postalCode].lng
+      const count = postalCodeData[postalCode].count
+      
+      // Running average: new_avg = (old_avg * (n-1) + new_value) / n
+      postalCodeData[postalCode].lat = (currentLat * (count - 1) + location.lat) / count
+      postalCodeData[postalCode].lng = (currentLng * (count - 1) + location.lng) / count
     })
 
     // Convert to GeoJSON
     const features: GeoJSONFeature[] = Object.entries(postalCodeData).map(([postalCode, data]) => {
       const avgProblemIndex = data.count > 0 ? data.totalProblemIndex / data.count : 0
+
+      // Calculate weight: combines count and problem index
+      // Normalize to 0-1 range for heatmap visualization
+      // Assumes problem_index roughly ranges 0-9 (slider scale)
+      const weight = Math.min(1.0, (data.count * avgProblemIndex) / 10)
 
       return {
         type: 'Feature',
@@ -104,6 +120,7 @@ export async function GET() {
           postalCode,
           count: data.count,
           average_problem_index: Math.round(avgProblemIndex * 100) / 100, // Round to 2 decimals
+          weight: Math.round(weight * 100) / 100, // Round to 2 decimals
         },
       }
     })

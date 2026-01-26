@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { HeatmapMap } from '@/components/HeatmapMap'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import Link from 'next/link'
 import React from 'react'
@@ -26,20 +28,23 @@ export default async function LandingPage() {
   const ctaButton = uiData?.landingPage?.ctaButton || "Los geht's"
 
   return (
-    <div className="flex min-h-[calc(100vh-200px)] flex-col items-center justify-center px-4 py-8 md:py-16">
-      <div className="container mx-auto max-w-2xl text-center">
-        <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">{title}</h1>
-        {description && (
-          <p className="mb-8 text-lg text-muted-foreground sm:text-xl md:mb-12">{description}</p>
-        )}
-        <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+    <div className="container mx-auto max-w-6xl px-4 py-8 md:py-16">
+      <div className="space-y-6">
+        {/* CTA Section */}
+        <div className="text-center">
+          <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">{title}</h1>
+          {description && (
+            <p className="mb-8 text-lg text-muted-foreground sm:text-xl md:mb-12">{description}</p>
+          )}
           <Button asChild size="lg" className="w-full sm:w-auto">
             <Link href="/location">{ctaButton}</Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-            <Link href="/heatmap">Heatmap anzeigen</Link>
-          </Button>
         </div>
+
+        {/* Heatmap */}
+        <Card className="relative h-[600px] w-full overflow-hidden">
+          <HeatmapMap className="h-full w-full" />
+        </Card>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio'
 import {
   Select,
   SelectContent,
@@ -230,27 +231,29 @@ export default function QuestionClient({
       case 'radio':
         if (!question.options || !Array.isArray(question.options)) return null
         return (
-          <div className="space-y-3">
+          <RadioGroup
+            value={answer || ''}
+            onValueChange={(value) => {
+              setAnswer(value)
+              setError(null)
+            }}
+            name={question.key}
+            className="space-y-3"
+          >
             {question.options.map((option, index) => (
               <label
                 key={index}
                 className="flex cursor-pointer items-center space-x-3 rounded-lg border bg-card p-4 hover:bg-muted"
+                onClick={() => {
+                  setAnswer(option.value)
+                  setError(null)
+                }}
               >
-                <input
-                  type="radio"
-                  name={question.key}
-                  value={option.value}
-                  checked={answer === option.value}
-                  onChange={(e) => {
-                    setAnswer(e.target.value)
-                    setError(null)
-                  }}
-                  className="h-4 w-4"
-                />
+                <RadioGroupItem value={option.value} />
                 <span className="flex-1">{option.label}</span>
               </label>
             ))}
-          </div>
+          </RadioGroup>
         )
 
       case 'checkbox':
@@ -344,27 +347,29 @@ export default function QuestionClient({
                   )}
 
                   {subQ.type === 'radio' && subQ.options && (
-                    <div className="space-y-2">
+                    <RadioGroup
+                      value={subAnswer || ''}
+                      onValueChange={(value) => {
+                        setAnswer({ ...answer, [subQ.key]: value })
+                        setError(null)
+                      }}
+                      name={subQ.key}
+                      className="space-y-2"
+                    >
                       {subQ.options.map((option, idx) => (
                         <label
                           key={idx}
                           className="flex cursor-pointer items-center space-x-3 rounded-lg border bg-card p-3 hover:bg-muted"
+                          onClick={() => {
+                            setAnswer({ ...answer, [subQ.key]: option.value })
+                            setError(null)
+                          }}
                         >
-                          <input
-                            type="radio"
-                            name={subQ.key}
-                            value={option.value}
-                            checked={subAnswer === option.value}
-                            onChange={(e) => {
-                              setAnswer({ ...answer, [subQ.key]: e.target.value })
-                              setError(null)
-                            }}
-                            className="h-4 w-4"
-                          />
+                          <RadioGroupItem value={option.value} />
                           <span className="flex-1">{option.label}</span>
                         </label>
                       ))}
-                    </div>
+                    </RadioGroup>
                   )}
 
                   {subQ.type === 'text' && (

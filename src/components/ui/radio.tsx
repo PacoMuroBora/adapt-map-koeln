@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { cn } from '@/utilities/ui'
-import { Circle } from 'lucide-react'
 
 interface RadioGroupContextType {
   value?: string
@@ -74,11 +73,7 @@ const RadioGroupItem = React.forwardRef<
       )}
       onClick={() => !disabled && onValueChange?.(itemValue)}
       {...props}
-    >
-      {checked && (
-        <Circle className="absolute inset-0 m-auto h-2.5 w-2.5 fill-current text-primary-foreground" />
-      )}
-    </button>
+    />
   )
 })
 RadioGroupItem.displayName = 'RadioGroupItem'
