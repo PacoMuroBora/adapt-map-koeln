@@ -115,6 +115,51 @@ export const SiteSettings: GlobalConfig = {
           ],
         },
         {
+          label: 'SEO',
+          fields: [
+            {
+              name: 'metaTitle',
+              type: 'text',
+              admin: {
+                description: 'Default meta title for the site (used in <title> tag and OpenGraph)',
+                placeholder: 'AdaptMap Köln - Accessibility Mapping',
+              },
+            },
+            {
+              name: 'metaDescription',
+              type: 'textarea',
+              admin: {
+                description: 'Default meta description for the site (used in <meta name="description"> and OpenGraph)',
+                placeholder: 'Discover accessible locations in Cologne with AdaptMap Köln',
+              },
+            },
+            {
+              name: 'ogImage',
+              type: 'upload',
+              relationTo: 'media',
+              admin: {
+                description: 'Default OpenGraph image (recommended: 1200x630px)',
+              },
+            },
+            {
+              name: 'twitterHandle',
+              type: 'text',
+              admin: {
+                description: 'Twitter/X handle (without @)',
+                placeholder: 'adaptmapkoeln',
+              },
+            },
+            {
+              name: 'keywords',
+              type: 'text',
+              admin: {
+                description: 'Comma-separated keywords for SEO (optional)',
+                placeholder: 'accessibility, cologne, mapping, inclusive design',
+              },
+            },
+          ],
+        },
+        {
           label: 'Legal & Cookies',
           fields: [
             {

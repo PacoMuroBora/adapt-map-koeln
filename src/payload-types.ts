@@ -2420,6 +2420,30 @@ export interface SiteSetting {
     kbSync: string;
   };
   /**
+   * Default meta title for the site (used in <title> tag and OpenGraph)
+   */
+  metaTitle?: string | null;
+  /**
+   * Default meta description for the site (used in <meta name="description"> and OpenGraph)
+   */
+  metaDescription?: string | null;
+  /**
+   * Default OpenGraph image (recommended: 1200x630px)
+   */
+  ogImage?: (string | null) | Media;
+  /**
+   * Twitter/X handle (without @)
+   */
+  twitterHandle?: string | null;
+  /**
+   * Comma-separated keywords for SEO (optional)
+   */
+  keywords?: string | null;
+  /**
+   * Default robots meta tag
+   */
+  robots?: ('index, follow' | 'noindex, follow' | 'index, nofollow' | 'noindex, nofollow') | null;
+  /**
    * Legal content pages (Impressum, Privacy Policy, Terms & Conditions)
    */
   legalContent: {
@@ -2615,6 +2639,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         aiRecommendation?: T;
         kbSync?: T;
       };
+  metaTitle?: T;
+  metaDescription?: T;
+  ogImage?: T;
+  twitterHandle?: T;
+  keywords?: T;
+  robots?: T;
   legalContent?:
     | T
     | {

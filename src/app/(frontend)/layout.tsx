@@ -15,7 +15,7 @@ import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const siteSettings = (await getCachedGlobal('site-settings', 0)()) as SiteSetting
+  const siteSettings = (await getCachedGlobal('site-settings', 1)()) as SiteSetting
 
   return (
     <html 
@@ -38,11 +38,49 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   )
 }
 
-export const metadata: Metadata = {
-  metadataBase: new URL(getServerSideURL()),
-  openGraph: mergeOpenGraph(),
-  twitter: {
-    card: 'summary_large_image',
-    creator: '@payloadcms',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const siteSettings = (await getCachedGlobal('site-settings', 1)()) as SiteSetting
+  const serverUrl = getServerSideURL()
+
+  const title = siteSettings?.metaTitle || siteSettings?.siteName || 'AdaptMap Köln'
+  const description = siteSettings?.metaDescription || siteSettings?.siteDescription || ''
+  
+  // Get OG image URL
+  let ogImageUrl = `${serverUrl}/website-template-OG.webp`
+  if (siteSettings?.ogImage && typeof siteSettings.ogImage === 'object' && 'url' in siteSettings.ogImage) {
+    const ogUrl = siteSettings.ogImage.sizes?.og?.url
+    ogImageUrl = ogUrl ? serverUrl + ogUrl : serverUrl + siteSettings.ogImage.url
+  }
+
+  // Build Twitter handle
+  const twitterHandle = siteSettings?.twitterHandle
+    ? `@${siteSettings.twitterHandle.replace('@', '')}`
+    : undefined
+
+  return {
+    metadataBase: new URL(serverUrl),
+    title: {
+      default: title,
+      template: `%s | ${title}`,
+    },
+    description,
+    keywords: siteSettings?.keywords?.split(',').map(k => k.trim()).filter(Boolean),
+    openGraph: mergeOpenGraph({
+      title,
+      description,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      siteName: siteSettings?.siteName || title,
+    }),
+    twitter: {
+      card: 'summary_large_image',
+      ...(twitterHandle && { creator: twitterHandle }),
+    },
+  }
 }
