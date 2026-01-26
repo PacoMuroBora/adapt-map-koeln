@@ -41,6 +41,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 export async function generateMetadata(): Promise<Metadata> {
   const siteSettings = (await getCachedGlobal('site-settings', 1)()) as SiteSetting
   const serverUrl = getServerSideURL()
+  
+  // Ensure canonical URL is adaptmap.de (no www)
+  const canonicalBase = 'https://adaptmap.de'
 
   const title = siteSettings?.metaTitle || siteSettings?.siteName || 'AdaptMap Köln'
   const description = siteSettings?.metaDescription || siteSettings?.siteDescription || ''
@@ -59,13 +62,27 @@ export async function generateMetadata(): Promise<Metadata> {
     : undefined
 
   return {
-    metadataBase: new URL(serverUrl),
+    metadataBase: new URL(canonicalBase),
     title: {
       default: title,
       template: `%s | ${title}`,
     },
     description,
     keywords: siteSettings?.keywords?.split(',').map(k => k.trim()).filter(Boolean),
+    alternates: {
+      canonical: canonicalBase,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
     openGraph: mergeOpenGraph({
       title,
       description,
