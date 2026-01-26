@@ -11,9 +11,10 @@ const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
   let url = serverUrl + '/website-template-OG.webp'
 
   if (image && typeof image === 'object' && 'url' in image) {
-    const ogUrl = image.sizes?.og?.url
+    // Try to use xlarge size (1920px) for OG images, fallback to base URL
+    const ogUrl = image.sizes?.xlarge?.url || image.url
 
-    url = ogUrl ? serverUrl + ogUrl : serverUrl + image.url
+    url = ogUrl ? serverUrl + ogUrl : serverUrl + '/website-template-OG.webp'
   }
 
   return url

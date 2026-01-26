@@ -48,8 +48,9 @@ export async function generateMetadata(): Promise<Metadata> {
   // Get OG image URL
   let ogImageUrl = `${serverUrl}/website-template-OG.webp`
   if (siteSettings?.ogImage && typeof siteSettings.ogImage === 'object' && 'url' in siteSettings.ogImage) {
-    const ogUrl = siteSettings.ogImage.sizes?.og?.url
-    ogImageUrl = ogUrl ? serverUrl + ogUrl : serverUrl + siteSettings.ogImage.url
+    // Try to use xlarge size (1920px) for OG images, fallback to base URL
+    const ogUrl = siteSettings.ogImage.sizes?.xlarge?.url || siteSettings.ogImage.url
+    ogImageUrl = ogUrl ? serverUrl + ogUrl : `${serverUrl}/website-template-OG.webp`
   }
 
   // Build Twitter handle
