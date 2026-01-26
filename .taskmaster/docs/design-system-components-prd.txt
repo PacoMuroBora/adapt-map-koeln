@@ -1,0 +1,142 @@
+# Design System Components Implementation PRD
+
+## Overview
+Implement and update all UI components from the AdaptMap design system to match Figma specifications. All components should follow shadcn/ui best practices and use the design tokens defined in docs/design/design-system.md.
+
+## Design System Foundation
+
+### 1. Update globals.css with Design System Variables
+- Add all CSS variables from design system (colors, typography, spacing, border radius)
+- Ensure proper :root selector setup
+- Map Figma variables to CSS variables correctly
+
+### 2. Update tailwind.config.mjs with Design System Extensions
+- Add color extensions (foreground-alt, mid-alt, ghost, ghost-foreground, am-* colors)
+- Add fontFamily extensions (headings, body, sans)
+- Add spacing extensions (2xs, xs, md, xl, 2xl, 5xl)
+- Add borderRadius extensions (sm, lg)
+
+## Core Components (High Priority)
+
+### 3. Update Button Component
+- Location: src/components/ui/button.tsx
+- Add shape variant (default/round)
+- Update typography (font-sans, text-base, font-normal, leading-none, tracking-[1px])
+- Update variants: secondary (#141418), outline, destructive (#ff8429), ghost
+- Add sizes: mini, tiny
+- Ensure proper spacing and styling per docs/design/components/button.md
+
+### 4. Update Input Component
+- Location: src/components/ui/input.tsx
+- Add shape prop (default/round)
+- Add size prop (default/sm/lg/mini)
+- Update typography (font-body, text-sm, font-normal)
+- Ensure proper states: empty, value, focus, error, error focus, disabled
+- Match colors and borders per docs/design/components/input.md
+
+### 5. Update Card Component
+- Location: src/components/ui/card.tsx
+- Ensure proper slot system (1-3 slots)
+- Add color variants (purple, orange, white)
+- Update styling (rounded-lg, shadow, padding, typography)
+- Match specs per docs/design/components/card.md
+
+### 6. Create Alert Component
+- Location: src/components/ui/alert.tsx
+- Install from shadcn/ui base
+- Implement variants (default/error/success)
+- Add showIcon/showLine2/showButtons props
+- Use AlertCircle and CheckCircle2 icons from lucide-react
+- Match styling per docs/design/components/alert.md
+
+## Form Components (Medium Priority)
+
+### 7. Create Alert Dialog Component
+- Location: src/components/ui/alert-dialog.tsx
+- Install from shadcn/ui base
+- Match design system specs per docs/design/components/alert-dialog.md
+
+### 8. Create Field Component
+- Location: src/components/ui/field.tsx
+- Form field wrapper with label support
+- Support vertical and horizontal layouts
+- Work with all input types (text, select, radio, textarea, checkbox, slider)
+- Match specs per docs/design/components/field.md
+
+### 9. Create Input Group Component
+- Location: src/components/ui/input-group.tsx
+- Grouped input elements with prefixes, suffixes, and icons
+- Match specs per docs/design/components/input-group.md
+
+### 10. Create Input OTP Component
+- Location: src/components/ui/input-otp.tsx
+- One-Time Password input with individual digit fields
+- Match specs per docs/design/components/input-otp.md
+
+### 11. Update Textarea Component
+- Location: src/components/ui/textarea.tsx
+- Add shape and size props
+- Update typography and styling
+- Match specs per docs/design/components/textarea.md
+
+### 12. Update Select & Combobox Components
+- Location: src/components/ui/select.tsx and combobox.tsx
+- Add search functionality
+- Match design system specs per docs/design/components/select-combobox.md
+
+### 13. Create Radio Component
+- Location: src/components/ui/radio.tsx
+- Radio button group with icon and label support
+- Match specs per docs/design/components/radio.md
+
+### 14. Create Radio Fancy Component
+- Location: src/components/ui/radio-fancy.tsx
+- Stylized radio buttons as card-like buttons with icons
+- Match specs per docs/design/components/radio-fancy.md
+
+### 15. Create Slider Component
+- Location: src/components/ui/slider.tsx
+- Range input with vertical and horizontal orientations
+- Match specs per docs/design/components/slider.md
+
+## Additional Components (Lower Priority)
+
+### 16. Create Skeleton Component
+- Location: src/components/ui/skeleton.tsx
+- Loading placeholders for content
+- Match specs per docs/design/components/skeleton.md
+
+### 17. Update Pagination Component
+- Location: src/components/ui/pagination.tsx
+- Match design system specs with previous/next buttons
+- Match specs per docs/design/components/pagination.md
+
+### 18. Create Stateful Info Box Component
+- Location: src/components/ui/stateful-info-box.tsx
+- Configurable list item with optional icons, text lines, and action buttons
+- Match specs per docs/design/components/stateful-info-box.md
+
+### 19. Create Link Button Component
+- Location: src/components/ui/link-button.tsx
+- Text link styled as button with underline on hover
+- Match specs per docs/design/components/link-button.md
+
+## Implementation Guidelines
+
+- Always start from shadcn/ui base when available
+- Use semantic CSS variables instead of hardcoded values
+- Follow Figma design specifications for spacing, colors, and typography
+- Maintain accessibility standards from shadcn components
+- Use TypeScript with proper prop interfaces
+- Follow shadcn/ui component patterns (forwardRef, displayName, etc.)
+- Use class-variance-authority (cva) for variant management
+- Ensure all components are properly exported
+
+## Testing Requirements
+
+- Verify all components match Figma designs
+- Test all variants and sizes
+- Verify accessibility (keyboard navigation, ARIA attributes)
+- Test responsive behavior
+- Verify proper TypeScript types
+- Test component composition and slot systems

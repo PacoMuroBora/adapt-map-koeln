@@ -1,21 +1,36 @@
 import { cn } from '@/utilities/ui'
 import * as React from 'react'
 
-const Textarea: React.FC<
-  {
-    ref?: React.Ref<HTMLTextAreaElement>
-  } & React.TextareaHTMLAttributes<HTMLTextAreaElement>
-> = ({ className, ref, ...props }) => {
-  return (
-    <textarea
-      className={cn(
-        'flex min-h-[80px] w-full rounded border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
-      ref={ref}
-      {...props}
-    />
-  )
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  shape?: 'default' | 'round'
+  size?: 'default' | 'sm' | 'lg'
 }
+
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, shape = 'default', size = 'default', ...props }, ref) => {
+    return (
+      <textarea
+        className={cn(
+          'flex min-h-[80px] w-full font-body text-sm font-normal bg-background text-foreground placeholder:text-muted-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          // Shape variants
+          {
+            'rounded-lg border border-border': shape === 'default',
+            'rounded-full border border-border': shape === 'round',
+          },
+          // Size variants
+          {
+            'px-3 py-2': size === 'default',
+            'px-2 py-1.5 text-sm': size === 'sm',
+            'px-4 py-3': size === 'lg',
+          },
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Textarea.displayName = 'Textarea'
 
 export { Textarea }

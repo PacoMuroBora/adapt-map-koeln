@@ -9,7 +9,7 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  darkMode: ['selector', '[data-theme="dark"]'],
+  darkMode: false,
   plugins: [tailwindcssAnimate, typography],
   prefix: '',
   safelist: [
@@ -51,9 +51,9 @@ const config = {
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
       borderRadius: {
-        lg: 'var(--radius)',
+        lg: 'var(--radius-lg)',
         md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        sm: 'var(--radius-sm)',
       },
       colors: {
         accent: {
@@ -92,10 +92,32 @@ const config = {
         success: 'hsl(var(--success))',
         error: 'hsl(var(--error))',
         warning: 'hsl(var(--warning))',
+        // Design System Colors
+        'foreground-alt': 'hsl(var(--foreground-alt))',
+        'mid-alt': 'hsl(var(--mid-alt))',
+        ghost: 'var(--ghost)',
+        'ghost-foreground': 'hsl(var(--ghost-foreground))',
+        'am-dark': 'hsl(var(--am-dark))',
+        'am-darker': 'hsl(var(--am-darker))',
+        'am-white': 'hsl(var(--am-white))',
+        'am-purple-alt': 'hsl(var(--am-purple-alt))',
+        'am-orange-alt': 'hsl(var(--am-orange-alt))',
       },
       fontFamily: {
         mono: ['var(--font-geist-mono)'],
-        sans: ['var(--font-geist-sans)'],
+        sans: ['var(--font-sans)', 'var(--font-geist-sans)', 'sans-serif'],
+        // Design System Font Families
+        headings: ['var(--font-headings)', 'var(--font-geist-sans)', 'sans-serif'],
+        body: ['var(--font-body)', 'var(--font-geist-sans)', 'sans-serif'],
+      },
+      spacing: {
+        // Design System Spacing
+        '2xs': 'var(--spacing-2xs)',
+        xs: 'var(--spacing-xs)',
+        md: 'var(--spacing-md)',
+        xl: 'var(--spacing-xl)',
+        '2xl': 'var(--spacing-2xl)',
+        '5xl': 'var(--spacing-5xl)',
       },
       keyframes: {
         'accordion-down': {

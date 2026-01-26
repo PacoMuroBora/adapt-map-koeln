@@ -1,3 +1,22 @@
+/* Design System Fonts */
+@font-face {
+  font-family: 'LT Institute';
+  src: url('/fonts/LTInstitute-1.woff2') format('woff2'),
+       url('/fonts/LTInstitute-1.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('/fonts/UncutSans-Variable.ttf') format('truetype');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+  font-variation-settings: normal;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -23,8 +42,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary: Lime Green #BEE75D */
+    --primary: 75 70% 64%;
+    --primary-foreground: 222.2 84% 4.9%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -38,49 +58,84 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 6% 80%;
+    /* Border: Purple #9f94ff (design system) */
+    --border: 252 100% 80%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --radius: 0.2rem;
+    /* Border Radius: 8px (design system) */
+    --radius: 0.5rem;
 
     --success: 196 52% 74%;
     --warning: 34 89% 85%;
     --error: 10 100% 86%;
-  }
 
-  [data-theme='dark'] {
-    --background: 0 0% 0%;
-    --foreground: 210 40% 98%;
-
-    --card: 0 0% 4%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 0, 0%, 15%, 0.8;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-
-    --success: 196 100% 14%;
-    --warning: 34 51% 25%;
-    --error: 10 39% 43%;
+    /* Design System Variables - Colors - Foreground */
+    --foreground-alt: 215 20% 35%; /* #4a5768 - unofficial/foreground alt */
+    --mid-alt: 215 25% 40%; /* #475569 - unofficial/mid alt */
+    
+    /* Design System Variables - Colors - Borders */
+    /* --border already defined above with design system value */
+    
+    /* Design System Variables - Colors - Ghost/Transparent */
+    --ghost: transparent; /* #ffffff00 - unofficial/ghost */
+    --ghost-foreground: 222.2 84% 4.9%; /* #141418 - unofficial/ghost foreground */
+    
+    /* Design System Variables - Colors - Brand (for reference) */
+    --am-dark: 0 0% 12%; /* #1e1e20 */
+    --am-darker: 0 0% 8%; /* #141418 */
+    --am-white: 60 20% 98%; /* #fffef8 */
+    --am-purple-alt: 252 100% 80%; /* #9f94ff */
+    --am-orange-alt: 20 100% 58%; /* #ff8429 */
+    
+    /* Design System Variables - Typography - Font Families */
+    --font-headings: 'LT Institute', sans-serif;
+    --font-body: 'Uncut Sans', sans-serif;
+    --font-sans: 'Uncut Sans', sans-serif;
+    
+    /* Design System Variables - Typography - Heading 1 */
+    --heading-1-size: 64px;
+    --heading-1-weight: 600;
+    --heading-1-line-height: 67px;
+    --heading-1-letter-spacing: -1px;
+    --heading-1-spacing: 64px;
+    
+    /* Design System Variables - Typography - Heading 3 */
+    --heading-3-size: 46px;
+    --heading-3-weight: 600;
+    --heading-3-line-height: 48px;
+    --heading-3-letter-spacing: -0.5px;
+    --heading-3-spacing: 46px;
+    
+    /* Design System Variables - Typography - Paragraph Regular */
+    --paragraph-regular-size: 18px;
+    --paragraph-regular-weight: 400;
+    --paragraph-regular-line-height: 24px;
+    --paragraph-regular-letter-spacing: 0px;
+    
+    /* Design System Variables - Typography - Paragraph Small */
+    --paragraph-small-size: 16px;
+    --paragraph-small-weight: 400;
+    --paragraph-small-line-height: 21px;
+    
+    /* Design System Variables - Typography - Button Large */
+    --button-large-size: 16px;
+    --button-large-weight: 400;
+    --button-large-line-height: 1;
+    --button-large-letter-spacing: 1px;
+    
+    /* Design System Variables - Spacing */
+    --spacing-2xs: 4px;
+    --spacing-xs: 8px;
+    --spacing-md: 16px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+    --spacing-5xl: 64px;
+    
+    /* Design System Variables - Border Radius */
+    --radius-sm: 4px;
+    --radius-lg: 8px;
+    --radius-full: 9999px;
   }
 }
 
@@ -90,14 +145,10 @@
   }
   body {
     @apply bg-background text-foreground min-h-[100vh] flex flex-col;
+    font-family: var(--font-body);
   }
-}
-
-html {
-  opacity: 0;
-}
-
-html[data-theme='dark'],
-html[data-theme='light'] {
-  opacity: initial;
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headings);
+  }
 }
