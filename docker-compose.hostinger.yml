@@ -14,6 +14,9 @@ services:
       - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
       - --certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}
       - --certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json
+      - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=300s
+      - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=300s
+      - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=300s
     restart: always
     mem_limit: 200M
     mem_reservation: 100M
@@ -141,6 +144,8 @@ services:
       - NEXT_PUBLIC_PHOTON_URL=https://photon.komoot.io
       - LOCATIONIQ_API_KEY=${LOCATIONIQ_API_KEY:-}
       - LOCATIONIQ_BASE_URL=${LOCATIONIQ_BASE_URL:-https://eu1.locationiq.com/v1}
+    volumes:
+      - media_data:/app/public/media
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
       interval: 30s
@@ -156,6 +161,8 @@ volumes:
   redis_data:
     driver: local
   n8n_data:
+    driver: local
+  media_data:
     driver: local
 
 networks:

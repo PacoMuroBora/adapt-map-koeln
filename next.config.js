@@ -21,6 +21,12 @@ const nextConfig = {
       }),
     ],
   },
+  // Increase body size limit for file uploads (50MB)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '50mb',
+    },
+  },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
       '.cjs': ['.cts', '.cjs'],

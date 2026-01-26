@@ -288,21 +288,6 @@ export interface Post {
 export interface Media {
   id: string;
   alt?: string | null;
-  caption?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
   folder?: (string | null) | FolderInterface;
   updatedAt: string;
   createdAt: string;
@@ -332,14 +317,6 @@ export interface Media {
       filesize?: number | null;
       filename?: string | null;
     };
-    small?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
     medium?: {
       url?: string | null;
       width?: number | null;
@@ -348,23 +325,7 @@ export interface Media {
       filesize?: number | null;
       filename?: string | null;
     };
-    large?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
     xlarge?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    og?: {
       url?: string | null;
       width?: number | null;
       height?: number | null;
@@ -1735,7 +1696,6 @@ export interface PostsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
-  caption?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1771,16 +1731,6 @@ export interface MediaSelect<T extends boolean = true> {
               filesize?: T;
               filename?: T;
             };
-        small?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
         medium?:
           | T
           | {
@@ -1791,27 +1741,7 @@ export interface MediaSelect<T extends boolean = true> {
               filesize?: T;
               filename?: T;
             };
-        large?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
         xlarge?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        og?:
           | T
           | {
               url?: T;
@@ -2440,10 +2370,6 @@ export interface SiteSetting {
    */
   keywords?: string | null;
   /**
-   * Default robots meta tag
-   */
-  robots?: ('index, follow' | 'noindex, follow' | 'index, nofollow' | 'noindex, nofollow') | null;
-  /**
    * Legal content pages (Impressum, Privacy Policy, Terms & Conditions)
    */
   legalContent: {
@@ -2644,7 +2570,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   ogImage?: T;
   twitterHandle?: T;
   keywords?: T;
-  robots?: T;
   legalContent?:
     | T
     | {

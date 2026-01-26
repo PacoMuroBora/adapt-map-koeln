@@ -81,14 +81,18 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# Install curl for healthchecks
-RUN apk add --no-cache curl
+# Install curl for healthchecks and sharp dependencies
+RUN apk add --no-cache curl vips-dev
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Remove this line if you do not have this folder
 COPY --from=builder /app/public ./public
+
+# Create media directory with write permissions
+RUN mkdir -p ./public/media && \
+    chown -R nextjs:nodejs ./public/media
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
