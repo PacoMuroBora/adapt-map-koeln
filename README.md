@@ -1,433 +1,230 @@
-# QR-to-Web Heat Reporting App
+# AdaptMap Köln — Heat Reporting + Public Heatmap + On‑Demand AI Recommendations
 
-A German-language, mobile-first web application for anonymous heat-related issue reporting with AI-powered recommendations and public heatmap visualization.
+German-language, mobile-first web app for collecting **anonymous** heat-related reports and visualizing them as a **public heatmap**. After submitting, users can optionally request **AI-generated recommendations** (German) via an external n8n workflow backed by a Payload-managed knowledge base.
 
-## Overview
+## What this app is for
 
-This application enables users to submit anonymous reports about heat-related issues at their location via QR code or direct link. After completing a questionnaire, users receive baseline results and can optionally request AI-generated recommendations. All submissions are aggregated and visualized in a public heatmap at the postal code level.
+- Quick “street-ready” reporting flow (QR/link → a few screens → submit)
+- A structured dataset that can be analyzed later (with **postal-code aggregation** for public views)
+- Content ops without redeploys: admins/editors manage UI copy, legal pages, knowledge base items, and (optionally) questionnaires in Payload
+- Optional AI recommendations generated **only when the user clicks** the CTA (no background AI calls)
 
-**Key Features:**
+## The user journey (as implemented)
 
-- 📱 Mobile-first design optimized for phones and tablets
-- 📍 GPS and manual address location capture with geocoding
-- 📝 Dynamic questionnaire managed in Payload CMS
-- 🤖 On-demand AI recommendations (German) via n8n RAG workflow
-- 🗺️ Public heatmap visualization with postal code aggregation
-- 👥 Role-based access control (User, Editor, Admin)
-- 📊 Admin dashboard with CSV export capabilities
+- **Landing** (`/`): CTA to start + embedded heatmap preview
+- **Location** (`/location`): GPS (reverse geocode) or manual address (forward geocode)
+- **Personal (optional)** (`/personal`): age/gender/household size
+- **Questionnaire** (`/questionnaire/[step]`): currently a hardcoded set of questions (v1)
+- **Feedback + consent** (`/feedback`): optional free text + mandatory data-collection consent → submits to API
+- **Results** (`/results`): baseline “problem index” + AI CTA
+- **Heatmap** (`/heatmap`): aggregated visualization + user marker (if available)
 
-## Tech Stack
+## Data flow (non-technical)
 
-- **Frontend**: Next.js 15, Tailwind CSS, shadcn/ui
-- **CMS/Backend**: Payload CMS 3.68.5
-- **Database**: MongoDB Atlas (with Vector Search for knowledge base)
-- **Maps**: MapLibre GL JS + react-map-gl
-- **Geocoding**: Self-hosted OSM-based stack (Nominatim + Photon)
-- **AI Workflows**: n8n on Hostinger
-- **Hosting**: Fly.io (web app), Hostinger (n8n)
+1. **A user opens the link** (often via QR code) and chooses a location (GPS or address).
+2. **They answer a short questionnaire** (and optionally add a comment).
+3. When they submit, the app **stores an anonymous report**:
+   - location info (including postal code)
+   - questionnaire answers
+   - an automatically computed **heat problem index**
+4. The public heatmap **does not show individual reports**. It groups reports by postal code and shows **averaged values** so you can see patterns without pinpointing a person.
+5. If the user clicks **“KI‑Empfehlung erhalten”**, the app sends the report to an AI workflow, receives recommendations, and **stores them back** on the report so they can be shown again without re-running AI.
 
-## Quick Start
+## Tech stack
 
-### Prerequisites
+- **Runtime**: Next.js 15 (App Router), React 19
+- **CMS/Backend**: Payload CMS 3.68.5 (`@payloadcms/next`)
+- **DB**: MongoDB (Atlas-friendly) via `@payloadcms/db-mongodb`
+- **UI**: Tailwind + shadcn/ui
+- **Maps**: MapLibre GL via `react-map-gl` + a custom influence-disk layer
+- **AI**: n8n workflows (recommendations + KB sync)
+- **Geocoding**: Photon/Nominatim style APIs with a pragmatic fallback chain (self-hosted or hosted)
 
-- Node.js 18.20.2+ or 20.9.0+
-- pnpm 9+ or 10+
-- MongoDB Atlas connection string
-- (Optional) Self-hosted geocoding services (Nominatim/Photon)
+## Architecture (how it’s built)
 
-### Development Setup
-
-1. **Clone and install dependencies:**
-
-   ```bash
-   git clone <repository-url>
-   cd AdaptMapKoeln
-   pnpm install
-   ```
-
-2. **Configure environment variables:**
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Required environment variables:
-
-   ```env
-   DATABASE_URI=mongodb+srv://...
-   PAYLOAD_SECRET=your-secret-key
-   N8N_RECOMMENDATION_ENDPOINT=https://...
-   NOMINATIM_URL=http://localhost:8080
-   PHOTON_URL=http://localhost:2322
-   ```
-
-3. **Start development server:**
-
-   ```bash
-   pnpm dev
-   ```
-
-4. **Access the application:**
-   - Frontend: `http://localhost:3000`
-   - Admin Panel: `http://localhost:3000/admin`
-   - Follow on-screen instructions to create your first admin user
-
-5. **Generate TypeScript types:**
-   ```bash
-   pnpm generate:types
-   ```
-
-## Project Structure
+### High-level layout
 
 ```
 src/
-├── app/
-│   ├── (frontend)/          # Public-facing routes
-│   │   ├── page.tsx         # Landing page
-│   │   ├── consent/         # Privacy consent
-│   │   ├── location/        # Location capture
-│   │   ├── questionnaire/   # Dynamic questionnaire
-│   │   ├── results/         # Results & AI CTA
-│   │   └── heatmap/          # Public heatmap
-│   └── (payload)/            # Payload admin routes
-├── collections/
-│   ├── Users/               # Auth with RBAC (user/editor/admin)
-│   ├── Questions/           # Question definitions
-│   ├── Questionnaires/      # Questionnaire versions
-│   ├── Submissions/         # User submissions
-│   └── KnowledgeBaseItems/   # RAG knowledge base
-├── globals/
-│   ├── siteSettings/        # Site configuration
-│   └── legalContent/        # Legal pages content
-├── components/              # React components
-├── hooks/                   # Payload hooks
-├── access/                  # Access control functions
-└── payload.config.ts        # Main Payload config
+  app/
+    (frontend)/                # Public pages (survey + heatmap)
+    (payload)/                 # Payload admin + API wiring
+    api/                       # Next API routes (submit, heatmap, geocode, AI, KB tools)
+  collections/                 # Payload collections (Submissions, KnowledgeBaseItems, ...)
+  globals/                     # Payload globals (SiteSettings, UiCopy)
+  components/                  # UI + map + CTA components
+  providers/Submission/        # Client-side session state (localStorage)
+  utilities/                   # Cached globals, webhook URL resolver, caches
 ```
 
-## Core Features
+### Data model (Payload)
 
-### Collections
+Core product collections:
 
-#### Users
+- **`submissions`** (`src/collections/Submissions/index.ts`)
+  - stores location, answers (normalized into fields), computed `problem_index` (0–100), optional `user_text`
+  - stores AI output under `aiFields` when generated
+  - **access**: create = public; read/update/delete = admin only
+- **`knowledge-base-items`** (`src/collections/KnowledgeBaseItems/index.ts`)
+  - editors/admins curate solutions/tips used by AI workflows
+  - stores embedding metadata (`embeddingMetadata.*`) updated by sync hooks / endpoints
+- **`questions`**, **`questionnaires`** exist and are fully modeled in Payload, but the frontend flow currently uses a hardcoded v1 set (see “Questionnaire source”).
 
-Authentication-enabled collection with role-based access control:
+Globals:
 
-- **Roles**: `user`, `editor`, `admin`
-- **Editors**: Can manage questions, content, and knowledge base (but not scoring weights)
-- **Admins**: Full system access including scoring weights, users, and exports
+- **`site-settings`** (`src/globals/SiteSettings.ts`): site identity, map defaults, legal pages, cookie banner, n8n webhook config
+- **`ui-copy`** (`src/globals/UICopy.ts`): strings for landing/consent/questionnaire/results
 
-#### Questions
+Note: `src/globals/LegalContent.ts` exists but is **not wired** into the active Payload config; legal pages are served from `site-settings.legalContent`.
 
-Question definitions managed by editors:
+### RBAC (roles)
 
-- Unique `key` identifier
-- German title and description (`title_de`, `description_de`)
-- Question types: `singleChoice`, `multiChoice`, `dropdown`, `slider`
-- Editor-editable fields (texts, options, display)
-- Admin-only scoring configuration (`adminScoring`)
+Payload auth lives in **`users`** (`src/collections/Users/index.ts`) with roles:
 
-#### Questionnaires
+- **Public**: can create `submissions`, can read published KB items, can read globals used by the frontend
+- **Editor/Admin**: can manage KB items, questions/questionnaires, UI copy, and site settings
 
-Questionnaire versions with configurable questions:
+### Questionnaire source
 
-- Version tracking
-- `isCurrent` flag (only one can be current)
-- Relationship to Questions collection
-- Draft/published status
+There are two layers:
 
-#### Submissions
+- **Frontend v1 (current)**: hardcoded questions at `src/app/(frontend)/questionnaire/questions.ts` (stored as `answers` JSON in the submission payload, then mapped to typed fields server-side).
+- **Payload-driven (available via API)**: `GET /api/questionnaire/current` returns the active questionnaire from Payload (`questions` + `questionnaires` collections). This is currently not the source used by the frontend survey screens.
 
-Anonymous user submissions:
+### API routes (Next)
 
-- Location data (lat/lng, postal_code, city)
-- Personal non-identifying fields
-- Questionnaire version reference
-- Answers stored as JSON (keyed by question key)
-- Calculated `problem_index` (0-100 scale)
-- Optional free text
-- AI recommendation fields (generated on-demand)
+Public:
 
-#### KnowledgeBaseItems
+- `POST /api/submit` — creates a `submissions` doc and returns baseline results (`src/app/api/submit/route.ts`)
+- `GET /api/heatmap` — returns GeoJSON aggregated by postal code (`src/app/api/heatmap/route.ts`)
+- `GET /api/health` — health probe (`src/app/api/health/route.ts`)
 
-Knowledge base for RAG (Retrieval-Augmented Generation):
+Location:
 
-- German title and content
-- Tags and categories
-- Status (draft/published)
-- Embedding metadata for vector search
+- `POST /api/geocode` — address → coordinates (Photon/LocationIQ fallback chain) (`src/app/api/geocode/route.ts`)
+- `POST /api/reverse-geocode` — coordinates → postal code/city (Nominatim/LocationIQ fallback chain) (`src/app/api/reverse-geocode/route.ts`)
 
-### Globals
+AI:
 
-#### siteSettings
+- `POST /api/ai/recommendation` — calls n8n, then writes AI output back onto the submission (`src/app/api/ai/recommendation/route.ts`)
 
-General site configuration and settings.
+Knowledge base ops (admin/editor, cookie-authenticated):
 
-#### legalContent
+- `POST /api/knowledge-base/import-excel` — bulk import KB items from an Excel file (`src/app/api/knowledge-base/import-excel/route.ts`)
+- `POST /api/knowledge-base/sync-item` — sync one KB item to vector DB via n8n (`src/app/api/knowledge-base/sync-item/route.ts`)
+- `POST /api/knowledge-base/sync-unsynced` — sync all unsynced items (`src/app/api/knowledge-base/sync-unsynced/route.ts`)
 
-Legal pages content managed by editors:
+Questionnaire:
 
-- Impressum
-- Privacy Policy (Datenschutzerklärung)
-- Terms and Conditions (AGB)
+- `GET /api/questionnaire/current` — returns the current active questionnaire from Payload (`src/app/api/questionnaire/current/route.ts`)
+  - The **frontend survey** currently uses `src/app/(frontend)/questionnaire/questions.ts` as v1 defaults.
 
-### Access Control
+### Caching & performance
 
-Role-based access control (RBAC) is implemented across all collections:
+- **Payload instance caching**: `getPayloadClient()` caches Payload at module level to avoid MongoDB pool exhaustion (`src/lib/payload.ts`).
+- **Heatmap caching**: `/api/heatmap` uses in-memory caching (5 minutes) + CDN-friendly headers.
+- **Geocoding caching**: in-memory cache with 24h TTL (`src/utilities/geocodeCache.ts`).
+- **Globals caching**: `unstable_cache` for globals (`src/utilities/getGlobals.ts`).
 
-- **Public**: Can submit questionnaires, view heatmap
-- **Editors**: Can manage questions, questionnaires, knowledge base, legal content
-- **Admins**: Full access including scoring weights, user management, exports
+### Heatmap rendering
 
-See `.cursor/rules/access-control.md` and `.cursor/rules/security-critical.mdc` for implementation patterns.
+- API returns GeoJSON points aggregated by postal code (`/api/heatmap`).
+- Frontend renders a custom **influence-disk** layer (MapLibre custom layer) via `src/components/HeatmapMap/InfluenceDiskLayer.ts`.
+- Current default influence radius is **5km per point** (`DEFAULT_RADIUS_METERS = 5000` in `src/components/HeatmapMap/index.ts`).
 
-### Location Capture
+### Privacy model (what’s stored vs what’s public)
 
-Two methods for location capture:
+- Stored (server-side): submissions include `location.lat/lng` and `postal_code` plus answers and computed scores.
+- Public (heatmap): the API only exposes aggregated postal-code points and averaged scores, not raw submissions.
 
-1. **GPS Geolocation**: Browser geolocation API with automatic reverse geocoding
-2. **Manual Address Input**: German address format (Straße, Hausnummer, PLZ, Stadt)
+### Security & access-control notes (Payload)
 
-Both methods use self-hosted OSM-based geocoding services:
+- Payload Local API can **bypass access control by default** unless you explicitly set `overrideAccess: false` for user-scoped operations.
+  - This is why `POST /api/submit` uses `overrideAccess: false` (public create is allowed by collection access).
+- System-style operations (aggregation / internal workflows) intentionally use `overrideAccess: true` where needed.
+- Always use the cached client `getPayloadClient()` (`src/lib/payload.ts`) to avoid creating multiple MongoDB connection pools.
 
-- **Nominatim**: Reverse geocoding (coordinates → postal code)
-- **Photon**: Forward geocoding (address → coordinates)
+## Local development
 
-### Questionnaire Engine
+### Prerequisites
 
-Dynamic questionnaire system that:
+- Node.js `^18.20.2` or `>=20.9.0`
+- **pnpm** `^9` or `^10`
+- MongoDB connection string
 
-- Fetches current questionnaire from Payload CMS
-- Validates at least one active question exists
-- Renders one question per screen
-- Supports all question types with validation
-- Stores answers as JSON keyed by question key
+### Setup
 
-### Scoring System
+```bash
+pnpm install
+cp .env.example .env
+pnpm dev
+```
 
-Admin-configurable scoring system:
+Then:
 
-- Per-question weights
-- Per-option score mapping (for choice questions)
-- Slider normalization rules
-- Calculates `problem_index` (0-100 scale)
-- Optional sub-scores per category
+- App: `http://localhost:3000`
+- Admin: `http://localhost:3000/admin`
 
-### AI Recommendations
+### Environment variables (practical)
 
-On-demand AI recommendations via n8n:
-
-- Triggered by user CTA button after submission
-- Uses RAG (Retrieval-Augmented Generation) from knowledge base
-- Generates German recommendations
-- Results stored in submission record
-- Retry logic for error handling
-
-### Public Heatmap
-
-Interactive heatmap visualization:
-
-- Aggregated data at postal code level
-- GeoJSON API endpoint with caching
-- MapLibre GL JS with react-map-gl
-- User location marker
-- Color-coded legend (low/medium/high problem index)
-
-### Admin Tools
-
-Admin-only features:
-
-- CSV export of submissions (with filtering)
-- Basic dashboard with statistics
-- Scoring weights management UI
-- User and permission management
-
-## API Endpoints
-
-### Public Endpoints
-
-- `POST /api/submit` - Submit questionnaire response
-- `GET /api/heatmap` - Get aggregated heatmap data (GeoJSON)
-- `GET /api/legal/:page` - Get legal page content
-
-### Internal Endpoints
-
-- `POST /api/geocode` - Convert address to coordinates
-- `POST /api/reverse-geocode` - Convert coordinates to postal code
-- `POST /api/ai/recommendation` - Generate AI recommendation (proxies to n8n)
-
-### Admin Endpoints
-
-- `GET /api/admin/export` - CSV export (admin-only)
-- `GET /api/admin/stats` - Dashboard statistics (admin-only)
-
-## Development
-
-### Working with MongoDB
-
-This project uses MongoDB Atlas. Ensure your connection string is configured in `.env`:
+Minimum (see `.env.example`):
 
 ```env
-DATABASE_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+DATABASE_URI=mongodb://127.0.0.1/your-database-name
+PAYLOAD_SECRET=YOUR_SECRET_HERE
+NEXT_PUBLIC_SERVER_URL=http://localhost:3000
 ```
 
-### Geocoding Services Setup
+Common optional knobs:
 
-**What are these services?** See [`docs/GEOCODING-SERVICES-EXPLAINED.md`](docs/GEOCODING-SERVICES-EXPLAINED.md) for a simple explanation.
+```env
+# n8n routing
+N8N_DOMAIN=https://n8n.adaptmap.de
+N8N_INTERNAL_URL=http://localhost:5678
 
-**Quick summary:**
+# Geocoding fallback chain
+LOCATIONIQ_API_KEY=...
+LOCATIONIQ_BASE_URL=https://eu1.locationiq.com/v1
+GEOCODING_URL=https://nominatim.openstreetmap.org
+PHOTON_URL=https://photon.komoot.io
+NEXT_PUBLIC_PHOTON_URL=https://photon.komoot.io
 
-- **Nominatim**: Converts GPS coordinates → postal code/address (reverse geocoding)
-- **Photon**: Converts address → GPS coordinates (forward geocoding)
-- **Why self-host**: No rate limits, better performance, privacy
-
-#### Local Development
-
-For local development, set up self-hosted geocoding services using Docker:
-
-```bash
-docker-compose up
+# Map tiles (optional)
+NEXT_PUBLIC_MAPTILER_API_KEY=...
 ```
 
-This starts:
+Also note: n8n webhook paths are primarily configured in Payload under **Global → Site Settings → n8n Webhooks** (`site-settings.n8nWebhooks.*`).
 
-- Nominatim on port 8080
-- Photon on port 2322
-
-#### Production (Hostinger VPS)
-
-For production deployment on Hostinger VPS, use the dedicated geocoding services:
+### Common scripts
 
 ```bash
-# Upload docker-compose.geocoding.yml to your VPS
-# Then run:
-docker-compose -f docker-compose.geocoding.yml up -d
-```
-
-**📖 Full setup guide**: See [`docs/geocoding-services-setup.md`](docs/geocoding-services-setup.md) for complete instructions including:
-
-- Docker installation
-- Service configuration
-- Nginx reverse proxy setup
-- SSL certificate setup
-- Maintenance and troubleshooting
-
-**Quick setup script**: Use `scripts/setup-geocoding-hostinger.sh` for automated setup on Hostinger VPS.
-
-### Type Generation
-
-After modifying collections or globals, regenerate TypeScript types:
-
-```bash
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+pnpm format
 pnpm generate:types
-```
-
-This updates `src/payload-types.ts` with the latest schema.
-
-### Import Map Generation
-
-After adding custom admin components, regenerate the import map:
-
-```bash
 pnpm generate:importmap
 ```
 
-## Security Considerations
-
-⚠️ **CRITICAL**: Follow security patterns from `.cursor/rules/security-critical.mdc`:
-
-1. **Local API Access Control**: Always set `overrideAccess: false` when passing `user` to Local API operations
-2. **Transaction Safety**: Always pass `req` to nested operations in hooks
-3. **Prevent Hook Loops**: Use `context` flags to prevent infinite loops
-
-See `.taskmaster/docs/cursor-rules-mapping.md` for detailed security patterns per task.
-
 ## Testing
 
-### Run Tests
-
 ```bash
-# Integration tests
 pnpm test:int
-
-# End-to-end tests
 pnpm test:e2e
-
-# All tests
 pnpm test
 ```
 
-## Production
+## Deployment & ops
 
-### Build
+- Health endpoint: `GET /api/health`
+- Payload runs inside Next (App Router). See `Dockerfile` and `docs/DEPLOYMENT.md` for the current deployment setup.
 
-```bash
-pnpm build
-```
+## Project docs / context
 
-### Start Production Server
-
-```bash
-pnpm start
-```
-
-### Deployment
-
-This project is configured for deployment on:
-
-- **Fly.io**: Main web application
-- **Hostinger**: n8n workflows
-- **MongoDB Atlas**: Database with Vector Search
-
-See deployment configuration in:
-
-- `fly.toml` - Fly.io configuration
-- `Dockerfile` - Container configuration
-- `next.config.js` - Next.js production optimizations
-
-### Environment Variables (Production)
-
-Ensure all required environment variables are set:
-
-```env
-DATABASE_URI=...
-PAYLOAD_SECRET=...
-N8N_RECOMMENDATION_ENDPOINT=...
-NOMINATIM_URL=...
-PHOTON_URL=...
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-```
-
-## Performance Targets (MVP)
-
-- Completion rate (start → submit): ≥ 60%
-- Median time to complete: ≤ 3 minutes
-- Valid postal code submissions: ≥ 90%
-- Heatmap API p95 (cached): < 500ms
-- AI CTA success rate: ≥ 95% (with retries)
-
-## Project Management
-
-This project uses Task Master AI for task management. See:
-
-- `.taskmaster/docs/prd.txt` - Product Requirements Document
-- `.taskmaster/docs/cursor-rules-mapping.md` - Cursor rules to tasks mapping
-- `.taskmaster/tasks/tasks.json` - Task definitions
-
-View tasks:
-
-```bash
-# Get all tasks
-# Use task-master-ai MCP tools or check .taskmaster/tasks/tasks.json
-```
-
-## Resources
-
-- [Payload CMS Documentation](https://payloadcms.com/docs)
-- [Payload CMS LLM Context](https://payloadcms.com/llms-full.txt)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [MapLibre GL JS](https://maplibre.org/)
-- [n8n Documentation](https://docs.n8n.io/)
+- PRD: `.taskmaster/docs/prd.txt`
+- Geocoding: `docs/GEOCODING-SERVICES-EXPLAINED.md`, `docs/geocoding-services-setup.md`
+- n8n + KB sync: `docs/n8n/README.md` and related files in `docs/n8n/`
 
 ## License
 

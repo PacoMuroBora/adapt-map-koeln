@@ -45,7 +45,6 @@ After resetting n8n, you need to recreate the credentials for your workflows. Th
    - **Name:** `MongoDB vectors`
    - **Connection String:** Your MongoDB Atlas connection string
      - Format: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority`
-     mongodb+srv://adaptmap_vectors:PrnHyJbzerW953Tn@cluster0.hrerykt.mongodb.net/adaptmap_vectors?appName=Cluster0&retryWrites=true&w=majority
      - Use the same connection string as your `VECTOR_DATABASE_URI` environment variable
      - Example: `mongodb+srv://adaptmap_vectors:password@cluster0.hrerykt.mongodb.net/adaptmap_vectors?appName=Cluster0`
 6. Click **Test Connection** to verify
