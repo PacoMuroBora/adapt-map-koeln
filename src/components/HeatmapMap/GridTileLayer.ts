@@ -100,9 +100,9 @@ void main() {
     min(coord.y - u_tileMin.y, u_tileMax.y - coord.y)
   );
   if (distToEdge < u_borderWidthPx)
-    gl_FragColor = vec4(u_borderColor, 1.0);
+    gl_FragColor = vec4(u_borderColor * u_opacity, u_opacity);
   else
-    gl_FragColor = vec4(u_color, u_opacity);
+    gl_FragColor = vec4(u_color * u_opacity, u_opacity);
 }
 `
 
@@ -182,7 +182,7 @@ export class GridTileLayer implements CustomLayerInterface {
     if (w === 0 || h === 0) return
 
     gl.enable(gl.BLEND)
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
     gl.useProgram(this.program)
     gl.bindBuffer(gl.ARRAY_BUFFER, this.quadBuffer)
     const posLoc = gl.getAttribLocation(this.program!, 'a_pos')
