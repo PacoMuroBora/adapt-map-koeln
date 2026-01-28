@@ -49,14 +49,6 @@ export const SiteSettings: GlobalConfig = {
               },
             },
             {
-              name: 'defaultQuestionnaire',
-              type: 'relationship',
-              relationTo: 'questionnaires',
-              admin: {
-                description: 'Default questionnaire to use if no current questionnaire is set',
-              },
-            },
-            {
               name: 'mapCenter',
               type: 'group',
               admin: {

@@ -2325,10 +2325,6 @@ export interface SiteSetting {
    */
   contactEmail?: string | null;
   /**
-   * Default questionnaire to use if no current questionnaire is set
-   */
-  defaultQuestionnaire?: (string | null) | Questionnaire;
-  /**
    * Default map center coordinates
    */
   mapCenter?: {
@@ -2343,6 +2339,10 @@ export interface SiteSetting {
    * Size of heatmap grid tiles in meters (default: 500m). Smaller values create finer grids.
    */
   heatmapTileSize: number;
+  /**
+   * Opacity of heatmap tiles (0-1). Lower values make tiles more transparent. Default: 0.35
+   */
+  heatmapTileOpacity: number;
   /**
    * n8n webhook URLs. In development, use full URL (https://n8n.adaptmap.de/...). In production, use path only for internal routing (/webhook/...).
    */
@@ -2558,7 +2558,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   siteName?: T;
   siteDescription?: T;
   contactEmail?: T;
-  defaultQuestionnaire?: T;
   mapCenter?:
     | T
     | {
@@ -2567,6 +2566,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         zoom?: T;
       };
   heatmapTileSize?: T;
+  heatmapTileOpacity?: T;
   n8nWebhooks?:
     | T
     | {
