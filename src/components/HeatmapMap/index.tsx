@@ -127,21 +127,52 @@ export function HeatmapMap({
   const layerRef = useRef<GridTileLayer | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch tile size from settings
+  // Fetch tile size and map center from settings
   useEffect(() => {
     let ignore = false
     fetch('/api/heatmap-settings')
       .then((r) => r.json())
-      .then((d: { tileSizeMeters?: number }) => {
-        const v = d?.tileSizeMeters
-        if (ignore || typeof v !== 'number') return
-        setTileSizeMeters((p) => (p === v ? p : v))
+      .then(
+        (d: {
+          tileSizeMeters?: number
+          mapCenter?: { lat?: number; lng?: number; zoom?: number }
+        }) => {
+          if (ignore) return
+
+          if (typeof d?.tileSizeMeters === 'number') {
+            setTileSizeMeters((p) => (p === d.tileSizeMeters ? p : d.tileSizeMeters))
+          }
+
+          // Update map center/zoom from settings if no user location
+          if (!userLocation && d?.mapCenter) {
+            const { lat, lng, zoom } = d.mapCenter
+            if (typeof lat === 'number' && typeof lng === 'number' && typeof zoom === 'number') {
+              console.log('[HeatmapMap] Setting initial view from SiteSettings:', {
+                lat,
+                lng,
+                zoom,
+              })
+              setViewState((p) => ({
+                ...p,
+                longitude: lng,
+                latitude: lat,
+                zoom,
+              }))
+            } else {
+              console.warn('[HeatmapMap] Invalid mapCenter from API:', d.mapCenter)
+            }
+          } else if (userLocation) {
+            console.log('[HeatmapMap] Using userLocation, ignoring SiteSettings mapCenter')
+          }
+        },
+      )
+      .catch((err) => {
+        console.error('[HeatmapMap] Failed to fetch heatmap-settings:', err)
       })
-      .catch(() => {})
     return () => {
       ignore = true
     }
-  }, [])
+  }, [userLocation])
 
   // Fetch grid data
   useEffect(() => {
@@ -186,7 +217,7 @@ export function HeatmapMap({
       id: 'grid-tile-layer',
       data: gridData,
       tileSizeMeters,
-      opacity: 0.5,
+      opacity: 0.4,
       debugBounds: debugTileBounds,
     })
     map.addLayer(layer)

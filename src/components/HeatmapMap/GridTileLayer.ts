@@ -4,7 +4,7 @@
  * Each tile is a square with:
  * - Fixed physical size in meters (from CMS / API)
  * - Solid fill with constant transparency (no opacity falloff)
- * - Thin light gray border
+ * - Denser opaque outline of the same color
  * - Color from average problem_index (value 0-1) via COLOR_STOPS
  */
 
@@ -90,6 +90,7 @@ uniform vec2 u_tileMax;
 uniform float u_borderWidthPx;
 uniform vec3 u_color;
 uniform float u_opacity;
+uniform float u_borderOpacity;
 uniform vec3 u_borderColor;
 varying vec2 v_texCoord;
 void main() {
@@ -100,7 +101,7 @@ void main() {
     min(coord.y - u_tileMin.y, u_tileMax.y - coord.y)
   );
   if (distToEdge < u_borderWidthPx)
-    gl_FragColor = vec4(u_borderColor * u_opacity, u_opacity);
+    gl_FragColor = vec4(u_borderColor * u_borderOpacity, u_borderOpacity);
   else
     gl_FragColor = vec4(u_color * u_opacity, u_opacity);
 }
@@ -136,6 +137,7 @@ export class GridTileLayer implements CustomLayerInterface {
   private uBorderWidth: WebGLUniformLocation | null = null
   private uColor: WebGLUniformLocation | null = null
   private uOpacity: WebGLUniformLocation | null = null
+  private uBorderOpacity: WebGLUniformLocation | null = null
   private uBorderColor: WebGLUniformLocation | null = null
 
   constructor(options: GridTileLayerOptions) {
@@ -157,6 +159,7 @@ export class GridTileLayer implements CustomLayerInterface {
     this.uBorderWidth = gl.getUniformLocation(this.program!, 'u_borderWidthPx')
     this.uColor = gl.getUniformLocation(this.program!, 'u_color')
     this.uOpacity = gl.getUniformLocation(this.program!, 'u_opacity')
+    this.uBorderOpacity = gl.getUniformLocation(this.program!, 'u_borderOpacity')
     this.uBorderColor = gl.getUniformLocation(this.program!, 'u_borderColor')
 
     const quad = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])
@@ -227,10 +230,11 @@ export class GridTileLayer implements CustomLayerInterface {
       gl.uniform2f(this.uRes!, w, h)
       gl.uniform2f(this.uTileMin!, minPxX, minPxY)
       gl.uniform2f(this.uTileMax!, maxPxX, maxPxY)
-      gl.uniform1f(this.uBorderWidth!, 1.0)
+      gl.uniform1f(this.uBorderWidth!, 3.0)
       gl.uniform3f(this.uColor!, color[0], color[1], color[2])
       gl.uniform1f(this.uOpacity!, this.opacity)
-      gl.uniform3f(this.uBorderColor!, 0.88, 0.88, 0.88)
+      gl.uniform1f(this.uBorderOpacity!, Math.min(1.0, this.opacity * 1.8))
+      gl.uniform3f(this.uBorderColor!, color[0], color[1], color[2])
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
   }

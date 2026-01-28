@@ -2334,6 +2334,9 @@ export interface SiteSetting {
   mapCenter?: {
     lat?: number | null;
     lng?: number | null;
+    /**
+     * Map zoom level (1-20). Higher values zoom closer (e.g., 10 = city level, 15 = street level).
+     */
     zoom?: number | null;
   };
   /**

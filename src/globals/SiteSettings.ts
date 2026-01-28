@@ -77,6 +77,10 @@ export const SiteSettings: GlobalConfig = {
                   name: 'zoom',
                   type: 'number',
                   defaultValue: 10,
+                  admin: {
+                    description:
+                      'Map zoom level (1-20). Higher values zoom closer (e.g., 10 = city level, 15 = street level).',
+                  },
                 },
               ],
             },
@@ -142,7 +146,8 @@ export const SiteSettings: GlobalConfig = {
               name: 'metaDescription',
               type: 'textarea',
               admin: {
-                description: 'Default meta description for the site (used in <meta name="description"> and OpenGraph)',
+                description:
+                  'Default meta description for the site (used in <meta name="description"> and OpenGraph)',
                 placeholder: 'Discover accessible locations in Cologne with AdaptMap Köln',
               },
             },
