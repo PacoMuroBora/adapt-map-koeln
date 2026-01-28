@@ -140,7 +140,8 @@ export function HeatmapMap({
           if (ignore) return
 
           if (typeof d?.tileSizeMeters === 'number') {
-            setTileSizeMeters((p) => (p === d.tileSizeMeters ? p : d.tileSizeMeters))
+            const tileSize = d.tileSizeMeters
+            setTileSizeMeters((p) => (p === tileSize ? p : tileSize))
           }
 
           // Update map center/zoom from settings if no user location
