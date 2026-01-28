@@ -98,6 +98,19 @@ export const SiteSettings: GlobalConfig = {
               },
             },
             {
+              name: 'heatmapTileOpacity',
+              type: 'number',
+              defaultValue: 0.35,
+              min: 0,
+              max: 1,
+              required: true,
+              admin: {
+                description:
+                  'Opacity of heatmap tiles (0-1). Lower values make tiles more transparent. Default: 0.35',
+                step: 0.01,
+              },
+            },
+            {
               name: 'n8nWebhooks',
               type: 'group',
               admin: {

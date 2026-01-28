@@ -118,6 +118,7 @@ export function HeatmapMap({
     zoom: userLocation ? 10 : DEFAULT_CENTER.zoom,
   })
   const [tileSizeMeters, setTileSizeMeters] = useState(500)
+  const [tileOpacity, setTileOpacity] = useState(0.35)
   const [gridData, setGridData] = useState<GridData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -135,6 +136,7 @@ export function HeatmapMap({
       .then(
         (d: {
           tileSizeMeters?: number
+          tileOpacity?: number
           mapCenter?: { lat?: number; lng?: number; zoom?: number }
         }) => {
           if (ignore) return
@@ -142,6 +144,11 @@ export function HeatmapMap({
           if (typeof d?.tileSizeMeters === 'number') {
             const tileSize = d.tileSizeMeters
             setTileSizeMeters((p) => (p === tileSize ? p : tileSize))
+          }
+
+          if (typeof d?.tileOpacity === 'number') {
+            const opacity = d.tileOpacity
+            setTileOpacity((p) => (p === opacity ? p : opacity))
           }
 
           // Update map center/zoom from settings if no user location
@@ -218,13 +225,13 @@ export function HeatmapMap({
       id: 'grid-tile-layer',
       data: gridData,
       tileSizeMeters,
-      opacity: 0.4,
+      opacity: tileOpacity,
       debugBounds: debugTileBounds,
     })
     map.addLayer(layer)
     layerRef.current = layer
     map.triggerRepaint()
-  }, [gridData, tileSizeMeters, debugTileBounds])
+  }, [gridData, tileSizeMeters, tileOpacity, debugTileBounds])
 
   const onMapLoad = useCallback(() => {
     setTimeout(setupLayer, 100)
