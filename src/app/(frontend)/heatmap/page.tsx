@@ -17,9 +17,10 @@ export default function HeatmapPage() {
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Heatmap</h1>
           <p className="text-muted-foreground">
-            Visualisierung der hitzebezogenen Probleme nach Postleitzahl. Die Farbe zeigt den
-            durchschnittlichen Problem-Index (0-100) an. Jeder Datenpunkt hat einen Einflussradius
-            von 500 Metern.
+            Raster-Heatmap der hitzebezogenen Probleme. Jede Kachel zeigt die durchschnittliche
+            Problem-Index-Farbe (0–100). Kachelgröße und weitere Einstellungen sind in den
+            Site-Einstellungen festgelegt. Fahren Sie mit der Maus über eine Kachel oder tippen Sie
+            darauf, um die Verteilung der Werte zu sehen.
           </p>
         </div>
 

@@ -81,6 +81,19 @@ export const SiteSettings: GlobalConfig = {
               ],
             },
             {
+              name: 'heatmapTileSize',
+              type: 'number',
+              defaultValue: 500,
+              min: 50,
+              max: 5000,
+              required: true,
+              admin: {
+                description:
+                  'Size of heatmap grid tiles in meters (default: 500m). Smaller values create finer grids.',
+                step: 50,
+              },
+            },
+            {
               name: 'n8nWebhooks',
               type: 'group',
               admin: {

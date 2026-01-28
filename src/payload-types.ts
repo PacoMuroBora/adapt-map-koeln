@@ -2337,6 +2337,10 @@ export interface SiteSetting {
     zoom?: number | null;
   };
   /**
+   * Size of heatmap grid tiles in meters (default: 500m). Smaller values create finer grids.
+   */
+  heatmapTileSize: number;
+  /**
    * n8n webhook URLs. In development, use full URL (https://n8n.adaptmap.de/...). In production, use path only for internal routing (/webhook/...).
    */
   n8nWebhooks: {
@@ -2559,6 +2563,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         lng?: T;
         zoom?: T;
       };
+  heatmapTileSize?: T;
   n8nWebhooks?:
     | T
     | {
