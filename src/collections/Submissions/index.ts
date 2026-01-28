@@ -2,6 +2,10 @@ import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '../../access/adminOnly'
 import { anyone } from '../../access/anyone'
+import {
+  revalidateHeatmapAfterChange,
+  revalidateHeatmapAfterDelete,
+} from './hooks/revalidateHeatmap'
 
 export const Submissions: CollectionConfig = {
   slug: 'submissions',
@@ -325,5 +329,9 @@ export const Submissions: CollectionConfig = {
       ],
     },
   ],
+  hooks: {
+    afterChange: [revalidateHeatmapAfterChange],
+    afterDelete: [revalidateHeatmapAfterDelete],
+  },
   timestamps: true,
 }

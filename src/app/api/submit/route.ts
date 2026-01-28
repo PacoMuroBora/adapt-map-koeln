@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { APIError } from 'payload'
 import { getPayloadClient } from '@/lib/payload'
 
@@ -126,7 +127,8 @@ export async function POST(req: Request) {
           : {},
         questionnaireVersion: body.questionnaireVersion || 'v1.0',
         heatFrequency: heatFrequency || undefined,
-        heatIntensity: heatIntensity !== null && heatIntensity !== undefined ? heatIntensity : undefined,
+        heatIntensity:
+          heatIntensity !== null && heatIntensity !== undefined ? heatIntensity : undefined,
         livingSituation: {
           housingType: housingType || undefined,
           greenNeighborhood: greenNeighborhood || undefined,
@@ -143,6 +145,10 @@ export async function POST(req: Request) {
       },
       overrideAccess: false, // Respect access control (anyone can create)
     })
+
+    // Invalidate heatmap cache so new submission appears immediately
+    revalidateTag('heatmap-grid')
+    revalidateTag('heatmap')
 
     // Generate baseline results
     let severity: 'niedrig' | 'mittel' | 'hoch' = 'niedrig'
