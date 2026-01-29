@@ -92,9 +92,13 @@ uniform vec3 u_color;
 uniform float u_opacity;
 uniform float u_borderOpacity;
 uniform vec3 u_borderColor;
+uniform float u_scale;
+uniform vec2 u_tileCenter;
 varying vec2 v_texCoord;
 void main() {
   vec2 coord = v_texCoord * u_resolution;
+  
+  // Tile bounds are already scaled, just check if coord is within bounds
   if (coord.x < u_tileMin.x || coord.x > u_tileMax.x || coord.y < u_tileMin.y || coord.y > u_tileMax.y) discard;
   // Skip border rendering if border width is 0
   if (u_borderWidthPx > 0.0) {
@@ -120,6 +124,18 @@ export interface GridTileLayerOptions {
   debugBounds?: boolean
 }
 
+interface TileAnimationState {
+  scale: number
+  opacity: number
+  targetScale: number
+  targetOpacity: number
+  startTime: number
+  startScale: number
+  startOpacity: number
+  duration: number
+  isScalingDown: boolean
+}
+
 export class GridTileLayer implements CustomLayerInterface {
   id: string
   type = 'custom' as const
@@ -143,6 +159,15 @@ export class GridTileLayer implements CustomLayerInterface {
   private uOpacity: WebGLUniformLocation | null = null
   private uBorderOpacity: WebGLUniformLocation | null = null
   private uBorderColor: WebGLUniformLocation | null = null
+  private uScale: WebGLUniformLocation | null = null
+  private uTileCenter: WebGLUniformLocation | null = null
+
+  private hoveredTileKey: string | null = null
+  // Track animation state per tile - cleaner structure
+  private tileAnimations: Map<string, TileAnimationState> = new Map()
+  private animationFrameId: number | null = null
+  private lastRepaintTime: number = 0
+  private readonly REPAINT_THROTTLE_MS = 16 // ~60fps
 
   constructor(options: GridTileLayerOptions) {
     this.id = options.id
@@ -165,6 +190,8 @@ export class GridTileLayer implements CustomLayerInterface {
     this.uOpacity = gl.getUniformLocation(this.program!, 'u_opacity')
     this.uBorderOpacity = gl.getUniformLocation(this.program!, 'u_borderOpacity')
     this.uBorderColor = gl.getUniformLocation(this.program!, 'u_borderColor')
+    this.uScale = gl.getUniformLocation(this.program!, 'u_scale')
+    this.uTileCenter = gl.getUniformLocation(this.program!, 'u_tileCenter')
 
     const quad = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])
     this.quadBuffer = gl.createBuffer()
@@ -173,8 +200,149 @@ export class GridTileLayer implements CustomLayerInterface {
   }
 
   onRemove(_map: MapLibreMap, gl: WebGLRenderingContext): void {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId)
+      this.animationFrameId = null
+    }
     if (this.quadBuffer) gl.deleteBuffer(this.quadBuffer)
     if (this.program) gl.deleteProgram(this.program)
+  }
+
+  setHoveredTile(tileX: number | null, tileY: number | null): void {
+    const newKey = tileX !== null && tileY !== null ? `${tileX},${tileY}` : null
+    if (this.hoveredTileKey === newKey) return
+
+    const now = performance.now()
+    const previousKey = this.hoveredTileKey
+    this.hoveredTileKey = newKey
+
+    // Animate previous tile out (if it exists and is different from new tile)
+    if (previousKey !== null && previousKey !== newKey) {
+      const prevAnim = this.tileAnimations.get(previousKey)
+      if (prevAnim) {
+        // Continue from current state
+        prevAnim.targetScale = 1.0
+        prevAnim.targetOpacity = this.opacity
+        prevAnim.startTime = now
+        prevAnim.startScale = prevAnim.scale
+        prevAnim.startOpacity = prevAnim.opacity
+        prevAnim.duration = 300
+        prevAnim.isScalingDown = false
+      } else {
+        // Initialize if doesn't exist
+        this.tileAnimations.set(previousKey, {
+          scale: 1.0,
+          opacity: this.opacity,
+          targetScale: 1.0,
+          targetOpacity: this.opacity,
+          startTime: now,
+          startScale: 1.0,
+          startOpacity: this.opacity,
+          duration: 300,
+          isScalingDown: false,
+        })
+      }
+    }
+
+    // Animate new tile in (if it exists)
+    if (newKey !== null) {
+      const newAnim = this.tileAnimations.get(newKey)
+      if (newAnim) {
+        // Continue from current state
+        newAnim.targetScale = 0.90
+        newAnim.targetOpacity = Math.min(1.0, this.opacity + 0.12)
+        newAnim.startTime = now
+        newAnim.startScale = newAnim.scale
+        newAnim.startOpacity = newAnim.opacity
+        newAnim.duration = 150
+        newAnim.isScalingDown = true
+      } else {
+        // Initialize if doesn't exist
+        this.tileAnimations.set(newKey, {
+          scale: 1.0,
+          opacity: this.opacity,
+          targetScale: 0.90,
+          targetOpacity: Math.min(1.0, this.opacity + 0.12),
+          startTime: now,
+          startScale: 1.0,
+          startOpacity: this.opacity,
+          duration: 150,
+          isScalingDown: true,
+        })
+      }
+    }
+
+    // Start animation loop if not already running
+    if (this.animationFrameId === null) {
+      this.startAnimation()
+    }
+  }
+
+  private startAnimation(): void {
+    const animate = (currentTime: number) => {
+      let hasActiveAnimations = false
+      const shouldRepaint = currentTime - this.lastRepaintTime >= this.REPAINT_THROTTLE_MS
+
+      // Update all tile animations
+      for (const [tileKey, anim] of this.tileAnimations.entries()) {
+        const elapsed = currentTime - anim.startTime
+        const progress = Math.min(1, elapsed / anim.duration)
+
+        if (progress >= 1) {
+          // Animation complete - snap to target
+          anim.scale = anim.targetScale
+          anim.opacity = anim.targetOpacity
+          // Remove completed animations for tiles that are not hovered and back to normal
+          if (tileKey !== this.hoveredTileKey && anim.scale === 1.0 && Math.abs(anim.opacity - this.opacity) < 0.001) {
+            this.tileAnimations.delete(tileKey)
+          } else {
+            hasActiveAnimations = true
+          }
+          continue
+        }
+
+        hasActiveAnimations = true
+
+        // Apply easing function
+        const eased = this.ease(progress, anim.isScalingDown)
+        anim.scale = anim.startScale + (anim.targetScale - anim.startScale) * eased
+        anim.opacity = anim.startOpacity + (anim.targetOpacity - anim.startOpacity) * eased
+      }
+
+      // Throttle repaints to avoid stuttering
+      if (hasActiveAnimations) {
+        if (shouldRepaint && this.map) {
+          this.map.triggerRepaint()
+          this.lastRepaintTime = currentTime
+        }
+        this.animationFrameId = requestAnimationFrame(animate)
+      } else {
+        this.animationFrameId = null
+        // Final repaint to ensure we're at target state
+        if (this.map) {
+          this.map.triggerRepaint()
+        }
+      }
+    }
+    this.animationFrameId = requestAnimationFrame(animate)
+  }
+
+  private ease(progress: number, isScalingDown: boolean): number {
+    if (isScalingDown) {
+      // Hover in: quick in (cubic), medium out (quadratic)
+      // Snappier entrance, medium exit
+      if (progress < 0.4) {
+        return 6.25 * progress * progress * progress // Quick cubic in
+      }
+      return 0.4 + 0.6 * (1 - Math.pow(1 - (progress - 0.4) / 0.6, 2)) // Medium quadratic out
+    } else {
+      // Hover out: medium in (quadratic), slow out (cubic)
+      // Medium entrance, slow smooth exit
+      if (progress < 0.3) {
+        return (progress / 0.3) * (progress / 0.3) // Medium quadratic in
+      }
+      return 0.3 + 0.7 * (1 - Math.pow(1 - (progress - 0.3) / 0.7, 3)) // Slow cubic out
+    }
   }
 
   prerender(_gl: WebGLRenderingContext, _o: CustomRenderMethodInput): void {}
@@ -242,14 +410,36 @@ export class GridTileLayer implements CustomLayerInterface {
         borderWidthPx = 1.0
       }
 
+      // Check if this tile has animation state
+      const tileKey = `${tileX},${tileY}`
+      const anim = this.tileAnimations.get(tileKey)
+      // Use animated values if this tile is being animated, otherwise use default values
+      const scale = anim ? anim.scale : 1.0
+      const tileOpacity = anim ? anim.opacity : this.opacity
+
+      const tileCenterX = (minPxX + maxPxX) / 2
+      const tileCenterY = (minPxY + maxPxY) / 2
+
+      // Apply scale to tile bounds to make it appear smaller/larger
+      const tileWidth = maxPxX - minPxX
+      const tileHeight = maxPxY - minPxY
+      const scaledWidth = tileWidth * scale
+      const scaledHeight = tileHeight * scale
+      const scaledMinX = tileCenterX - scaledWidth / 2
+      const scaledMaxX = tileCenterX + scaledWidth / 2
+      const scaledMinY = tileCenterY - scaledHeight / 2
+      const scaledMaxY = tileCenterY + scaledHeight / 2
+
       const color = valueToColor(val)
       gl.uniform2f(this.uRes!, w, h)
-      gl.uniform2f(this.uTileMin!, minPxX, minPxY)
-      gl.uniform2f(this.uTileMax!, maxPxX, maxPxY)
+      gl.uniform2f(this.uTileMin!, scaledMinX, scaledMinY)
+      gl.uniform2f(this.uTileMax!, scaledMaxX, scaledMaxY)
       gl.uniform1f(this.uBorderWidth!, borderWidthPx)
+      gl.uniform1f(this.uScale!, 1.0) // No coordinate scaling needed, we scale the bounds instead
+      gl.uniform2f(this.uTileCenter!, tileCenterX, tileCenterY)
       gl.uniform3f(this.uColor!, color[0], color[1], color[2])
-      gl.uniform1f(this.uOpacity!, this.opacity)
-      gl.uniform1f(this.uBorderOpacity!, Math.min(1.0, this.opacity * 1.8))
+      gl.uniform1f(this.uOpacity!, tileOpacity)
+      gl.uniform1f(this.uBorderOpacity!, Math.min(1.0, tileOpacity * 1.8))
       gl.uniform3f(this.uBorderColor!, color[0], color[1], color[2])
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }

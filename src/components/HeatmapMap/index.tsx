@@ -262,6 +262,15 @@ export function HeatmapMap({
       const t = getTileAtPoint(x, y, gridData.features, map, tileSizeMeters)
       setHoveredTile(t)
       setTooltipPos(t ? { x: x + 12, y: y + 12 } : null)
+      
+      // Update layer animation
+      if (layerRef.current) {
+        layerRef.current.setHoveredTile(
+          t?.properties.tileX ?? null,
+          t?.properties.tileY ?? null,
+        )
+      }
+      
       if (hideTimerRef.current) {
         clearTimeout(hideTimerRef.current)
         hideTimerRef.current = null
@@ -270,6 +279,9 @@ export function HeatmapMap({
         hideTimerRef.current = setTimeout(() => {
           setHoveredTile(null)
           setTooltipPos(null)
+          if (layerRef.current) {
+            layerRef.current.setHoveredTile(null, null)
+          }
           hideTimerRef.current = null
         }, 2500)
       }
@@ -319,6 +331,9 @@ export function HeatmapMap({
   const onMouseLeave = useCallback(() => {
     setHoveredTile(null)
     setTooltipPos(null)
+    if (layerRef.current) {
+      layerRef.current.setHoveredTile(null, null)
+    }
     if (hideTimerRef.current) {
       clearTimeout(hideTimerRef.current)
       hideTimerRef.current = null
