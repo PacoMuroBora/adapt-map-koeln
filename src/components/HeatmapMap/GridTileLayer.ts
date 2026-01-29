@@ -96,14 +96,18 @@ varying vec2 v_texCoord;
 void main() {
   vec2 coord = v_texCoord * u_resolution;
   if (coord.x < u_tileMin.x || coord.x > u_tileMax.x || coord.y < u_tileMin.y || coord.y > u_tileMax.y) discard;
-  float distToEdge = min(
-    min(coord.x - u_tileMin.x, u_tileMax.x - coord.x),
-    min(coord.y - u_tileMin.y, u_tileMax.y - coord.y)
-  );
-  if (distToEdge < u_borderWidthPx)
-    gl_FragColor = vec4(u_borderColor * u_borderOpacity, u_borderOpacity);
-  else
-    gl_FragColor = vec4(u_color * u_opacity, u_opacity);
+  // Skip border rendering if border width is 0
+  if (u_borderWidthPx > 0.0) {
+    float distToEdge = min(
+      min(coord.x - u_tileMin.x, u_tileMax.x - coord.x),
+      min(coord.y - u_tileMin.y, u_tileMax.y - coord.y)
+    );
+    if (distToEdge < u_borderWidthPx) {
+      gl_FragColor = vec4(u_borderColor * u_borderOpacity, u_borderOpacity);
+      return;
+    }
+  }
+  gl_FragColor = vec4(u_color * u_opacity, u_opacity);
 }
 `
 
@@ -226,11 +230,23 @@ export class GridTileLayer implements CustomLayerInterface {
 
       if (maxPxX < 0 || minPxX > w || maxPxY < 0 || minPxY > h) continue
 
+      const currentZoom = this.map?.getZoom() ?? 10
+      // Stepped border width based on zoom:
+      // Below 9: 0px, 9-11: 1px, 11-13: 2px, 13+: 3px
+      let borderWidthPx = 0
+      if (currentZoom >= 13) {
+        borderWidthPx = 3.0
+      } else if (currentZoom >= 11) {
+        borderWidthPx = 2.0
+      } else if (currentZoom >= 9) {
+        borderWidthPx = 1.0
+      }
+
       const color = valueToColor(val)
       gl.uniform2f(this.uRes!, w, h)
       gl.uniform2f(this.uTileMin!, minPxX, minPxY)
       gl.uniform2f(this.uTileMax!, maxPxX, maxPxY)
-      gl.uniform1f(this.uBorderWidth!, 3.0)
+      gl.uniform1f(this.uBorderWidth!, borderWidthPx)
       gl.uniform3f(this.uColor!, color[0], color[1], color[2])
       gl.uniform1f(this.uOpacity!, this.opacity)
       gl.uniform1f(this.uBorderOpacity!, Math.min(1.0, this.opacity * 1.8))
