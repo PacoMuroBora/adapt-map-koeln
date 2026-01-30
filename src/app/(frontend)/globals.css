@@ -27,14 +27,14 @@
   h3,
   h4,
   h5,
-  h6 {
-    font-size: unset;
-    font-weight: unset;
+  h6, p, span, div, a, li, ul, ol, button, input, textarea, select, option, label, legend, fieldset, legend, caption, th, td, tr, tbody, thead, tfoot {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: var(--am-white);
+    --foreground: var(--am-dark);
 
     --card: 240 5% 96%;
     --card-foreground: 222.2 84% 4.9%;
@@ -42,87 +42,65 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Primary: Lime Green #BEE75D */
-    --primary: 75 70% 64%;
-    --primary-foreground: 222.2 84% 4.9%;
+    --primary: var(--am-green-alt);
+    --primary-foreground: var(--am-dark);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: var(--am-light);
+    --secondary-foreground: var(--am-dark);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: var(--am-light-alt);
+    --muted-foreground: var(--am-dark);
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: var(--am-green-alt);
+    --accent-foreground: var(--am-dark);
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    /* Border: Purple #9f94ff (design system) */
-    --border: 252 100% 80%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-
+    
     /* Border Radius: 8px (design system) */
     --radius: 0.5rem;
-
+    
     --success: 196 52% 74%;
-    --warning: 34 89% 85%;
-    --error: 10 100% 86%;
-
+    --warning: var(--destructive);
+    --error: var(--destructive);
+    
     /* Design System Variables - Colors - Foreground */
     --foreground-alt: 215 20% 35%; /* #4a5768 - unofficial/foreground alt */
     --mid-alt: 215 25% 40%; /* #475569 - unofficial/mid alt */
     
     /* Design System Variables - Colors - Borders */
+    --border-purple: var(--am-purple-alt);
+    --border-orange: var(--am-orange-alt);
     /* --border already defined above with design system value */
     
     /* Design System Variables - Colors - Ghost/Transparent */
     --ghost: transparent; /* #ffffff00 - unofficial/ghost */
     --ghost-foreground: 222.2 84% 4.9%; /* #141418 - unofficial/ghost foreground */
     
-    /* Design System Variables - Colors - Brand (for reference) */
-    --am-dark: 0 0% 12%; /* #1e1e20 */
-    --am-darker: 0 0% 8%; /* #141418 */
-    --am-white: 60 20% 98%; /* #fffef8 */
-    --am-purple-alt: 252 100% 80%; /* #9f94ff */
-    --am-orange-alt: 20 100% 58%; /* #ff8429 */
+    /* Design System Variables - Colors - Brand (ADAPTMAP/AM_*) */
+    --am-white: 51 100% 99%; /* #fffef8 */
+    --am-light: 215 28% 88%; /* #d8dfe9 */
+    --am-light-alt: 214 17% 35%; /* #4a5768 */
+    --am-dark: 240 3% 12%; /* #1e1e20 */
+    --am-darker: 240 9% 9%; /* #141418 */
+    --am-green: 70 95% 84%; /* #f0fdaf */
+    --am-green-alt: 70 95% 60%; /* #dafa38 */
+    --am-pink: 290 83% 84%; /* #edb4f8 */
+    --am-pink-alt: 290 83% 74%; /* #e286f4 */
+    --am-orange: 26 100% 76%; /* #ffb985 */
+    --am-orange-alt: 26 100% 58%; /* #ff8429 */
+    --am-purple: 246 100% 85%; /* #bcb4ff */
+    --am-purple-alt: 246 100% 79%; /* #9f94ff */
+    --am-turq: 165 50% 74%; /* #9bdecd */
+    --am-turq-alt: 169 55% 34%; /* #278674 */
     
     /* Design System Variables - Typography - Font Families */
     --font-headings: 'LT Institute', sans-serif;
     --font-body: 'Uncut Sans', sans-serif;
     --font-sans: 'Uncut Sans', sans-serif;
-    
-    /* Design System Variables - Typography - Heading 1 */
-    --heading-1-size: 64px;
-    --heading-1-weight: 600;
-    --heading-1-line-height: 67px;
-    --heading-1-letter-spacing: -1px;
-    --heading-1-spacing: 64px;
-    
-    /* Design System Variables - Typography - Heading 3 */
-    --heading-3-size: 46px;
-    --heading-3-weight: 600;
-    --heading-3-line-height: 48px;
-    --heading-3-letter-spacing: -0.5px;
-    --heading-3-spacing: 46px;
-    
-    /* Design System Variables - Typography - Paragraph Regular */
-    --paragraph-regular-size: 18px;
-    --paragraph-regular-weight: 400;
-    --paragraph-regular-line-height: 24px;
-    --paragraph-regular-letter-spacing: 0px;
-    
-    /* Design System Variables - Typography - Paragraph Small */
-    --paragraph-small-size: 16px;
-    --paragraph-small-weight: 400;
-    --paragraph-small-line-height: 21px;
-    
-    /* Design System Variables - Typography - Button Large */
-    --button-large-size: 16px;
-    --button-large-weight: 400;
-    --button-large-line-height: 1;
-    --button-large-letter-spacing: 1px;
     
     /* Design System Variables - Spacing */
     --spacing-2xs: 4px;

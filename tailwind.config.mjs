@@ -18,30 +18,40 @@ const config = {
     'lg:col-span-12',
     'border-border',
     'bg-card',
+    'bg-dark',
     'border-error',
     'bg-error/30',
     'border-success',
     'bg-success/30',
     'border-warning',
     'bg-warning/30',
+    'text-h1',
+    'text-h2',
+    'text-h3',
+    'text-h4',
+    'text-h5',
+    'text-h6',
+    'text-body',
+    'text-body-lg',
+    'text-body-sm',
   ],
   theme: {
     container: {
       center: true,
       padding: {
-        '2xl': '2rem',
         DEFAULT: '1rem',
-        lg: '2rem',
-        md: '2rem',
         sm: '1rem',
+        md: '2rem',
+        lg: '2rem',
         xl: '2rem',
+        '2xl': '2rem',
       },
       screens: {
-        '2xl': '86rem',
-        lg: '64rem',
-        md: '48rem',
         sm: '40rem',
+        md: '48rem',
+        lg: '64rem',
         xl: '80rem',
+        '2xl': '86rem',
       },
     },
     extend: {
@@ -55,12 +65,16 @@ const config = {
         sm: 'var(--radius-sm)',
       },
       colors: {
+        black: {
+          DEFAULT: 'hsl(var(--am-dark))',
+          foreground: 'hsl(var(--am-white))',
+        },
         accent: {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
         },
         background: 'hsl(var(--background))',
-        border: 'hsla(var(--border))',
+        border: 'hsla(var(--border-purple))',
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
@@ -82,6 +96,7 @@ const config = {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+          hover: 'hsl(var(--am-green))',
         },
         ring: 'hsl(var(--ring))',
         secondary: {
@@ -94,6 +109,8 @@ const config = {
         // Design System Colors
         'foreground-alt': 'hsl(var(--foreground-alt))',
         'mid-alt': 'hsl(var(--mid-alt))',
+        'border-purple': 'hsl(var(--border-purple))',
+        'border-orange': 'hsl(var(--border-orange))',
         ghost: 'var(--ghost)',
         'ghost-foreground': 'hsl(var(--ghost-foreground))',
         'am-dark': 'hsl(var(--am-dark))',
@@ -108,6 +125,38 @@ const config = {
         // Design System Font Families
         headings: ['var(--font-headings)', 'var(--font-geist-sans)', 'sans-serif'],
         body: ['var(--font-body)', 'var(--font-geist-sans)', 'sans-serif'],
+      },
+      fontSize: {
+        base: '1rem',
+        // Design system headings: fluid 320px→1440px (min→max), lineHeight as %
+        h1: [
+          'clamp(2.625rem, calc(2.625rem + (64 - 42) * (100vw - 320px) / 1120), 4rem)',
+          { lineHeight: '105%', letterSpacing: '-0.01562em', fontWeight: 600 },
+        ],
+        h2: [
+          'clamp(2.375rem, calc(2.375rem + (52 - 38) * (100vw - 320px) / 1120), 3.25rem)',
+          { lineHeight: '105%', letterSpacing: '-0.01923em', fontWeight: 600 },
+        ],
+        h3: [
+          'clamp(2.125rem, calc(2.125rem + (46 - 34) * (100vw - 320px) / 1120), 2.875rem)',
+          { lineHeight: '105%', letterSpacing: '-0.01087em', fontWeight: 600 },
+        ],
+        h4: [
+          'clamp(1.875rem, calc(1.875rem + (40 - 30) * (100vw - 320px) / 1120), 2.5rem)',
+          { lineHeight: '120%', letterSpacing: '-0.0125em', fontWeight: 600 },
+        ],
+        h5: [
+          'clamp(1.625rem, calc(1.625rem + (34 - 26) * (100vw - 320px) / 1120), 2.125rem)',
+          { lineHeight: '110%', letterSpacing: '-0.00735em', fontWeight: 600 },
+        ],
+        h6: [
+          'clamp(1.5rem, calc(1.5rem + (28 - 24) * (100vw - 320px) / 1120), 1.75rem)',
+          { lineHeight: '120%', letterSpacing: '-0.00893em', fontWeight: 600 },
+        ],
+        // Design system body: fixed sizes, lineHeight as %
+        'body-lg': ['1.125rem', { lineHeight: '135%' }],
+        body: ['1rem', { lineHeight: '130%' }],
+        'body-sm': ['0.875rem', { lineHeight: '115%' }],
       },
       spacing: {
         // Design System Spacing
@@ -128,45 +177,6 @@ const config = {
           to: { height: '0' },
         },
       },
-      typography: () => ({
-        DEFAULT: {
-          css: [
-            {
-              '--tw-prose-body': 'var(--text)',
-              '--tw-prose-headings': 'var(--text)',
-              h1: {
-                fontWeight: 'normal',
-                marginBottom: '0.25em',
-              },
-            },
-          ],
-        },
-        base: {
-          css: [
-            {
-              h1: {
-                fontSize: '2.5rem',
-              },
-              h2: {
-                fontSize: '1.25rem',
-                fontWeight: 600,
-              },
-            },
-          ],
-        },
-        md: {
-          css: [
-            {
-              h1: {
-                fontSize: '3.5rem',
-              },
-              h2: {
-                fontSize: '1.5rem',
-              },
-            },
-          ],
-        },
-      }),
     },
   },
 }
