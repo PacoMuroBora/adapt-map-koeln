@@ -29,7 +29,26 @@ export const CallToAction: Block = {
       label: false,
     },
     linkGroup({
-      appearances: ['default', 'outline'],
+      appearances: ['default', 'white', 'black', 'outline', 'destructive', 'ghost', 'ghost-muted'],
+      sizes: ['default', 'sm', 'lg', 'icon', 'mini', 'tiny'],
+      iconBefore: [
+        'arrow-right',
+        'arrow-up',
+        'arrow-down',
+        'arrow-up-right',
+        'external-link',
+        'plus',
+        'close',
+      ],
+      iconAfter: [
+        'arrow-right',
+        'arrow-up',
+        'arrow-down',
+        'arrow-up-right',
+        'external-link',
+        'plus',
+        'close',
+      ],
       overrides: {
         maxRows: 2,
       },

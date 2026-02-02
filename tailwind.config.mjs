@@ -47,11 +47,11 @@ const config = {
         '2xl': '2rem',
       },
       screens: {
-        sm: '40rem',
-        md: '48rem',
-        lg: '64rem',
-        xl: '80rem',
-        '2xl': '86rem',
+        sm: '100%',
+        md: '100%',
+        lg: '100%',
+        xl: '100%',
+        '2xl': '100%',
       },
     },
     extend: {

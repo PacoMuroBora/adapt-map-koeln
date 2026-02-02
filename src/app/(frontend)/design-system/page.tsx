@@ -1,6 +1,6 @@
+import { ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LinkButton } from '@/components/ui/link-button'
-import { Plus, ExternalLink } from 'lucide-react'
 import React from 'react'
 import type { Metadata } from 'next'
 
@@ -144,7 +144,7 @@ export default function DesignSystemPage() {
                     variant={variant as ButtonVariant}
                     size={size as ButtonSize}
                     shape="round"
-                    iconBefore={<Plus className="h-4 w-4" />}
+                    iconBefore="plus"
                     aria-label="Add"
                   />
                 ) : (
@@ -174,7 +174,7 @@ export default function DesignSystemPage() {
               variant="outline"
               shape="round"
               size="icon"
-              iconBefore={<Plus className="h-4 w-4" />}
+              iconBefore="plus"
               aria-label="Add"
             />
           </div>
@@ -183,24 +183,13 @@ export default function DesignSystemPage() {
         <div className="mb-12">
           <h3 className="font-body text-body font-semibold mb-4">With icon (default variant)</h3>
           <div className="flex flex-wrap gap-4">
-            <Button shape="round" iconBefore={<Plus className="h-4 w-4" />}>
+            <Button shape="round" iconBefore="plus">
               Add item
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              shape="round"
-              iconBefore={<Plus className="h-3 w-3" />}
-            >
+            <Button variant="outline" size="sm" shape="round" iconBefore="plus">
               Small
             </Button>
-            <Button
-              variant="black"
-              size="lg"
-              shape="round"
-              iconBefore={<Plus className="h-4 w-4" />}
-              iconAfter={<Plus className="h-4 w-4" />}
-            >
+            <Button variant="black" size="lg" shape="round" iconBefore="plus" iconAfter="plus">
               Large
             </Button>
           </div>
@@ -265,7 +254,7 @@ export default function DesignSystemPage() {
             <div className="flex flex-wrap gap-4">
               <LinkButton href="https://adaptmap.de" external shape="round">
                 External link
-                <ExternalLink className="ml-1 h-3 w-3 inline" />
+                <ExternalLink size={12} className="ml-1 inline" />
               </LinkButton>
             </div>
           </div>

@@ -1,29 +1,56 @@
-import clsx from 'clsx'
 import React from 'react'
 
 interface Props {
   className?: string
-  loading?: 'lazy' | 'eager'
-  priority?: 'auto' | 'high' | 'low'
+  height?: number
 }
 
-export const Logo = (props: Props) => {
-  const { loading: loadingFromProps, priority: priorityFromProps, className } = props
-
-  const loading = loadingFromProps || 'lazy'
-  const priority = priorityFromProps || 'low'
-
+export const Logo = ({ className, height = 17 }: Props) => {
   return (
-    /* eslint-disable @next/next/no-img-element */
-    <img
-      alt="Payload Logo"
-      width={193}
-      height={34}
-      loading={loading}
-      fetchPriority={priority}
-      decoding="async"
-      className={clsx('max-w-[9.375rem] w-full h-[34px]', className)}
-      src="https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-logo-light.svg"
-    />
+    <svg
+      width={(height * 111) / 17}
+      height={height}
+      viewBox="0 0 111 17"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M49.6284 5.33803V3.27745H60.0869V5.33803H56.024V16.8851H53.6913V5.33803H49.6284Z"
+        fill="currentColor"
+      />
+      <path
+        d="M41.5573 5.33803V10.1396H44.0455C45.6784 10.1396 46.5921 9.08986 46.5921 7.70965C46.5921 6.38777 45.6784 5.33803 44.0455 5.33803H41.5573ZM41.5573 16.8851H39.2245V3.27745H44.0455C47.0975 3.27745 48.9637 5.2214 48.9637 7.72909C48.9637 10.2368 47.117 12.2002 44.1038 12.2002H41.5573V16.8851Z"
+        fill="currentColor"
+      />
+      <path
+        d="M31.5845 5.74627L29.5628 11.6753H33.7228L31.7011 5.74627H31.5845ZM27.7938 16.8851H25.3055L30.1071 3.27745H33.1785L37.9801 16.8851H35.4918L34.4227 13.7359H28.863L27.7938 16.8851Z"
+        fill="currentColor"
+      />
+      <path
+        d="M13.919 16.8851V3.27745H18.5261C22.6862 3.27745 25.2133 6.25169 25.2133 10.0813C25.2133 13.9109 22.6862 16.8851 18.5261 16.8851H13.919ZM16.2517 14.8245H18.5261C21.2671 14.8245 22.8417 12.7639 22.8417 10.0424C22.8417 7.39862 21.2671 5.33803 18.5261 5.33803H16.2517V14.8245Z"
+        fill="currentColor"
+      />
+      <path
+        d="M6.27896 5.74627L4.25725 11.6753H8.4173L6.3956 5.74627H6.27896ZM2.48826 16.8851H0L4.80156 3.27745H7.873L12.6746 16.8851H10.1863L9.11713 13.7359H3.55743L2.48826 16.8851Z"
+        fill="currentColor"
+      />
+      <path
+        d="M103.489 5.33819V10.1397H105.977C107.61 10.1397 108.524 9.09001 108.524 7.70981C108.524 6.38792 107.61 5.33819 105.977 5.33819H103.489ZM103.489 16.8853H101.156V3.2776H105.977C109.029 3.2776 110.895 5.22155 110.895 7.72925C110.895 10.2369 109.049 12.2003 106.035 12.2003H103.489V16.8853Z"
+        fill="currentColor"
+      />
+      <path
+        d="M93.5161 5.74642L91.4943 11.6755H95.6544L93.6327 5.74642H93.5161ZM89.7253 16.8853H87.2371L92.0387 3.2776H95.1101L99.9117 16.8853H97.4234L96.3542 13.7361H90.7945L89.7253 16.8853Z"
+        fill="currentColor"
+      />
+      <path
+        d="M72.258 16.8853V3.2776H75.6405L79.1591 14.2026H79.2757L82.7943 3.2776H86.1767V16.8853H83.844V7.06831H83.7274L80.481 16.8853H77.9538L74.7074 7.06831H74.5908V16.8853H72.258Z"
+        fill="currentColor"
+      />
+      <path
+        d="M67.8664 3.44241C67.8664 2.36965 66.9968 1.50001 65.924 1.50001C64.8513 1.50003 63.9816 2.36966 63.9816 3.44241C63.9816 4.51518 64.8513 5.3848 65.924 5.38481V6.88482C64.0228 6.88481 62.4816 5.34361 62.4816 3.44241C62.4816 1.54123 64.0228 1.572e-05 65.924 0C67.8252 0 69.3664 1.54122 69.3664 3.44241C69.3664 5.34362 67.8252 6.88482 65.924 6.88482V5.38481C66.9968 5.38481 67.8664 4.51519 67.8664 3.44241Z"
+        fill="currentColor"
+      />
+    </svg>
   )
 }

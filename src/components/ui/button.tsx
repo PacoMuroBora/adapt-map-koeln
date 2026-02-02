@@ -1,7 +1,26 @@
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, ExternalLink, Plus, X } from 'lucide-react'
 import { cn } from '@/utilities/ui'
 import { Slot } from '@radix-ui/react-slot'
 import { type VariantProps, cva } from 'class-variance-authority'
+import Link from 'next/link'
 import * as React from 'react'
+
+import type { LinkIconOption } from '@/fields/link'
+
+const BUTTON_ICON_SIZE = 16
+
+const buttonIconMap: Record<
+  LinkIconOption,
+  React.ComponentType<{ size?: number; className?: string }>
+> = {
+  'arrow-right': ArrowRight,
+  'arrow-up': ArrowUp,
+  'arrow-down': ArrowDown,
+  'arrow-up-right': ArrowUpRight,
+  'external-link': ExternalLink,
+  plus: Plus,
+  close: X,
+}
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
@@ -47,10 +66,14 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean
-  /** Named slot: icon before the text. When size is "lg", wrapped in a bordered div. */
-  iconBefore?: React.ReactNode
-  /** Named slot: icon after the text. When size is "lg", wrapped in a bordered div. */
-  iconAfter?: React.ReactNode
+  /** When provided, renders as a Next.js Link instead of a button. */
+  href?: string
+  /** Open link in new tab. Only used when href is provided. */
+  newTab?: boolean
+  /** Icon before the text (Payload link icon option). When size is "lg", wrapped in a bordered div. */
+  iconBefore?: LinkIconOption | null
+  /** Icon after the text (Payload link icon option). When size is "lg", wrapped in a bordered div. */
+  iconAfter?: LinkIconOption | null
 }
 
 const iconSlotClasses = (shape: 'default' | 'round') =>
@@ -61,16 +84,36 @@ const iconSlotClasses = (shape: 'default' | 'round') =>
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, shape, asChild = false, iconBefore, iconAfter, children, ...props },
+    {
+      className,
+      variant,
+      size,
+      shape,
+      asChild = false,
+      href,
+      newTab,
+      iconBefore,
+      iconAfter,
+      children,
+      ...props
+    },
     ref,
   ) => {
-    const Comp = asChild ? Slot : 'button'
     const isLarge = size === 'lg'
     const wrapIcon = (node: React.ReactNode) =>
-      isLarge ? <div className={iconSlotClasses(shape ?? 'default')}>{node}</div> : node
-    const iconBeforeSlot =
-      iconBefore !== undefined && iconBefore !== null ? wrapIcon(iconBefore) : null
-    const iconAfterSlot = iconAfter !== undefined && iconAfter !== null ? wrapIcon(iconAfter) : null
+      node != null && isLarge ? (
+        <div className={iconSlotClasses(shape ?? 'default')}>{node}</div>
+      ) : (
+        node
+      )
+    const renderIcon = (option: LinkIconOption | null | undefined): React.ReactNode => {
+      if (!option || !(option in buttonIconMap)) return null
+      const Icon = buttonIconMap[option as LinkIconOption]
+      const node = Icon ? <Icon className="shrink-0" size={BUTTON_ICON_SIZE} /> : null
+      return node ? wrapIcon(node) : null
+    }
+    const iconBeforeSlot = renderIcon(iconBefore)
+    const iconAfterSlot = renderIcon(iconAfter)
     const hasText = React.Children.count(children) > 0
     const hasIcon = iconBeforeSlot !== null || iconAfterSlot !== null
     const content = (
@@ -80,15 +123,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {iconAfterSlot}
       </>
     )
+    const classes = cn(
+      buttonVariants({ variant, size, shape, className }),
+      hasIcon && hasText && 'gap-2',
+    )
+
+    // Render as Link when href is provided
+    if (href) {
+      const linkProps = newTab ? { target: '_blank' as const, rel: 'noopener noreferrer' } : {}
+      return (
+        <Link href={href} className={classes} {...linkProps}>
+          {content}
+        </Link>
+      )
+    }
+
+    // Render as button or Slot
+    const Comp = asChild ? Slot : 'button'
     return (
-      <Comp
-        className={cn(
-          buttonVariants({ variant, size, shape, className }),
-          hasIcon && hasText && 'gap-2',
-        )}
-        ref={ref}
-        {...props}
-      >
+      <Comp className={classes} ref={ref} {...props}>
         {content}
       </Comp>
     )
