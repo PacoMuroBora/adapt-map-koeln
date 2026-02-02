@@ -199,13 +199,33 @@ export interface Page {
               | ({
                   relationTo: 'posts';
                   value: string | Post;
+                } | null)
+              | ({
+                  relationTo: 'questionnaires';
+                  value: string | Questionnaire;
                 } | null);
             url?: string | null;
             label: string;
             /**
-             * Choose how the link should be rendered.
+             * Choose how the link should be rendered (Button variant).
              */
-            appearance?: ('default' | 'outline') | null;
+            appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+            /**
+             * Button size.
+             */
+            size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+            /**
+             * Icon before the label.
+             */
+            iconBefore?:
+              | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+              | null;
+            /**
+             * Icon after the label.
+             */
+            iconAfter?:
+              | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+              | null;
           };
           id?: string | null;
         }[]
@@ -413,6 +433,136 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questionnaires".
+ */
+export interface Questionnaire {
+  id: string;
+  /**
+   * Version identifier (e.g., "v1.0", "2024-01")
+   */
+  version: string;
+  /**
+   * Mark this as the current active questionnaire
+   */
+  isCurrent?: boolean | null;
+  /**
+   * Select questions for this questionnaire
+   */
+  questions: (string | Question)[];
+  status: 'draft' | 'active' | 'archived';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questions".
+ */
+export interface Question {
+  id: string;
+  /**
+   * Unique identifier for the question (e.g., "q1", "heat_comfort")
+   */
+  key: string;
+  /**
+   * Question title in German
+   */
+  title_de: string;
+  /**
+   * Optional description or help text in German
+   */
+  description_de?: string | null;
+  /**
+   * Type of question input
+   */
+  type: 'singleChoice' | 'multiChoice' | 'slider' | 'address' | 'location_GPS' | 'iconSelection' | 'group';
+  /**
+   * Available options for choice/dropdown questions
+   */
+  options?:
+    | {
+        value: string;
+        label: string;
+        /**
+         * Score value for this option (used in adminScoring)
+         */
+        score?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Configuration for slider questions
+   */
+  sliderConfig?: {
+    min: number;
+    max: number;
+    step: number;
+    /**
+     * Unit label (e.g., "°C", "%")
+     */
+    unit?: string | null;
+  };
+  /**
+   * Whether this question must be answered
+   */
+  required?: boolean | null;
+  /**
+   * Category for grouping questions (e.g., "comfort", "health", "infrastructure")
+   */
+  category?: string | null;
+  /**
+   * Fields editable by editors (not admins only)
+   */
+  editorFields?: {
+    /**
+     * Order in which this question appears
+     */
+    displayOrder?: number | null;
+    /**
+     * Additional help text for users
+     */
+    helpText?: string | null;
+  };
+  /**
+   * Scoring configuration (admin only)
+   */
+  adminScoring: {
+    /**
+     * Weight multiplier for this question in problem index calculation
+     */
+    weight: number;
+    /**
+     * Score mappings for each option
+     */
+    optionScores?:
+      | {
+          optionValue: string;
+          /**
+           * Score value (0-100) for this option
+           */
+          score: number;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * How to map slider values to scores
+     */
+    sliderMapping?: {
+      normalization?: ('linear' | 'logarithmic' | 'custom') | null;
+      /**
+       * Score when slider is at minimum
+       */
+      minScore?: number | null;
+      /**
+       * Score when slider is at maximum
+       */
+      maxScore?: number | null;
+    };
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CallToActionBlock".
  */
 export interface CallToActionBlock {
@@ -444,13 +594,33 @@ export interface CallToActionBlock {
             | ({
                 relationTo: 'posts';
                 value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
               } | null);
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered.
+           * Choose how the link should be rendered (Button variant).
            */
-          appearance?: ('default' | 'outline') | null;
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -494,13 +664,33 @@ export interface ContentBlock {
             | ({
                 relationTo: 'posts';
                 value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
               } | null);
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered.
+           * Choose how the link should be rendered (Button variant).
            */
-          appearance?: ('default' | 'outline') | null;
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -750,136 +940,6 @@ export interface Form {
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "questions".
- */
-export interface Question {
-  id: string;
-  /**
-   * Unique identifier for the question (e.g., "q1", "heat_comfort")
-   */
-  key: string;
-  /**
-   * Question title in German
-   */
-  title_de: string;
-  /**
-   * Optional description or help text in German
-   */
-  description_de?: string | null;
-  /**
-   * Type of question input
-   */
-  type: 'singleChoice' | 'multiChoice' | 'dropdown' | 'slider';
-  /**
-   * Available options for choice/dropdown questions
-   */
-  options?:
-    | {
-        value: string;
-        label: string;
-        /**
-         * Score value for this option (used in adminScoring)
-         */
-        score?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Configuration for slider questions
-   */
-  sliderConfig?: {
-    min: number;
-    max: number;
-    step: number;
-    /**
-     * Unit label (e.g., "°C", "%")
-     */
-    unit?: string | null;
-  };
-  /**
-   * Whether this question must be answered
-   */
-  required?: boolean | null;
-  /**
-   * Category for grouping questions (e.g., "comfort", "health", "infrastructure")
-   */
-  category?: string | null;
-  /**
-   * Fields editable by editors (not admins only)
-   */
-  editorFields?: {
-    /**
-     * Order in which this question appears
-     */
-    displayOrder?: number | null;
-    /**
-     * Additional help text for users
-     */
-    helpText?: string | null;
-  };
-  /**
-   * Scoring configuration (admin only)
-   */
-  adminScoring: {
-    /**
-     * Weight multiplier for this question in problem index calculation
-     */
-    weight: number;
-    /**
-     * Score mappings for each option
-     */
-    optionScores?:
-      | {
-          optionValue: string;
-          /**
-           * Score value (0-100) for this option
-           */
-          score: number;
-          id?: string | null;
-        }[]
-      | null;
-    /**
-     * How to map slider values to scores
-     */
-    sliderMapping?: {
-      normalization?: ('linear' | 'logarithmic' | 'custom') | null;
-      /**
-       * Score when slider is at minimum
-       */
-      minScore?: number | null;
-      /**
-       * Score when slider is at maximum
-       */
-      maxScore?: number | null;
-    };
-  };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "questionnaires".
- */
-export interface Questionnaire {
-  id: string;
-  /**
-   * Version identifier (e.g., "v1.0", "2024-01")
-   */
-  version: string;
-  /**
-   * Mark this as the current active questionnaire
-   */
-  isCurrent?: boolean | null;
-  /**
-   * Select questions for this questionnaire
-   */
-  questions: (string | Question)[];
-  status: 'draft' | 'active' | 'archived';
   updatedAt: string;
   createdAt: string;
 }
@@ -1547,6 +1607,9 @@ export interface PagesSelect<T extends boolean = true> {
                     url?: T;
                     label?: T;
                     appearance?: T;
+                    size?: T;
+                    iconBefore?: T;
+                    iconAfter?: T;
                   };
               id?: T;
             };
@@ -1593,6 +1656,9 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
               url?: T;
               label?: T;
               appearance?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };
@@ -1619,6 +1685,9 @@ export interface ContentBlockSelect<T extends boolean = true> {
               url?: T;
               label?: T;
               appearance?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };
@@ -2267,9 +2336,29 @@ export interface Header {
             | ({
                 relationTo: 'posts';
                 value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
               } | null);
           url?: string | null;
           label: string;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -2296,9 +2385,29 @@ export interface Footer {
             | ({
                 relationTo: 'posts';
                 value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
               } | null);
           url?: string | null;
           label: string;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -2520,6 +2629,9 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };
@@ -2543,6 +2655,9 @@ export interface FooterSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };

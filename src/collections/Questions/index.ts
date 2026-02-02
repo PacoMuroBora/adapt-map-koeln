@@ -49,8 +49,11 @@ export const Questions: CollectionConfig = {
       options: [
         { label: 'Single Choice', value: 'singleChoice' },
         { label: 'Multiple Choice', value: 'multiChoice' },
-        { label: 'Dropdown', value: 'dropdown' },
         { label: 'Slider', value: 'slider' },
+        { label: 'Address', value: 'address' },
+        { label: 'Location_GPS', value: 'location_GPS' },
+        { label: 'Icon Selection', value: 'iconSelection' },
+        { label: 'Group', value: 'group' },
       ],
       admin: {
         description: 'Type of question input',

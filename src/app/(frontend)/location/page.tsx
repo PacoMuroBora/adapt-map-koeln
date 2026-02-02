@@ -349,7 +349,7 @@ export default function LocationPage() {
 
       // Combine street and housenumber for the street field
       const fullStreet = housenumber ? `${street} ${housenumber}`.trim() : street
-      
+
       updateLocation({
         lat: data.lat,
         lng: data.lng,
