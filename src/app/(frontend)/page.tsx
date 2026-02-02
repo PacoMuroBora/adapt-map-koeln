@@ -32,12 +32,22 @@ export default async function LandingPage() {
       <div className="space-y-6">
         {/* CTA Section */}
         <div className="text-center">
-          <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">{title}</h1>
+          <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+            {title}
+          </h1>
           {description && (
             <p className="mb-8 text-lg text-muted-foreground sm:text-xl md:mb-12">{description}</p>
           )}
-          <Button asChild size="lg" className="w-full sm:w-auto">
-            <Link href="/location">{ctaButton}</Link>
+          <Button
+            href="/location"
+            iconAfter={null}
+            iconBefore={null}
+            newTab={false}
+            shape="round"
+            size="lg"
+            variant="default"
+          >
+            {ctaButton}
           </Button>
         </div>
 

@@ -1,9 +1,10 @@
+import { getPayloadClient } from '@/lib/payload'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { notFound } from 'next/navigation'
 import QuestionClient from './QuestionClient'
-import { QUESTIONS } from '../questions'
+import { mapPayloadQuestionToFrontend } from '../mapQuestion'
 
-import type { UiCopy } from '@/payload-types'
+import type { Question as PayloadQuestion, UiCopy } from '@/payload-types'
 
 export const revalidate = 600
 
@@ -21,20 +22,33 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     notFound()
   }
 
-  const totalSteps = QUESTIONS.length
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'questionnaires',
+    where: { isCurrent: { equals: true } },
+    limit: 1,
+    depth: 1,
+  })
+  const questionnaire = docs[0]
+  if (!questionnaire?.questions?.length) {
+    notFound()
+  }
 
-  // Validate step number is within range
+  const rawQuestions = questionnaire.questions.filter(
+    (q): q is PayloadQuestion => typeof q === 'object' && q !== null && 'key' in q,
+  )
+  const questions = rawQuestions.map(mapPayloadQuestionToFrontend)
+
+  const totalSteps = questions.length
   if (stepNumber > totalSteps) {
     notFound()
   }
 
-  const currentQuestion = QUESTIONS[stepNumber - 1]
-
+  const currentQuestion = questions[stepNumber - 1]
   if (!currentQuestion) {
     notFound()
   }
 
-  // Get UI copy for buttons
   const uiCopy = (await getCachedGlobal('ui-copy', 0)()) as UiCopy
 
   return (

@@ -2,7 +2,7 @@ import { Button, type ButtonProps } from '@/components/ui/button'
 import React from 'react'
 
 import type { LinkIconOption } from '@/fields/link'
-import type { Page, Post } from '@/payload-types'
+import type { Page, Post, Questionnaire } from '@/payload-types'
 
 type CMSLinkType = {
   appearance?: ButtonProps['variant']
@@ -12,8 +12,8 @@ type CMSLinkType = {
   label?: string | null
   newTab?: boolean | null
   reference?: {
-    relationTo: 'pages' | 'posts'
-    value: Page | Post | string | number
+    relationTo: 'pages' | 'posts' | 'questionnaires'
+    value: Page | Post | Questionnaire | string | number
   } | null
   size?: ButtonProps['size'] | null
   type?: 'custom' | 'reference' | null
@@ -34,11 +34,18 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     url,
   } = props
 
-  const href =
-    type === 'reference' && typeof reference?.value === 'object' && reference.value.slug
-      ? `${reference?.relationTo !== 'pages' ? `/${reference?.relationTo}` : ''}/${
-          reference.value.slug
-        }`
+  const refValue = reference?.value
+  const hasSlug =
+    type === 'reference' &&
+    typeof refValue === 'object' &&
+    refValue !== null &&
+    'slug' in refValue &&
+    refValue.slug
+  const isQuestionnaireRef = type === 'reference' && reference?.relationTo === 'questionnaires'
+  const href = hasSlug
+    ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
+    : isQuestionnaireRef
+      ? '/questionnaire/1'
       : url
 
   if (!href) return null
