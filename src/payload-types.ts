@@ -203,9 +203,25 @@ export interface Page {
             url?: string | null;
             label: string;
             /**
-             * Choose how the link should be rendered.
+             * Choose how the link should be rendered (Button variant).
              */
-            appearance?: ('default' | 'outline') | null;
+            appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+            /**
+             * Button size.
+             */
+            size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+            /**
+             * Icon before the label.
+             */
+            iconBefore?:
+              | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+              | null;
+            /**
+             * Icon after the label.
+             */
+            iconAfter?:
+              | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+              | null;
           };
           id?: string | null;
         }[]
@@ -448,9 +464,25 @@ export interface CallToActionBlock {
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered.
+           * Choose how the link should be rendered (Button variant).
            */
-          appearance?: ('default' | 'outline') | null;
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -498,9 +530,25 @@ export interface ContentBlock {
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered.
+           * Choose how the link should be rendered (Button variant).
            */
-          appearance?: ('default' | 'outline') | null;
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -1547,6 +1595,9 @@ export interface PagesSelect<T extends boolean = true> {
                     url?: T;
                     label?: T;
                     appearance?: T;
+                    size?: T;
+                    iconBefore?: T;
+                    iconAfter?: T;
                   };
               id?: T;
             };
@@ -1593,6 +1644,9 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
               url?: T;
               label?: T;
               appearance?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };
@@ -1619,6 +1673,9 @@ export interface ContentBlockSelect<T extends boolean = true> {
               url?: T;
               label?: T;
               appearance?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };
@@ -2270,6 +2327,22 @@ export interface Header {
               } | null);
           url?: string | null;
           label: string;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -2299,6 +2372,22 @@ export interface Footer {
               } | null);
           url?: string | null;
           label: string;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | null;
         };
         id?: string | null;
       }[]
@@ -2520,6 +2609,9 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };
@@ -2543,6 +2635,9 @@ export interface FooterSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
             };
         id?: T;
       };
