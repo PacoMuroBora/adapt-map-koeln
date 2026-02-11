@@ -10,7 +10,7 @@ import { Loader2, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect, useRef } from 'react'
-import { STEP_LOCATION, TOTAL_STEPS } from '../questionnaire/constants'
+import { STEP_LOCATION, TOTAL_STEPS } from '../../questionnaire/constants'
 
 interface AddressSuggestion {
   name: string

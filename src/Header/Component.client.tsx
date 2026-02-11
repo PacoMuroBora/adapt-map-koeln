@@ -7,6 +7,7 @@ import type { Header } from '@/payload-types'
 
 import { Logo } from '@/components/Logo/Logo'
 import { HeaderNav } from './Nav'
+import { cn } from '@/utilities/ui'
 
 interface HeaderClientProps {
   data: Header
@@ -14,14 +15,15 @@ interface HeaderClientProps {
 
 export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const pathname = usePathname()
+  const isQuestionnaire = pathname?.startsWith('/questionnaire')
 
   return (
-    <header className="container relative z-20">
-      <div className="py-8 flex justify-between">
+    <header className={cn('relative z-20 h-14', isQuestionnaire && 'bg-black')}>
+      <div className="container py-4 flex justify-between">
         <Link href="/">
-          <Logo className="text-black" height={24} />
+          <Logo className={isQuestionnaire ? 'text-white' : 'text-black'} height={24} />
         </Link>
-        <HeaderNav data={data} />
+        <HeaderNav data={data} inverted={isQuestionnaire} />
       </div>
     </header>
   )

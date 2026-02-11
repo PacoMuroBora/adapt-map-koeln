@@ -41,8 +41,12 @@ export type LinkIconOption =
   | 'arrow-down'
   | 'arrow-up-right'
   | 'external-link'
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'check'
   | 'plus'
   | 'close'
+  | 'locate'
 
 export const linkIconOptions: { label: string; value: LinkIconOption }[] = [
   { label: 'Arrow Right', value: 'arrow-right' },
@@ -50,6 +54,9 @@ export const linkIconOptions: { label: string; value: LinkIconOption }[] = [
   { label: 'Arrow Down', value: 'arrow-down' },
   { label: 'Arrow Up Right', value: 'arrow-up-right' },
   { label: 'External Link', value: 'external-link' },
+  { label: 'Chevron Left', value: 'chevron-left' },
+  { label: 'Chevron Right', value: 'chevron-right' },
+  { label: 'Check', value: 'check' },
   { label: 'Plus', value: 'plus' },
   { label: 'Close', value: 'close' },
 ]

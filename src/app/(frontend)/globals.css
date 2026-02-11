@@ -1,9 +1,8 @@
 /* Design System Fonts */
 @font-face {
   font-family: 'LT Institute';
-  src: url('/fonts/LTInstitute-1.woff2') format('woff2'),
-       url('/fonts/LTInstitute-1.woff') format('woff');
-  font-weight: normal;
+  src: url('/fonts/LTInstitute-1.woff2') format('woff2');
+  font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
@@ -51,7 +50,7 @@
     --muted: var(--am-light-alt);
     --muted-foreground: var(--am-dark);
 
-    --accent: var(--am-green-alt);
+    --accent: var(--am-purple-alt);
     --accent-foreground: var(--am-dark);
 
     --destructive: 0 84.2% 60.2%;
@@ -74,6 +73,7 @@
     /* Design System Variables - Colors - Borders */
     --border-purple: var(--am-purple-alt);
     --border-orange: var(--am-orange-alt);
+    --border-light: 240 3% 12%; /* #1e1e20 */
     /* --border already defined above with design system value */
     
     /* Design System Variables - Colors - Ghost/Transparent */

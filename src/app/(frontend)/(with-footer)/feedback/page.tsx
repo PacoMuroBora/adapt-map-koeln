@@ -9,7 +9,7 @@ import { useSubmission } from '@/providers/Submission'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
-import { STEP_FEEDBACK, TOTAL_STEPS } from '../questionnaire/constants'
+import { STEP_FEEDBACK, TOTAL_STEPS } from '../../questionnaire/constants'
 
 const MAX_LENGTH = 2000
 

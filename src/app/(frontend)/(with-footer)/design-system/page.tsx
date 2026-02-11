@@ -102,7 +102,7 @@ export default function DesignSystemPage() {
         <h2 className="font-headings text-h2 mb-8 border-b border-border pb-4">Headlines</h2>
         <div className="space-y-10">
           {headingLevels.map(({ level, label, className, token }) => (
-            <div key={level} className="space-y-2">
+            <div key={level} className="space-y-2 uppercase">
               {React.createElement(`h${level}`, { className }, `${label} – The quick brown fox`)}
               <p className="font-body text-body-xs text-foreground-alt">{token}</p>
             </div>

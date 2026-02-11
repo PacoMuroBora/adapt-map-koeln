@@ -1,4 +1,16 @@
-import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, ExternalLink, Plus, X } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Plus,
+  Check,
+  Locate,
+  X,
+} from 'lucide-react'
 import { cn } from '@/utilities/ui'
 import { Slot } from '@radix-ui/react-slot'
 import { type VariantProps, cva } from 'class-variance-authority'
@@ -18,8 +30,12 @@ const buttonIconMap: Record<
   'arrow-down': ArrowDown,
   'arrow-up-right': ArrowUpRight,
   'external-link': ExternalLink,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
+  check: Check,
   plus: Plus,
   close: X,
+  locate: Locate,
 }
 
 const buttonVariants = cva(
@@ -28,7 +44,7 @@ const buttonVariants = cva(
     defaultVariants: {
       size: 'default',
       variant: 'default',
-      shape: 'default',
+      shape: 'round',
     },
     variants: {
       size: {
@@ -43,17 +59,19 @@ const buttonVariants = cva(
         default:
           'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover disabled:bg-gray-300 disabled:text-gray-500',
         white:
-          'bg-white text-white-foreground border border-white hover:bg-black hover:text-white active:bg-black disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-white text-white-foreground hover:bg-primary active:bg-primary disabled:bg-gray-300 disabled:text-gray-500',
         black:
           'bg-black text-black-foreground border border-black hover:bg-white hover:text-black active:bg-black disabled:bg-gray-300 disabled:text-gray-500',
         outline:
-          'border border-border bg-background text-foreground hover:bg-muted active:bg-muted/80 disabled:border disabled:bg-gray-100 disabled:text-gray-400',
+          'border border-border bg-background text-foreground hover:bg-accent/60 hover:text-accent-foreground active:bg-accent/40 disabled:border disabled:bg-gray-100 disabled:text-gray-400',
+        'outline-white':
+          'border border-white/30 bg-white/5 text-white hover:bg-white hover:text-black active:bg-white/40 disabled:border disabled:bg-gray-100 disabled:text-gray-400',
         destructive:
           'bg-[#ff8429] text-white hover:bg-[#e6731f] active:bg-[#d4661a] disabled:bg-orange-200 disabled:text-orange-400',
         ghost:
           'bg-transparent text-foreground hover:bg-muted/50 active:bg-muted/70 disabled:text-gray-400',
-        'ghost-muted':
-          'bg-transparent text-muted-foreground/50 hover:bg-muted/30 active:bg-muted/50 disabled:opacity-20 disabled:text-gray-300',
+        muted:
+          'bg-muted text-muted-foreground/50 hover:bg-muted/30 active:bg-muted/50 disabled:opacity-20 disabled:text-gray-300',
       },
       shape: {
         default: 'rounded-lg',
@@ -116,6 +134,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const iconAfterSlot = renderIcon(iconAfter)
     const hasText = React.Children.count(children) > 0
     const hasIcon = iconBeforeSlot !== null || iconAfterSlot !== null
+    const isIconOnly = !hasText && hasIcon && !(iconBefore && iconAfter)
     const content = (
       <>
         {iconBeforeSlot}
@@ -126,6 +145,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const classes = cn(
       buttonVariants({ variant, size, shape, className }),
       hasIcon && hasText && 'gap-2',
+      isIconOnly && 'aspect-square p-0',
     )
 
     // Render as Link when href is provided

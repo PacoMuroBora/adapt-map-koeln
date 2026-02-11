@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { cn } from '@/utilities/ui'
 import React from 'react'
 
-import { Footer } from '@/Footer/Component'
 import { Header } from '@/Header/Component'
 import { Providers } from '@/providers'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
@@ -30,7 +29,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers>
           <Header />
           {children}
-          <Footer />
           <CookieBanner cookieBanner={siteSettings?.cookieBanner} />
         </Providers>
       </body>

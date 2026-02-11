@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@/utilities/ui'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -16,13 +17,17 @@ import { Textarea } from '@/components/ui/textarea'
 import HeatIntensitySlider from '@/components/questionnaire/HeatIntensitySlider'
 import IconSelection from '@/components/questionnaire/IconSelection'
 import ProgressBar from '@/components/questionnaire/ProgressBar'
+import { LinkButton } from '@/components/ui/link-button'
 import { useSubmission } from '@/providers/Submission'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'motion/react'
 import React, { useEffect, useState } from 'react'
 import { STEP_QUESTIONNAIRE_START, TOTAL_STEPS } from '../constants'
 
 import type { Question } from '../questions'
+import { Card } from '@/components/ui/card'
+import { Alert } from '@/components/ui/alert'
 
 type QuestionClientProps = {
   question: Question
@@ -40,8 +45,8 @@ export default function QuestionClient({
   previousButtonText,
 }: QuestionClientProps) {
   const router = useRouter()
-  const { state, updateAnswer, updateAnswers, updateCurrentStep } = useSubmission()
-  
+  const { state, updateAnswer, updateAnswers, updateCurrentStep, updateLocation } = useSubmission()
+
   // For group questions, store answers as an object
   // For regular questions, store as single value
   const getInitialAnswer = () => {
@@ -59,6 +64,14 @@ export default function QuestionClient({
 
   const [answer, setAnswer] = useState<any>(getInitialAnswer())
   const [error, setError] = useState<string | null>(null)
+  const [isGpsLoading, setIsGpsLoading] = useState(false)
+
+  // Auto-dismiss error alert after 500ms
+  useEffect(() => {
+    if (!error) return
+    const timer = setTimeout(() => setError(null), 2500)
+    return () => clearTimeout(timer)
+  }, [error])
 
   // Initialize slider with default value if required and not set
   useEffect(() => {
@@ -170,8 +183,221 @@ export default function QuestionClient({
     }
   }
 
+  const handleGPSLocation = async () => {
+    setIsGpsLoading(true)
+    setError(null)
+
+    try {
+      if (!navigator.geolocation) {
+        throw new Error('Geolocation wird von Ihrem Browser nicht unterstützt.')
+      }
+
+      const cachedPosition = localStorage.getItem('gps_position')
+      if (cachedPosition) {
+        try {
+          const { position: cached, timestamp } = JSON.parse(cachedPosition)
+          const age = Date.now() - timestamp
+          const CACHE_VALIDITY = 5 * 60 * 1000
+
+          if (age < CACHE_VALIDITY && cached.lat && cached.lng) {
+            const response = await fetch('/api/reverse-geocode', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ lat: cached.lat, lng: cached.lng }),
+            })
+
+            if (response.ok) {
+              const data = await response.json()
+              updateLocation({
+                lat: cached.lat,
+                lng: cached.lng,
+                postal_code: data.postal_code,
+                city: data.city,
+                street: data.street || undefined,
+              })
+              updateCurrentStep('questionnaire')
+              if (stepNumber < totalSteps) {
+                router.push(`/questionnaire/${stepNumber + 1}`)
+              } else {
+                router.push('/feedback')
+              }
+              return
+            }
+          }
+        } catch {
+          // Invalid cache, continue to get new position
+        }
+      }
+
+      const GPS_TIMEOUT = 15000
+      const MIN_ACCURACY = 100
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        let timeoutId: ReturnType<typeof setTimeout>
+
+        const watchId = navigator.geolocation.watchPosition(
+          (pos) => {
+            if (pos.coords.accuracy <= MIN_ACCURACY) {
+              clearTimeout(timeoutId)
+              navigator.geolocation.clearWatch(watchId)
+              resolve(pos)
+              return
+            }
+            if (!timeoutId) {
+              timeoutId = setTimeout(() => {
+                navigator.geolocation.clearWatch(watchId)
+                resolve(pos)
+              }, GPS_TIMEOUT)
+            }
+          },
+          reject,
+          { enableHighAccuracy: true, timeout: GPS_TIMEOUT, maximumAge: 60000 },
+        )
+
+        timeoutId = setTimeout(() => {
+          navigator.geolocation.clearWatch(watchId)
+          reject(new Error('Timeout'))
+        }, GPS_TIMEOUT)
+      })
+
+      const { latitude, longitude } = position.coords
+
+      try {
+        localStorage.setItem(
+          'gps_position',
+          JSON.stringify({
+            position: { lat: latitude, lng: longitude },
+            timestamp: Date.now(),
+          }),
+        )
+      } catch {
+        // localStorage might be disabled
+      }
+
+      const response = await fetch('/api/reverse-geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat: latitude, lng: longitude }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        if (response.status === 429) {
+          throw new Error(
+            'Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut oder verwenden Sie die manuelle Eingabe.',
+          )
+        }
+        throw new Error(
+          errorData.error ||
+            'Geocodierung fehlgeschlagen. Bitte verwenden Sie die manuelle Eingabe.',
+        )
+      }
+
+      const data = await response.json()
+
+      if (!data.postal_code) {
+        throw new Error(
+          'Postleitzahl konnte nicht ermittelt werden. Bitte verwenden Sie die manuelle Eingabe.',
+        )
+      }
+
+      updateLocation({
+        lat: latitude,
+        lng: longitude,
+        postal_code: data.postal_code,
+        city: data.city,
+        street: data.street || undefined,
+      })
+
+      updateCurrentStep('questionnaire')
+      if (stepNumber < totalSteps) {
+        router.push(`/questionnaire/${stepNumber + 1}`)
+      } else {
+        router.push('/feedback')
+      }
+    } catch (err: unknown) {
+      try {
+        localStorage.removeItem('gps_position')
+      } catch {
+        // Ignore
+      }
+
+      const e = err as { code?: number; message?: string }
+      if (e.code === 1) {
+        setError(
+          'Standortzugriff wurde verweigert. Bitte erlauben Sie den Standortzugriff in Ihren Browsereinstellungen oder verwenden Sie die manuelle Eingabe.',
+        )
+      } else if (e.code === 2) {
+        setError(
+          'Standort konnte nicht ermittelt werden. Bitte überprüfen Sie Ihre GPS-Einstellungen oder verwenden Sie die manuelle Eingabe.',
+        )
+      } else if (e.code === 3 || e.message === 'Timeout') {
+        setError(
+          'Zeitüberschreitung bei der Standortermittlung. Bitte versuchen Sie es erneut oder verwenden Sie die manuelle Eingabe.',
+        )
+      } else {
+        setError(
+          e.message ||
+            'Fehler bei der Standortermittlung. Bitte verwenden Sie die manuelle Eingabe.',
+        )
+      }
+    } finally {
+      setIsGpsLoading(false)
+    }
+  }
+
+  const handleManualAddress = () => {
+    updateAnswer(question.key, 'manual')
+    updateCurrentStep('questionnaire')
+    if (stepNumber < totalSteps) {
+      router.push(`/questionnaire/${stepNumber + 1}`)
+    } else {
+      router.push('/feedback')
+    }
+  }
+
   const renderQuestionInput = () => {
     switch (question.type) {
+      case 'location_GPS':
+        return (
+          <div className="space-y-6 flex flex-col items-center">
+            <Button
+              type="button"
+              variant="white"
+              size="lg"
+              shape="round"
+              onClick={handleGPSLocation}
+              disabled={isGpsLoading}
+              iconAfter={isGpsLoading ? null : 'locate'}
+            >
+              {isGpsLoading ? (
+                <div className="flex flex-row items-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Standort wird ermittelt...
+                </div>
+              ) : (
+                <>
+                  {/* <MapPin className="mr-2 h-4 w-4" /> */}
+                  Standort ermitteln
+                </>
+              )}
+            </Button>
+            <div className="flex justify-center">
+              <LinkButton
+                href={`/questionnaire/${stepNumber + 1}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleManualAddress()
+                }}
+                size="sm"
+                className="text-muted-foreground"
+              >
+                Adresse manuell eingeben
+              </LinkButton>
+            </div>
+          </div>
+        )
+
       case 'address':
         const addressAnswer = answer || { street: '', postal_code: '' }
         return (
@@ -396,43 +622,67 @@ export default function QuestionClient({
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8 md:py-16">
-      <div className="space-y-6">
-        {/* Progress bar */}
-        <ProgressBar currentStep={actualStepNumber} totalSteps={TOTAL_STEPS} />
-
-        {/* Question */}
-        <div className="space-y-4">
-          <div>
-            <h1 className="mb-2 text-2xl font-bold sm:text-3xl">{question.title}</h1>
-            {question.description && (
-              <p className="text-muted-foreground">{question.description}</p>
-            )}
-            {question.required && (
-              <p className="mt-2 text-sm text-muted-foreground">* Pflichtfeld</p>
-            )}
-          </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          <div className="rounded-lg border bg-card p-6">{renderQuestionInput()}</div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlePrevious}
-            className="w-full sm:w-auto"
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            key="alert"
+            initial={{ x: '-50%', y: -100, opacity: 0 }}
+            animate={{ x: '-50%', y: 0, opacity: 1 }}
+            exit={{ x: '-50%', y: -100, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-0 left-1/2 w-full max-w-[560px] z-50 p-2"
           >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            {previousButtonText}
-          </Button>
-          <Button type="button" onClick={handleNext} className="w-full sm:w-auto sm:ml-auto">
-            {stepNumber === totalSteps ? 'Weiter' : nextButtonText}
-            {stepNumber < totalSteps && <ChevronRight className="ml-2 h-4 w-4" />}
-          </Button>
+            <Alert variant="error" className="text-sm">
+              {error}
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <Card variant="purple" className="h-[70lvh]">
+        <div className="space-y-6">
+          {/* Progress bar */}
+          {/* <ProgressBar currentStep={actualStepNumber} totalSteps={TOTAL_STEPS} /> */}
+
+          {/* Question */}
+          <div className="px-6 py-8 space-y-6">
+            <div>
+              <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
+                {question.title}
+              </h1>
+              {question.description && (
+                <p className="text-body-sm text-muted-foreground">{question.description}</p>
+              )}
+              {question.required && (
+                <p className="mt-2 text-sm text-muted-foreground">* Pflichtfeld</p>
+              )}
+            </div>
+
+            <div>{renderQuestionInput()}</div>
+          </div>
         </div>
+      </Card>
+      {/* Navigation */}
+      <div className="relative flex flex-row items-center gap-4 h-14 mt-4">
+        <Button
+          type="button"
+          variant="outline-white"
+          onClick={handlePrevious}
+          iconBefore="arrow-up"
+        />
+        <Button
+          type="button"
+          size="lg"
+          shape="round"
+          variant="white"
+          iconAfter={stepNumber < totalSteps ? 'arrow-down' : 'check'}
+          onClick={handleNext}
+          className={cn(
+            'absolute left-1/2 -translate-x-1/2',
+            question.type === 'location_GPS' ? 'opacity-20' : '',
+          )}
+        >
+          {stepNumber === totalSteps ? 'Weiter' : nextButtonText}
+        </Button>
       </div>
     </div>
   )

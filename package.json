@@ -49,6 +49,7 @@
     "graphql": "^16.8.2",
     "lucide-react": "^0.378.0",
     "maplibre-gl": "^5.15.0",
+    "motion": "^12.34.0",
     "next": "15.4.10",
     "next-sitemap": "^4.2.3",
     "payload": "3.68.5",

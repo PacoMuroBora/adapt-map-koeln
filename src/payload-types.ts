@@ -218,13 +218,37 @@ export interface Page {
              * Icon before the label.
              */
             iconBefore?:
-              | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+              | (
+                  | ''
+                  | 'arrow-right'
+                  | 'arrow-up'
+                  | 'arrow-down'
+                  | 'arrow-up-right'
+                  | 'external-link'
+                  | 'chevron-left'
+                  | 'chevron-right'
+                  | 'check'
+                  | 'plus'
+                  | 'close'
+                )
               | null;
             /**
              * Icon after the label.
              */
             iconAfter?:
-              | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+              | (
+                  | ''
+                  | 'arrow-right'
+                  | 'arrow-up'
+                  | 'arrow-down'
+                  | 'arrow-up-right'
+                  | 'external-link'
+                  | 'chevron-left'
+                  | 'chevron-right'
+                  | 'check'
+                  | 'plus'
+                  | 'close'
+                )
               | null;
           };
           id?: string | null;
@@ -683,13 +707,37 @@ export interface ContentBlock {
            * Icon before the label.
            */
           iconBefore?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
             | null;
           /**
            * Icon after the label.
            */
           iconAfter?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
             | null;
         };
         id?: string | null;
@@ -2351,13 +2399,37 @@ export interface Header {
            * Icon before the label.
            */
           iconBefore?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
             | null;
           /**
            * Icon after the label.
            */
           iconAfter?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
             | null;
         };
         id?: string | null;
@@ -2400,13 +2472,37 @@ export interface Footer {
            * Icon before the label.
            */
           iconBefore?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
             | null;
           /**
            * Icon after the label.
            */
           iconAfter?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
             | null;
         };
         id?: string | null;

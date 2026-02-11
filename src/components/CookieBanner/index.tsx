@@ -6,6 +6,7 @@ import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 
 import type { SiteSetting } from '@/payload-types'
+import { LinkButton } from '../ui/link-button'
 
 type CookieBannerProps = {
   cookieBanner?: SiteSetting['cookieBanner']
@@ -51,7 +52,7 @@ export function CookieBanner({ cookieBanner }: CookieBannerProps) {
       aria-labelledby="cookie-banner-title"
       aria-describedby="cookie-banner-description"
     >
-      <Card className="mx-auto max-w-4xl border-2 shadow-lg">
+      <Card className="mx-auto max-w-4xl border shadow-lg">
         <div className="p-4 sm:p-6">
           <h3 id="cookie-banner-title" className="mb-2 text-lg font-semibold">
             {cookieBanner.title}
@@ -64,20 +65,21 @@ export function CookieBanner({ cookieBanner }: CookieBannerProps) {
               <Button onClick={acceptAll} size="sm" className="w-full sm:w-auto">
                 {cookieBanner.acceptAllText}
               </Button>
-              <Button onClick={acceptNecessary} variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button
+                onClick={acceptNecessary}
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+              >
                 {cookieBanner.acceptNecessaryText}
               </Button>
             </div>
-            <Link
-              href="/legal/privacy"
-              className="text-sm text-primary underline underline-offset-4 hover:text-primary/80"
-            >
+            <LinkButton href="/legal/privacy" size="sm" shape="round">
               {cookieBanner.privacyLinkText}
-            </Link>
+            </LinkButton>
           </div>
         </div>
       </Card>
     </div>
   )
 }
-

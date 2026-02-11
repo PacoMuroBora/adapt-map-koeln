@@ -19,7 +19,10 @@ function navHref(link: { type?: string | null; url?: string | null; reference?: 
   return link.url ?? '#'
 }
 
-export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
+export const HeaderNav: React.FC<{
+  data: HeaderType
+  inverted?: boolean
+}> = ({ data, inverted }) => {
   const navItems = data?.navItems || []
 
   return (
@@ -27,7 +30,13 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
       {navItems.map(({ link }, i) => {
         const href = navHref(link)
         return (
-          <LinkButton key={i} href={href} external={link.newTab ?? false} size="sm">
+          <LinkButton
+            key={i}
+            href={href}
+            external={link.newTab ?? false}
+            size="sm"
+            className={inverted ? 'text-white' : undefined}
+          >
             {link.label}
           </LinkButton>
         )

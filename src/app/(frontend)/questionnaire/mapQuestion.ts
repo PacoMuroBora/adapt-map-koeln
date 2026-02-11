@@ -7,7 +7,7 @@ const BE_TYPE_TO_FRONTEND: Record<PayloadQuestion['type'], Question['type']> = {
   multiChoice: 'checkbox',
   slider: 'slider',
   address: 'address',
-  location_GPS: 'address',
+  location_GPS: 'location_GPS',
   iconSelection: 'iconSelection',
   group: 'group',
 }

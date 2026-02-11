@@ -14,7 +14,7 @@ import ProgressBar from '@/components/questionnaire/ProgressBar'
 import { useSubmission } from '@/providers/Submission'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
-import { STEP_PERSONAL, TOTAL_STEPS } from '../questionnaire/constants'
+import { STEP_PERSONAL, TOTAL_STEPS } from '../../questionnaire/constants'
 
 export default function PersonalPage() {
   const router = useRouter()
