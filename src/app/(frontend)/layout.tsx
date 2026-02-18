@@ -13,14 +13,13 @@ import type { SiteSetting } from '@/payload-types'
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 
+import { GeistMono } from 'geist/font/mono'
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const siteSettings = (await getCachedGlobal('site-settings', 1)()) as SiteSetting
 
   return (
-    <html 
-      lang="de" 
-      suppressHydrationWarning
-    >
+    <html lang="de" suppressHydrationWarning className={GeistMono.variable}>
       <head>
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
         <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
@@ -39,16 +38,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 export async function generateMetadata(): Promise<Metadata> {
   const siteSettings = (await getCachedGlobal('site-settings', 1)()) as SiteSetting
   const serverUrl = getServerSideURL()
-  
+
   // Ensure canonical URL is adaptmap.de (no www)
   const canonicalBase = 'https://adaptmap.de'
 
   const title = siteSettings?.metaTitle || siteSettings?.siteName || 'AdaptMap Köln'
   const description = siteSettings?.metaDescription || siteSettings?.siteDescription || ''
-  
+
   // Get OG image URL
   let ogImageUrl = `${serverUrl}/website-template-OG.webp`
-  if (siteSettings?.ogImage && typeof siteSettings.ogImage === 'object' && 'url' in siteSettings.ogImage) {
+  if (
+    siteSettings?.ogImage &&
+    typeof siteSettings.ogImage === 'object' &&
+    'url' in siteSettings.ogImage
+  ) {
     // Try to use xlarge size (1920px) for OG images, fallback to base URL
     const ogUrl = siteSettings.ogImage.sizes?.xlarge?.url || siteSettings.ogImage.url
     ogImageUrl = ogUrl ? serverUrl + ogUrl : `${serverUrl}/website-template-OG.webp`
@@ -66,7 +69,10 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${title}`,
     },
     description,
-    keywords: siteSettings?.keywords?.split(',').map(k => k.trim()).filter(Boolean),
+    keywords: siteSettings?.keywords
+      ?.split(',')
+      .map((k) => k.trim())
+      .filter(Boolean),
     alternates: {
       canonical: canonicalBase,
     },

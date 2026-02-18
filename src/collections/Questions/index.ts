@@ -51,6 +51,7 @@ export const Questions: CollectionConfig = {
         { label: 'Multiple Choice', value: 'multiChoice' },
         { label: 'Slider', value: 'slider' },
         { label: 'Address', value: 'address' },
+        { label: 'PLZ', value: 'plz' },
         { label: 'Location_GPS', value: 'location_GPS' },
         { label: 'Icon Selection', value: 'iconSelection' },
         { label: 'Group', value: 'group' },

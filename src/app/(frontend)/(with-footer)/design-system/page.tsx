@@ -13,37 +13,37 @@ const headingLevels = [
   {
     level: 1,
     label: 'Heading 1',
-    className: 'font-headings text-h1',
+    className: 'font-headings font-semibold text-h1',
     token: 'text-h1 · fluid 42px→64px @ 320px→1440px, 105% line-height',
   },
   {
     level: 2,
     label: 'Heading 2',
-    className: 'font-headings text-h2',
+    className: 'font-headings font-semibold text-h2',
     token: 'text-h2 · fluid 38px→52px, 105% line-height',
   },
   {
     level: 3,
     label: 'Heading 3',
-    className: 'font-headings text-h3',
+    className: 'font-headings font-semibold text-h3',
     token: 'text-h3 · fluid 34px→46px, 105% line-height',
   },
   {
     level: 4,
     label: 'Heading 4',
-    className: 'font-headings text-h4',
+    className: 'font-headings font-semibold text-h4',
     token: 'text-h4 · fluid 30px→40px, 120% line-height',
   },
   {
     level: 5,
     label: 'Heading 5',
-    className: 'font-headings text-h5',
+    className: 'font-headings font-semibold text-h5',
     token: 'text-h5 · fluid 26px→34px, 110% line-height',
   },
   {
     level: 6,
     label: 'Heading 6',
-    className: 'font-headings text-h6',
+    className: 'font-headings font-semibold text-h6',
     token: 'text-h6 · fluid 24px→28px, 120% line-height',
   },
 ] as const
@@ -92,6 +92,8 @@ type ButtonSize = (typeof buttonSizes)[number]
 export default function DesignSystemPage() {
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12">
+      <h1 className="font-mono text-h1 mb-2">Geist Mono</h1>
+
       <h1 className="font-headings text-h1 mb-2">Design System</h1>
       <p className="font-body text-body text-foreground-alt mb-12">
         Headlines and button components
@@ -99,7 +101,9 @@ export default function DesignSystemPage() {
 
       {/* Headlines */}
       <section className="mb-16">
-        <h2 className="font-headings text-h2 mb-8 border-b border-border pb-4">Headlines</h2>
+        <h2 className="font-headings font-semibold text-h2 mb-8 border-b border-border pb-4">
+          Headlines
+        </h2>
         <div className="space-y-10">
           {headingLevels.map(({ level, label, className, token }) => (
             <div key={level} className="space-y-2 uppercase">

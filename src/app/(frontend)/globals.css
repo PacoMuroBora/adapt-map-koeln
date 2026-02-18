@@ -101,6 +101,7 @@
     --font-headings: 'LT Institute', sans-serif;
     --font-body: 'Uncut Sans', sans-serif;
     --font-sans: 'Uncut Sans', sans-serif;
+    --font-mono: 'Geist Mono', sans-serif;
     
     /* Design System Variables - Spacing */
     --spacing-2xs: 4px;

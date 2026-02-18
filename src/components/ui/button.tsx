@@ -70,6 +70,8 @@ const buttonVariants = cva(
           'bg-[#ff8429] text-white hover:bg-[#e6731f] active:bg-[#d4661a] disabled:bg-orange-200 disabled:text-orange-400',
         ghost:
           'bg-transparent text-foreground hover:bg-muted/50 active:bg-muted/70 disabled:text-gray-400',
+        'ghost-muted':
+          'bg-transparent text-muted-foreground hover:bg-muted/30 active:bg-muted/50 disabled:text-gray-400',
         muted:
           'bg-muted text-muted-foreground/50 hover:bg-muted/30 active:bg-muted/50 disabled:opacity-20 disabled:text-gray-300',
       },

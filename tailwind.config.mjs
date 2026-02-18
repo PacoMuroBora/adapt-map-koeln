@@ -129,11 +129,11 @@ const config = {
         'ghost-foreground': 'hsl(var(--ghost-foreground))',
       },
       fontFamily: {
-        mono: ['var(--font-geist-mono)'],
-        sans: ['var(--font-sans)', 'var(--font-geist-sans)', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+        sans: ['var(--font-sans)', 'sans-serif'],
         // Design System Font Families
-        headings: ['var(--font-headings)', 'var(--font-geist-sans)', 'sans-serif'],
-        body: ['var(--font-body)', 'var(--font-geist-sans)', 'sans-serif'],
+        headings: ['var(--font-headings)', 'sans-serif'],
+        body: ['var(--font-body)', 'sans-serif'],
       },
       fontSize: {
         base: '1rem',

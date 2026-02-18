@@ -8,7 +8,7 @@ export interface Question {
   key: string
   title: string
   description?: string
-  type: 'address' | 'location_GPS' | 'select' | 'slider' | 'radio' | 'checkbox' | 'text' | 'iconSelection' | 'group'
+  type: 'address' | 'location_GPS' | 'plz' | 'select' | 'slider' | 'radio' | 'checkbox' | 'text' | 'iconSelection' | 'group'
   required: boolean
   options?: QuestionOption[]
   sliderConfig?: {

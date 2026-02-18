@@ -498,7 +498,7 @@ export interface Question {
   /**
    * Type of question input
    */
-  type: 'singleChoice' | 'multiChoice' | 'slider' | 'address' | 'location_GPS' | 'iconSelection' | 'group';
+  type: 'singleChoice' | 'multiChoice' | 'slider' | 'address' | 'plz' | 'location_GPS' | 'iconSelection' | 'group';
   /**
    * Available options for choice/dropdown questions
    */

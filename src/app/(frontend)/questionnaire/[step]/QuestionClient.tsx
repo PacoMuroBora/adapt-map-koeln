@@ -98,8 +98,8 @@ export default function QuestionClient({
       for (const subQ of question.groupFields) {
         if (subQ.required) {
           const subAnswer = answer[subQ.key]
-          if (subQ.type === 'text') {
-            if (!subAnswer || subAnswer.trim() === '') {
+          if (subQ.type === 'text' || subQ.type === 'plz') {
+            if (!subAnswer || String(subAnswer).trim() === '') {
               setError(`Bitte beantworten Sie: ${subQ.title}`)
               return false
             }
@@ -125,6 +125,11 @@ export default function QuestionClient({
     } else if (question.type === 'address') {
       if (!answer || !answer.street || answer.street.trim() === '') {
         setError('Bitte geben Sie eine Straße ein.')
+        return false
+      }
+    } else if (question.type === 'plz') {
+      if (!answer || String(answer).trim() === '') {
+        setError('Bitte geben Sie eine Postleitzahl ein.')
         return false
       }
     } else if (question.type === 'checkbox') {
@@ -398,6 +403,20 @@ export default function QuestionClient({
           </div>
         )
 
+      case 'plz':
+        return (
+          <Input
+            value={answer || ''}
+            onChange={(e) => {
+              setAnswer(e.target.value)
+              setError(null)
+            }}
+            placeholder="z.B. 50667"
+            inputMode="numeric"
+            maxLength={5}
+          />
+        )
+
       case 'address':
         const addressAnswer = answer || { street: '', postal_code: '' }
         return (
@@ -607,6 +626,19 @@ export default function QuestionClient({
                       }}
                       placeholder="Ihre Antwort..."
                       rows={3}
+                    />
+                  )}
+
+                  {subQ.type === 'plz' && (
+                    <Input
+                      value={subAnswer || ''}
+                      onChange={(e) => {
+                        setAnswer({ ...answer, [subQ.key]: e.target.value })
+                        setError(null)
+                      }}
+                      placeholder="z.B. 50667"
+                      inputMode="numeric"
+                      maxLength={5}
                     />
                   )}
                 </div>

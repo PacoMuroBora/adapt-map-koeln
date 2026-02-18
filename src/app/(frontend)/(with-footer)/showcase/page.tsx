@@ -1,7 +1,14 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { LinkButton } from '@/components/ui/link-button'
 import { Skeleton, SkeletonAvatar } from '@/components/ui/skeleton'
@@ -18,7 +25,13 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Field } from '@/components/ui/field'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Pagination,
   PaginationContent,
@@ -207,7 +220,7 @@ export default function ShowcasePage() {
             <h3 className="font-body text-base font-semibold mb-4">Variants</h3>
             <div className="flex flex-wrap gap-4">
               <Button variant="default">Primary</Button>
-              <Button variant="secondary">Secondary</Button>
+              <Button variant="white">White</Button>
               <Button variant="outline">Outline</Button>
               <Button variant="destructive">Destructive</Button>
               <Button variant="ghost">Ghost</Button>
@@ -235,7 +248,9 @@ export default function ShowcasePage() {
             <div className="flex flex-wrap gap-4">
               <Button shape="default">Default Shape</Button>
               <Button shape="round">Round Shape</Button>
-              <Button shape="round" size="lg">Round Large</Button>
+              <Button shape="round" size="lg">
+                Round Large
+              </Button>
             </div>
           </div>
 
@@ -263,7 +278,9 @@ export default function ShowcasePage() {
             <h3 className="font-body text-base font-semibold mb-4">States</h3>
             <div className="flex flex-wrap gap-4">
               <Button disabled>Disabled</Button>
-              <Button variant="outline" disabled>Disabled Outline</Button>
+              <Button variant="outline" disabled>
+                Disabled Outline
+              </Button>
             </div>
           </div>
         </div>
@@ -280,10 +297,18 @@ export default function ShowcasePage() {
             <h3 className="font-body text-base font-semibold mb-4">Variations</h3>
             <div className="flex flex-wrap gap-4 items-center">
               <LinkButton href="/">Default Link</LinkButton>
-              <LinkButton href="/" size="sm">Small Link</LinkButton>
-              <LinkButton href="/" size="lg">Large Link</LinkButton>
-              <LinkButton href="/" size="mini">Mini Link</LinkButton>
-              <LinkButton href="/" shape="round">Round Link</LinkButton>
+              <LinkButton href="/" size="sm">
+                Small Link
+              </LinkButton>
+              <LinkButton href="/" size="lg">
+                Large Link
+              </LinkButton>
+              <LinkButton href="/" size="mini">
+                Mini Link
+              </LinkButton>
+              <LinkButton href="/" shape="round">
+                Round Link
+              </LinkButton>
               <LinkButton href="https://example.com" external>
                 External Link
                 <ExternalLink className="ml-1 h-3 w-3 inline" />
@@ -347,7 +372,10 @@ export default function ShowcasePage() {
               <Textarea placeholder="Round shape" shape="round" />
               <Textarea placeholder="Small size" size="sm" />
               <Textarea placeholder="Large size" size="lg" />
-              <Textarea placeholder="Error state" className="border-error focus-visible:ring-error" />
+              <Textarea
+                placeholder="Error state"
+                className="border-error focus-visible:ring-error"
+              />
               <Textarea placeholder="Disabled" disabled />
             </div>
           </div>
@@ -375,7 +403,10 @@ export default function ShowcasePage() {
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox id="check3" disabled />
-            <label htmlFor="check3" className="font-body text-sm text-muted-foreground cursor-not-allowed">
+            <label
+              htmlFor="check3"
+              className="font-body text-sm text-muted-foreground cursor-not-allowed"
+            >
               Disabled
             </label>
           </div>
@@ -406,7 +437,10 @@ export default function ShowcasePage() {
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="option3" id="r3" disabled />
-                <label htmlFor="r3" className="font-body text-sm text-muted-foreground cursor-not-allowed">
+                <label
+                  htmlFor="r3"
+                  className="font-body text-sm text-muted-foreground cursor-not-allowed"
+                >
                   Option 3 (Disabled)
                 </label>
               </div>
@@ -536,7 +570,9 @@ export default function ShowcasePage() {
               <CardDescription>White background with dashed border</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="font-body text-sm">This card uses a white background with dashed border.</p>
+              <p className="font-body text-sm">
+                This card uses a white background with dashed border.
+              </p>
             </CardContent>
           </Card>
 
@@ -586,7 +622,9 @@ export default function ShowcasePage() {
           {/* Alert with Two Lines */}
           <Alert variant="success" showIcon showLine2>
             <AlertTitle>Success</AlertTitle>
-            <AlertDescription>Your changes have been saved. You can continue editing.</AlertDescription>
+            <AlertDescription>
+              Your changes have been saved. You can continue editing.
+            </AlertDescription>
           </Alert>
 
           {/* Alert with Button */}
@@ -743,7 +781,11 @@ export default function ShowcasePage() {
         <div className="space-y-8">
           <div>
             <h3 className="font-body text-base font-semibold mb-4">Card-like Radio Buttons</h3>
-            <RadioFancyGroup defaultValue="house" name="location-type" className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <RadioFancyGroup
+              defaultValue="house"
+              name="location-type"
+              className="grid grid-cols-2 md:grid-cols-3 gap-4"
+            >
               <RadioFancyItem
                 value="house"
                 label="IN EINEM HAUS"
@@ -754,11 +796,7 @@ export default function ShowcasePage() {
                 label="IN EINER WOHNUNG"
                 icon={<Building className="h-5 w-5" />}
               />
-              <RadioFancyItem
-                value="other"
-                label="ANDERES"
-                icon={<Plus className="h-5 w-5" />}
-              />
+              <RadioFancyItem value="other" label="ANDERES" icon={<Plus className="h-5 w-5" />} />
             </RadioFancyGroup>
           </div>
         </div>
@@ -823,7 +861,8 @@ export default function ShowcasePage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                  This action cannot be undone. This will permanently delete your account and remove
+                  your data from our servers.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
