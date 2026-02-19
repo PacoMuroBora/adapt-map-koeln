@@ -25,7 +25,7 @@ This document outlines the design system rules and component specifications for 
    - [Textarea](./components/textarea.md)
    - [Select & Combobox](./components/select-combobox.md)
    - [Radio](./components/radio.md)
-   - [Radio Fancy](./components/radio-fancy.md)
+   - [Radio Card](./components/radio-card.md)
    - [Slider](./components/slider.md)
    - [Skeleton](./components/skeleton.md)
    - [Pagination](./components/pagination.md)
@@ -267,7 +267,7 @@ Each component has its own documentation file in the `components/` directory. Cl
 - **[Textarea](./components/textarea.md)** - Multi-line text input with resize handle
 - **[Select & Combobox](./components/select-combobox.md)** - Dropdown and combobox components with search
 - **[Radio](./components/radio.md)** - Radio button group with icon and label support
-- **[Radio Fancy](./components/radio-fancy.md)** - Stylized radio buttons as card-like buttons with icons
+- **[Radio Card](./components/radio-card.md)** - Stylized radio buttons as card-like buttons with icons
 - **[Slider](./components/slider.md)** - Range input with vertical and horizontal orientations
 - **[Skeleton](./components/skeleton.md)** - Loading placeholders for content
 - **[Pagination](./components/pagination.md)** - Page navigation with previous/next buttons

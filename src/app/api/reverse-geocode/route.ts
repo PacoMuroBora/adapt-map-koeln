@@ -158,6 +158,8 @@ export async function POST(req: NextRequest) {
     const result = {
       postal_code: data.address?.postcode || null,
       city: data.address?.city || data.address?.town || data.address?.village || null,
+      street: data.address?.road || null,
+      house_number: data.address?.house_number || null,
       address: data.display_name || null,
     }
 

@@ -5,12 +5,12 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
 
 const otpInputVariants = cva(
-  'flex items-center justify-center text-center font-medium border transition-colors focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:cursor-not-allowed',
+  'flex items-center justify-center text-center border transition-colors focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:cursor-not-allowed',
   {
     variants: {
       size: {
         default: 'h-12 w-12 text-lg',
-        large: 'h-16 w-16 text-xl',
+        large: 'h-14 w-14 text-[1.75rem]',
         small: 'h-10 w-10 text-base',
         'x-sm': 'h-8 w-8 text-sm',
       },
@@ -22,6 +22,10 @@ const otpInputVariants = cva(
         error: 'border-error text-foreground',
         'error-focus': 'border-error ring-error',
         disabled: 'border-muted bg-muted text-muted-foreground opacity-50',
+        'plz-empty':
+          'border-am-purple-alt bg-white font-mono text-muted-foreground focus-visible:shadow-[0_0_0_3px_rgba(159,148,255,0.35)]',
+        'plz-value':
+          'border-am-purple-alt bg-white font-mono text-foreground focus-visible:shadow-[0_0_0_3px_rgba(159,148,255,0.35)]',
       },
       shape: {
         default: 'rounded-lg',
@@ -33,11 +37,12 @@ const otpInputVariants = cva(
       state: 'empty',
       shape: 'round',
     },
-  }
+  },
 )
 
 export interface InputOTPProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'onChange'>,
+  extends
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'onChange'>,
     VariantProps<typeof otpInputVariants> {
   length?: number
   separator?: string
@@ -45,6 +50,10 @@ export interface InputOTPProps
   value?: string
   onChange?: (value: string) => void
   onComplete?: (value: string) => void
+  /** Placeholder character for empty slots (e.g. "0" for PLZ) */
+  placeholderChar?: string
+  /** PLZ variant: circular inputs, white on lavender, purple border */
+  variant?: 'default' | 'plz'
 }
 
 const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
@@ -60,18 +69,26 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
       onComplete,
       className,
       disabled,
+      placeholderChar,
+      variant = 'default',
       ...props
     },
-    ref
+    ref,
   ) => {
     const [otp, setOtp] = React.useState<string[]>(
-      value.split('').slice(0, length).concat(Array(Math.max(0, length - value.length)).fill(''))
+      value
+        .split('')
+        .slice(0, length)
+        .concat(Array(Math.max(0, length - value.length)).fill('')),
     )
     const inputRefs = React.useRef<(HTMLInputElement | null)[]>([])
 
     React.useEffect(() => {
       if (value) {
-        const newOtp = value.split('').slice(0, length).concat(Array(Math.max(0, length - value.length)).fill(''))
+        const newOtp = value
+          .split('')
+          .slice(0, length)
+          .concat(Array(Math.max(0, length - value.length)).fill(''))
         setOtp(newOtp)
       } else {
         setOtp(Array(length).fill(''))
@@ -103,10 +120,7 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
       }
     }
 
-    const handleKeyDown = (
-      index: number,
-      e: React.KeyboardEvent<HTMLInputElement>
-    ) => {
+    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Backspace' && !otp[index] && index > 0) {
         inputRefs.current[index - 1]?.focus()
       }
@@ -135,7 +149,10 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
 
     const getState = (index: number): VariantProps<typeof otpInputVariants>['state'] => {
       if (disabled) return 'disabled'
-      // Add error state logic here if needed via className prop
+      if (variant === 'plz') {
+        if (otp[index]) return 'plz-value'
+        return 'plz-empty'
+      }
       if (otp[index]) return 'value'
       return 'empty'
     }
@@ -143,7 +160,11 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
     return (
       <div
         ref={ref}
-        className={cn('flex items-center gap-2', className)}
+        className={cn(
+          'flex items-center justify-center gap-1',
+          variant === 'plz' && 'rounded-2xl bg-am-purple/25 p-4',
+          className,
+        )}
         {...props}
       >
         {Array.from({ length }).map((_, index) => (
@@ -156,6 +177,7 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
               inputMode="numeric"
               maxLength={1}
               value={otp[index] || ''}
+              placeholder={placeholderChar}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={(e) => handlePaste(e, index)}
@@ -165,20 +187,18 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
                   size,
                   shape,
                   state: getState(index),
-                })
+                }),
               )}
               aria-label={`OTP digit ${index + 1}`}
             />
-            {separator &&
-              separatorPosition !== undefined &&
-              index === separatorPosition - 1 && (
-                <span className="text-foreground font-medium">{separator}</span>
-              )}
+            {separator && separatorPosition !== undefined && index === separatorPosition - 1 && (
+              <span className="text-foreground font-medium">{separator}</span>
+            )}
           </React.Fragment>
         ))}
       </div>
     )
-  }
+  },
 )
 InputOTP.displayName = 'InputOTP'
 

@@ -52,8 +52,8 @@ const buttonVariants = cva(
         sm: 'h-9 px-3 text-body',
         lg: 'h-14 p-2 text-body uppercase',
         icon: 'h-10 w-10',
-        mini: 'h-8 px-3',
-        tiny: 'h-6 px-2 text-body-sm',
+        mini: 'h-8 px-3 text-sm',
+        tiny: 'h-6 px-2 text-sm',
       },
       variant: {
         default:
@@ -63,11 +63,11 @@ const buttonVariants = cva(
         black:
           'bg-black text-black-foreground border border-black hover:bg-white hover:text-black active:bg-black disabled:bg-gray-300 disabled:text-gray-500',
         outline:
-          'border border-border bg-background text-foreground hover:bg-accent/60 hover:text-accent-foreground active:bg-accent/40 disabled:border disabled:bg-gray-100 disabled:text-gray-400',
+          'border border-black text-black hover:bg-black hover:text-white active:bg-black/20 active:text-black disabled:border disabled:bg-gray-100 disabled:text-gray-400',
         'outline-white':
           'border border-white/30 bg-white/5 text-white hover:bg-white hover:text-black active:bg-white/40 disabled:border disabled:bg-gray-100 disabled:text-gray-400',
         destructive:
-          'bg-[#ff8429] text-white hover:bg-[#e6731f] active:bg-[#d4661a] disabled:bg-orange-200 disabled:text-orange-400',
+          'bg-[#ff8429] text-black hover:bg-[#e6731f] active:bg-[#d4661a] disabled:bg-orange-200 disabled:text-orange-400',
         ghost:
           'bg-transparent text-foreground hover:bg-muted/50 active:bg-muted/70 disabled:text-gray-400',
         'ghost-muted':
@@ -83,8 +83,24 @@ const buttonVariants = cva(
   },
 )
 
+export type ButtonVariant =
+  | 'default'
+  | 'white'
+  | 'black'
+  | 'outline'
+  | 'outline-white'
+  | 'destructive'
+  | 'ghost'
+  | 'ghost-muted'
+  | 'muted'
+export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny'
+export type ButtonShape = 'default' | 'round'
+
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  shape?: ButtonShape
   asChild?: boolean
   /** When provided, renders as a Next.js Link instead of a button. */
   href?: string

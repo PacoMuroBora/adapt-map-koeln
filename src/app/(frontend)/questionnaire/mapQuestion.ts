@@ -3,8 +3,8 @@ import type { Question as PayloadQuestion } from '@/payload-types'
 import type { Question } from './questions'
 
 const BE_TYPE_TO_FRONTEND: Record<PayloadQuestion['type'], Question['type']> = {
-  singleChoice: 'select',
-  multiChoice: 'checkbox',
+  singleChoice: 'singleChoice',
+  multiChoice: 'multiChoice',
   slider: 'slider',
   address: 'address',
   plz: 'plz',

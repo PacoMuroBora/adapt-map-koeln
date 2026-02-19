@@ -3,19 +3,26 @@
 import { cn } from '@/utilities/ui'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Toggle } from '@/components/ui/toggle'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio'
+import { RadioCardGroup, RadioCardItem } from '@/components/ui/radio-card'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { InputOTP } from '@/components/ui/input-otp'
 import HeatIntensitySlider from '@/components/questionnaire/HeatIntensitySlider'
 import IconSelection from '@/components/questionnaire/IconSelection'
+import { AddressSearchInput } from '@/components/questionnaire/AddressSearchInput'
 import ProgressBar from '@/components/questionnaire/ProgressBar'
 import { LinkButton } from '@/components/ui/link-button'
 import { useSubmission } from '@/providers/Submission'
@@ -29,18 +36,26 @@ import type { Question } from '../questions'
 import { Card } from '@/components/ui/card'
 import { Alert } from '@/components/ui/alert'
 
+import { X, Home, Building, Plus } from 'lucide-react'
+import { isValidColognePlz } from '@/utilities/colognePlz'
+
 type QuestionClientProps = {
   question: Question
   stepNumber: number
   totalSteps: number
+  /** Used to skip plz/address steps when user located via GPS */
+  questionTypes: Question['type'][]
   nextButtonText: string
   previousButtonText: string
 }
+
+const STEPS_TO_SKIP_WHEN_GPS = ['plz', 'address'] as const
 
 export default function QuestionClient({
   question,
   stepNumber,
   totalSteps,
+  questionTypes,
   nextButtonText,
   previousButtonText,
 }: QuestionClientProps) {
@@ -65,6 +80,20 @@ export default function QuestionClient({
   const [answer, setAnswer] = useState<any>(getInitialAnswer())
   const [error, setError] = useState<string | null>(null)
   const [isGpsLoading, setIsGpsLoading] = useState(false)
+  const [showAbortDialog, setShowAbortDialog] = useState(false)
+  const [resolvedAddress, setResolvedAddress] = useState<{
+    postal_code: string
+    city: string | null
+    street?: string | null
+    house_number?: string | null
+  } | null>(null)
+
+  const formatDisplayAddress = (addr: NonNullable<typeof resolvedAddress>) => {
+    const streetPart = [addr.street, addr.house_number].filter(Boolean).join(' ')
+    const placePart = [addr.postal_code, addr.city].filter(Boolean).join(' ')
+    if (streetPart && placePart) return `${streetPart}, ${placePart}`
+    return placePart || streetPart || ''
+  }
 
   // Auto-dismiss error alert after 500ms
   useEffect(() => {
@@ -72,6 +101,45 @@ export default function QuestionClient({
     const timer = setTimeout(() => setError(null), 2500)
     return () => clearTimeout(timer)
   }, [error])
+
+  // Sync resolvedAddress from state when user navigates back with existing location
+  useEffect(() => {
+    if (
+      question.type === 'location_GPS' &&
+      !resolvedAddress &&
+      state.location?.postal_code &&
+      state.answers[question.key] === 'gps'
+    ) {
+      const loc = state.location
+      setResolvedAddress({
+        postal_code: loc.postal_code!,
+        city: loc.city,
+        street: loc.street || null,
+        house_number: null,
+      })
+    }
+  }, [question.type, question.key, state.location, state.answers, resolvedAddress])
+
+  // Skip plz/address when user already used GPS (e.g. direct link or back from later step)
+  useEffect(() => {
+    if (!state.location?.postal_code) return
+    if (!STEPS_TO_SKIP_WHEN_GPS.includes(question.type as (typeof STEPS_TO_SKIP_WHEN_GPS)[number]))
+      return
+    let nextStep = stepNumber
+    while (
+      nextStep <= totalSteps &&
+      STEPS_TO_SKIP_WHEN_GPS.includes(
+        questionTypes[nextStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
+      )
+    ) {
+      nextStep++
+    }
+    if (nextStep <= totalSteps) {
+      router.replace(`/questionnaire/${nextStep}`)
+    } else {
+      router.replace('/feedback')
+    }
+  }, [question.type, stepNumber, totalSteps, questionTypes, state.location?.postal_code, router])
 
   // Initialize slider with default value if required and not set
   useEffect(() => {
@@ -89,6 +157,26 @@ export default function QuestionClient({
   // Calculate actual step number in overall flow (questionnaire starts at STEP_QUESTIONNAIRE_START)
   const actualStepNumber = STEP_QUESTIONNAIRE_START + stepNumber - 1
 
+  const isWeiterDisabled = (): boolean => {
+    if (question.type === 'location_GPS') return !resolvedAddress
+    if (question.type === 'plz') {
+      const plz = String(answer ?? '').trim()
+      return plz.length !== 5 || !isValidColognePlz(plz)
+    }
+    if (question.type === 'singleChoice') {
+      return answer == null || answer === ''
+    }
+    if (question.type === 'group' && question.groupFields) {
+      for (const subQ of question.groupFields) {
+        if (subQ.required && subQ.type === 'plz') {
+          const plz = String(answer?.[subQ.key] ?? '').trim()
+          if (plz.length !== 5 || !isValidColognePlz(plz)) return true
+        }
+      }
+    }
+    return false
+  }
+
   const validateAnswer = (): boolean => {
     if (!question.required) return true
 
@@ -98,9 +186,19 @@ export default function QuestionClient({
       for (const subQ of question.groupFields) {
         if (subQ.required) {
           const subAnswer = answer[subQ.key]
-          if (subQ.type === 'text' || subQ.type === 'plz') {
+          if (subQ.type === 'text') {
             if (!subAnswer || String(subAnswer).trim() === '') {
               setError(`Bitte beantworten Sie: ${subQ.title}`)
+              return false
+            }
+          } else if (subQ.type === 'plz') {
+            const plz = String(subAnswer ?? '').trim()
+            if (!plz || plz.length !== 5) {
+              setError(`Bitte geben Sie eine gültige 5-stellige Postleitzahl ein: ${subQ.title}`)
+              return false
+            }
+            if (!isValidColognePlz(plz)) {
+              setError('Bitte geben Sie eine gültige Postleitzahl von Köln ein.')
               return false
             }
           } else if (subAnswer === null || subAnswer === undefined || subAnswer === '') {
@@ -127,12 +225,23 @@ export default function QuestionClient({
         setError('Bitte geben Sie eine Straße ein.')
         return false
       }
-    } else if (question.type === 'plz') {
-      if (!answer || String(answer).trim() === '') {
-        setError('Bitte geben Sie eine Postleitzahl ein.')
+    } else if (question.type === 'location_GPS') {
+      if (!state.location?.postal_code) {
+        setError('Bitte ermitteln Sie Ihren Standort oder geben Sie die Adresse manuell ein.')
         return false
       }
-    } else if (question.type === 'checkbox') {
+      return true
+    } else if (question.type === 'plz') {
+      const plz = String(answer ?? '').trim()
+      if (!plz || plz.length !== 5) {
+        setError('Bitte geben Sie eine gültige 5-stellige Postleitzahl ein.')
+        return false
+      }
+      if (!isValidColognePlz(plz)) {
+        setError('Bitte geben Sie eine gültige Postleitzahl von Köln ein.')
+        return false
+      }
+    } else if (question.type === 'multiChoice') {
       if (!answer || (Array.isArray(answer) && answer.length === 0)) {
         setError('Bitte wählen Sie mindestens eine Option aus.')
         return false
@@ -164,8 +273,20 @@ export default function QuestionClient({
 
     updateCurrentStep('questionnaire')
 
-    if (stepNumber < totalSteps) {
-      router.push(`/questionnaire/${stepNumber + 1}`)
+    let nextStep = stepNumber + 1
+    if (question.type === 'location_GPS' && state.location?.postal_code) {
+      while (
+        nextStep <= totalSteps &&
+        STEPS_TO_SKIP_WHEN_GPS.includes(
+          questionTypes[nextStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
+        )
+      ) {
+        nextStep++
+      }
+    }
+
+    if (nextStep <= totalSteps) {
+      router.push(`/questionnaire/${nextStep}`)
     } else {
       router.push('/feedback')
     }
@@ -181,11 +302,32 @@ export default function QuestionClient({
       updateAnswer(question.key, answer)
     }
 
-    if (stepNumber > 1) {
-      router.push(`/questionnaire/${stepNumber - 1}`)
+    let prevStep = stepNumber - 1
+    if (state.location?.postal_code) {
+      while (
+        prevStep >= 1 &&
+        STEPS_TO_SKIP_WHEN_GPS.includes(
+          questionTypes[prevStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
+        )
+      ) {
+        prevStep--
+      }
+    }
+
+    if (prevStep >= 1) {
+      router.push(`/questionnaire/${prevStep}`)
     } else {
       router.push('/personal')
     }
+  }
+
+  const handleAbortQuestionnaire = () => {
+    setShowAbortDialog(true)
+  }
+
+  const handleConfirmAbort = () => {
+    setShowAbortDialog(false)
+    router.push('/')
   }
 
   const handleGPSLocation = async () => {
@@ -213,19 +355,21 @@ export default function QuestionClient({
 
             if (response.ok) {
               const data = await response.json()
+              const streetWithNumber = [data.street, data.house_number].filter(Boolean).join(' ')
               updateLocation({
                 lat: cached.lat,
                 lng: cached.lng,
                 postal_code: data.postal_code,
                 city: data.city,
-                street: data.street || undefined,
+                street: streetWithNumber || undefined,
               })
-              updateCurrentStep('questionnaire')
-              if (stepNumber < totalSteps) {
-                router.push(`/questionnaire/${stepNumber + 1}`)
-              } else {
-                router.push('/feedback')
-              }
+              updateAnswer(question.key, 'gps')
+              setResolvedAddress({
+                postal_code: data.postal_code,
+                city: data.city,
+                street: data.street || null,
+                house_number: data.house_number || null,
+              })
               return
             }
           }
@@ -306,20 +450,21 @@ export default function QuestionClient({
         )
       }
 
+      const streetWithNumber = [data.street, data.house_number].filter(Boolean).join(' ')
       updateLocation({
         lat: latitude,
         lng: longitude,
         postal_code: data.postal_code,
         city: data.city,
-        street: data.street || undefined,
+        street: streetWithNumber || undefined,
       })
-
-      updateCurrentStep('questionnaire')
-      if (stepNumber < totalSteps) {
-        router.push(`/questionnaire/${stepNumber + 1}`)
-      } else {
-        router.push('/feedback')
-      }
+      updateAnswer(question.key, 'gps')
+      setResolvedAddress({
+        postal_code: data.postal_code,
+        city: data.city,
+        street: data.street || null,
+        house_number: data.house_number || null,
+      })
     } catch (err: unknown) {
       try {
         localStorage.removeItem('gps_position')
@@ -353,6 +498,7 @@ export default function QuestionClient({
 
   const handleManualAddress = () => {
     updateAnswer(question.key, 'manual')
+    updateLocation({ lat: 0, lng: 0, postal_code: null, city: null })
     updateCurrentStep('questionnaire')
     if (stepNumber < totalSteps) {
       router.push(`/questionnaire/${stepNumber + 1}`)
@@ -364,6 +510,43 @@ export default function QuestionClient({
   const renderQuestionInput = () => {
     switch (question.type) {
       case 'location_GPS':
+        if (resolvedAddress) {
+          return (
+            <div className="space-y-8 flex flex-col items-center">
+              <div className="space-y-2 flex flex-col items-center">
+                <div className="w-full">
+                  <p className="text-body-sm uppercase font-mono text-muted">Dein Standort</p>
+                  <div className="rounded-full bg-white px-4 py-3 mt-2">
+                    <p className="mt-1 font-medium">{formatDisplayAddress(resolvedAddress)}</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="mini"
+                  onClick={() => {
+                    setResolvedAddress(null)
+                    setAnswer(null)
+                    updateLocation({ lat: 0, lng: 0, postal_code: null, city: null })
+                  }}
+                >
+                  Standort erneut ermitteln
+                </Button>
+              </div>
+              <LinkButton
+                href={`/questionnaire/${stepNumber + 1}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleManualAddress()
+                }}
+                size="sm"
+                className="text-muted-foreground"
+              >
+                Adresse manuell eingeben
+              </LinkButton>
+            </div>
+          )
+        }
         return (
           <div className="space-y-6 flex flex-col items-center">
             <Button
@@ -405,72 +588,88 @@ export default function QuestionClient({
 
       case 'plz':
         return (
-          <Input
+          <InputOTP
+            length={5}
             value={answer || ''}
-            onChange={(e) => {
-              setAnswer(e.target.value)
-              setError(null)
+            onChange={(val) => {
+              setAnswer(val)
+              if (val.length === 5) {
+                setError(
+                  isValidColognePlz(val)
+                    ? null
+                    : 'Bitte geben Sie eine gültige Postleitzahl von Köln ein.',
+                )
+              } else {
+                setError(null)
+              }
             }}
-            placeholder="z.B. 50667"
-            inputMode="numeric"
-            maxLength={5}
+            variant="plz"
+            placeholderChar="0"
+            shape="round"
+            size="large"
           />
         )
 
-      case 'address':
+      case 'address': {
         const addressAnswer = answer || { street: '', postal_code: '' }
+        const postalCodeForFilter =
+          state.location?.postal_code ??
+          addressAnswer.postal_code ??
+          (() => {
+            for (const v of Object.values(state.answers || {})) {
+              if (typeof v === 'string' && isValidColognePlz(v)) return v
+              if (
+                v &&
+                typeof v === 'object' &&
+                'postal_code' in v &&
+                typeof (v as any).postal_code === 'string' &&
+                isValidColognePlz((v as any).postal_code)
+              )
+                return (v as any).postal_code
+            }
+            return undefined
+          })()
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="street">
-                Straße {question.required && <span className="text-destructive">*</span>}
-              </Label>
-              <Input
-                id="street"
-                value={addressAnswer.street || ''}
-                onChange={(e) => {
-                  setAnswer({ ...addressAnswer, street: e.target.value })
-                  setError(null)
-                }}
-                placeholder="z.B. Musterstraße 123"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="postal_code">Postleitzahl (optional)</Label>
-              <Input
-                id="postal_code"
-                value={addressAnswer.postal_code || ''}
-                onChange={(e) => {
-                  setAnswer({ ...addressAnswer, postal_code: e.target.value })
-                  setError(null)
-                }}
-                placeholder="z.B. 50667"
-              />
-            </div>
-          </div>
+          <AddressSearchInput
+            value={addressAnswer}
+            onChange={(val) => {
+              setAnswer(val)
+              setError(null)
+            }}
+            onError={setError}
+            placeholder="STRASSE SUCHEN"
+            postalCode={postalCodeForFilter}
+          />
         )
+      }
 
-      case 'select':
+      case 'singleChoice':
         if (!question.options || !Array.isArray(question.options)) return null
         return (
-          <Select
+          <RadioCardGroup
             value={answer || ''}
             onValueChange={(value) => {
               setAnswer(value)
               setError(null)
             }}
+            name={question.key}
+            className="grid grid-cols-2 gap-2"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Bitte auswählen" />
-            </SelectTrigger>
-            <SelectContent>
-              {question.options.map((option, index) => (
-                <SelectItem key={index} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {question.options.map((option, index) => {
+              const text = `${option.value} ${option.label}`.toLowerCase()
+              const icon =
+                text.includes('haus') || text.includes('house') ? (
+                  <Home className="h-5 w-5" />
+                ) : text.includes('wohnung') || text.includes('apartment') ? (
+                  <Building className="h-5 w-5" />
+                ) : (
+                  <Plus className="h-5 w-5" />
+                )
+              return (
+                <RadioCardItem key={index} value={option.value} label={option.label} icon={icon} />
+              )
+            })}
+          </RadioCardGroup>
         )
 
       case 'radio':
@@ -501,29 +700,27 @@ export default function QuestionClient({
           </RadioGroup>
         )
 
-      case 'checkbox':
+      case 'multiChoice':
         if (!question.options || !Array.isArray(question.options)) return null
         const selectedValues = Array.isArray(answer) ? answer : []
         return (
-          <div className="space-y-3">
+          <div className="flex flex-wrap gap-1">
             {question.options.map((option, index) => (
-              <label
+              <Toggle
                 key={index}
-                className="flex cursor-pointer items-center space-x-3 rounded-lg border bg-card p-4 hover:bg-muted"
+                pressed={selectedValues.includes(option.value)}
+                onPressedChange={(pressed: boolean) => {
+                  if (pressed) {
+                    setAnswer([...selectedValues, option.value])
+                  } else {
+                    setAnswer(selectedValues.filter((v: string) => v !== option.value))
+                  }
+                  setError(null)
+                }}
+                aria-label={option.label}
               >
-                <Checkbox
-                  checked={selectedValues.includes(option.value)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setAnswer([...selectedValues, option.value])
-                    } else {
-                      setAnswer(selectedValues.filter((v: string) => v !== option.value))
-                    }
-                    setError(null)
-                  }}
-                />
-                <span className="flex-1">{option.label}</span>
-              </label>
+                {option.label}
+              </Toggle>
             ))}
           </div>
         )
@@ -630,17 +827,50 @@ export default function QuestionClient({
                   )}
 
                   {subQ.type === 'plz' && (
-                    <Input
+                    <InputOTP
+                      length={5}
                       value={subAnswer || ''}
-                      onChange={(e) => {
-                        setAnswer({ ...answer, [subQ.key]: e.target.value })
-                        setError(null)
+                      onChange={(val) => {
+                        setAnswer({ ...answer, [subQ.key]: val })
+                        if (val.length === 5) {
+                          setError(
+                            isValidColognePlz(val)
+                              ? null
+                              : 'Bitte geben Sie eine gültige Postleitzahl von Köln ein.',
+                          )
+                        } else {
+                          setError(null)
+                        }
                       }}
-                      placeholder="z.B. 50667"
-                      inputMode="numeric"
-                      maxLength={5}
+                      variant="plz"
+                      placeholderChar="0"
+                      shape="round"
+                      size="default"
                     />
                   )}
+
+                  {subQ.type === 'address' &&
+                    (() => {
+                      const addrAnswer = subAnswer || { street: '', postal_code: '' }
+                      const plzFromGroup = question.groupFields?.find((f) => f.type === 'plz')
+                      const groupPostalCode = plzFromGroup
+                        ? String(answer[plzFromGroup.key] ?? '').trim()
+                        : undefined
+                      const postalCodeForFilter =
+                        state.location?.postal_code ?? (groupPostalCode || addrAnswer.postal_code)
+                      return (
+                        <AddressSearchInput
+                          value={addrAnswer}
+                          onChange={(val) => {
+                            setAnswer({ ...answer, [subQ.key]: val })
+                            setError(null)
+                          }}
+                          onError={setError}
+                          placeholder="STRASSE SUCHEN"
+                          postalCode={postalCodeForFilter || undefined}
+                        />
+                      )
+                    })()}
                 </div>
               )
             })}
@@ -654,6 +884,7 @@ export default function QuestionClient({
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8 md:py-16">
+      {/* Error Alert */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -693,7 +924,11 @@ export default function QuestionClient({
           </div>
         </div>
       </Card>
+
       {/* Navigation */}
+      <button onClick={handleAbortQuestionnaire} className="fixed top-4 right-4 z-20">
+        <X className="size-5 text-white" />
+      </button>
       <div className="relative flex flex-row items-center gap-4 h-14 mt-4">
         <Button
           type="button"
@@ -708,14 +943,28 @@ export default function QuestionClient({
           variant="white"
           iconAfter={stepNumber < totalSteps ? 'arrow-down' : 'check'}
           onClick={handleNext}
-          className={cn(
-            'absolute left-1/2 -translate-x-1/2',
-            question.type === 'location_GPS' ? 'opacity-20' : '',
-          )}
+          disabled={isWeiterDisabled()}
+          className={cn('absolute left-1/2 -translate-x-1/2', isWeiterDisabled() && 'opacity-20')}
         >
           {stepNumber === totalSteps ? 'Weiter' : nextButtonText}
         </Button>
       </div>
+
+      {/* Abort confirmation dialog */}
+      <AlertDialog open={showAbortDialog} onOpenChange={setShowAbortDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Abbrechen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bist du sicher, dass du abbrechen möchtest? Deine Angaben werden verloren gehen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleConfirmAbort}>Abbrechen</AlertDialogAction>
+            <AlertDialogCancel>Weiter bearbeiten</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

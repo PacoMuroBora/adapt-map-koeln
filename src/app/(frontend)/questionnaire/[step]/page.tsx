@@ -51,11 +51,14 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
 
   const uiCopy = (await getCachedGlobal('ui-copy', 0)()) as UiCopy
 
+  const questionTypes = questions.map((q) => q.type)
+
   return (
     <QuestionClient
       question={currentQuestion}
       stepNumber={stepNumber}
       totalSteps={totalSteps}
+      questionTypes={questionTypes}
       nextButtonText={uiCopy?.questionnaire?.nextButton || 'Weiter'}
       previousButtonText={uiCopy?.questionnaire?.previousButton || 'Zurück'}
     />

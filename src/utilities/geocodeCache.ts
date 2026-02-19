@@ -67,7 +67,7 @@ export const geocodeCache = new GeocodeCache(24 * 60 * 60 * 1000) // 24 hours
 
 // Helper to create cache keys
 export function createCacheKey(
-  type: 'geocode' | 'reverse-geocode',
+  type: 'geocode' | 'reverse-geocode' | 'house-numbers',
   params: Record<string, any>,
 ): string {
   // Sort keys for consistent cache key generation

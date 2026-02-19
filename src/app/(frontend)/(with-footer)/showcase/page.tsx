@@ -44,7 +44,7 @@ import {
 import { InputGroup } from '@/components/ui/input-group'
 import { InputOTP } from '@/components/ui/input-otp'
 import { Combobox } from '@/components/ui/combobox'
-import { RadioFancyGroup, RadioFancyItem } from '@/components/ui/radio-fancy'
+import { RadioCardGroup, RadioCardItem } from '@/components/ui/radio-card'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { StatefulInfoBoxExamples } from './StatefulInfoBoxExamples'
@@ -772,32 +772,63 @@ export default function ShowcasePage() {
         </div>
       </section>
 
-      {/* Radio Fancy Section */}
+      {/* Radio Card Section */}
       <section className="mb-16">
         <h2 className="font-headings text-[46px] font-semibold leading-[48px] tracking-[-0.5px] mb-8">
-          Radio Fancy
+          Radio Card
         </h2>
 
         <div className="space-y-8">
           <div>
-            <h3 className="font-body text-base font-semibold mb-4">Card-like Radio Buttons</h3>
-            <RadioFancyGroup
+            <h3 className="font-body text-base font-semibold mb-4">
+              Card-like Radio (Teil 1 – default variant)
+            </h3>
+            <RadioCardGroup
               defaultValue="house"
               name="location-type"
               className="grid grid-cols-2 md:grid-cols-3 gap-4"
             >
-              <RadioFancyItem
+              <RadioCardItem
                 value="house"
                 label="IN EINEM HAUS"
                 icon={<Home className="h-5 w-5" />}
               />
-              <RadioFancyItem
+              <RadioCardItem
                 value="apartment"
                 label="IN EINER WOHNUNG"
                 icon={<Building className="h-5 w-5" />}
               />
-              <RadioFancyItem value="other" label="ANDERES" icon={<Plus className="h-5 w-5" />} />
-            </RadioFancyGroup>
+              <RadioCardItem value="other" label="ANDERES" icon={<Plus className="h-5 w-5" />} />
+            </RadioCardGroup>
+          </div>
+          <div>
+            <h3 className="font-body text-base font-semibold mb-4">
+              Card-like Radio (Teil 2 – orange variant)
+            </h3>
+            <RadioCardGroup
+              defaultValue="apartment"
+              name="location-type-orange"
+              className="grid grid-cols-2 md:grid-cols-3 gap-4"
+            >
+              <RadioCardItem
+                value="house"
+                label="IN EINEM HAUS"
+                icon={<Home className="h-5 w-5" />}
+                variant="orange"
+              />
+              <RadioCardItem
+                value="apartment"
+                label="IN EINER WOHNUNG"
+                icon={<Building className="h-5 w-5" />}
+                variant="orange"
+              />
+              <RadioCardItem
+                value="other"
+                label="ANDERES"
+                icon={<Plus className="h-5 w-5" />}
+                variant="orange"
+              />
+            </RadioCardGroup>
           </div>
         </div>
       </section>
