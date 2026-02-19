@@ -898,9 +898,9 @@ export default function QuestionClient({
                     {question.description && (
                       <p className="text-body-sm text-muted-foreground">{question.description}</p>
                     )}
-                    {question.required && (
+                    {/* {question.required && (
                       <p className="mt-2 text-sm text-muted-foreground">* Pflichtfeld</p>
-                    )}
+                    )} */}
                   </div>
 
                   <div>{renderQuestionInput()}</div>
