@@ -19,6 +19,10 @@ export type StepNavigationConfig = {
   updateAnswer: (key: string, value: unknown) => void
   updateCurrentStep: (step: SubmissionState['currentStep']) => void
   validateAnswer: () => boolean
+  /** When set, called with the next path instead of navigating immediately (e.g. to run exit animation). */
+  onBeforeNextNavigate?: (path: string) => void
+  /** When set, called with the prev path instead of navigating immediately (e.g. to run exit animation). */
+  onBeforePrevNavigate?: (path: string) => void
 }
 
 export type StartNavigationConfig = {
@@ -65,10 +69,14 @@ export function useQuestionnaireNavigation(
         prevStep--
       }
     }
-    if (prevStep >= 1) {
-      router.push(`/questionnaire/${questionnaireName}/${prevStep}`)
+    const path =
+      prevStep >= 1
+        ? `/questionnaire/${questionnaireName}/${prevStep}`
+        : `/questionnaire/${questionnaireName}`
+    if (config.onBeforePrevNavigate) {
+      config.onBeforePrevNavigate(path)
     } else {
-      router.push(`/questionnaire/${questionnaireName}`)
+      router.push(path)
     }
   }
 
@@ -107,10 +115,14 @@ export function useQuestionnaireNavigation(
         nextStep++
       }
     }
-    if (nextStep <= totalSteps) {
-      router.push(`/questionnaire/${questionnaireName}/${nextStep}`)
+    const path =
+      nextStep <= totalSteps
+        ? `/questionnaire/${questionnaireName}/${nextStep}`
+        : '/feedback'
+    if (config.onBeforeNextNavigate) {
+      config.onBeforeNextNavigate(path)
     } else {
-      router.push('/feedback')
+      router.push(path)
     }
   }
 

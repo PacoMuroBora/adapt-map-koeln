@@ -20,7 +20,7 @@ import { useQuestionnaireNavigation } from '../../useQuestionnaireNavigation'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import type { Question } from '../../questions'
 import { Card } from '@/components/ui/card'
@@ -72,6 +72,8 @@ export default function QuestionClient({
 
   const [answer, setAnswer] = useState<any>(getInitialAnswer())
   const [error, setError] = useState<string | null>(null)
+  const [isExiting, setIsExiting] = useState(false)
+  const pendingPathRef = useRef<string | null>(null)
   const [isGpsLoading, setIsGpsLoading] = useState(false)
   const [resolvedAddress, setResolvedAddress] = useState<{
     postal_code: string
@@ -271,6 +273,26 @@ export default function QuestionClient({
     updateAnswer,
     updateCurrentStep,
     validateAnswer,
+    onBeforeNextNavigate: (path) => {
+      pendingPathRef.current = path
+      setIsExiting(true)
+      setTimeout(() => {
+        if (pendingPathRef.current) {
+          router.push(pendingPathRef.current)
+          pendingPathRef.current = null
+        }
+      }, 220)
+    },
+    onBeforePrevNavigate: (path) => {
+      pendingPathRef.current = path
+      setIsExiting(true)
+      setTimeout(() => {
+        if (pendingPathRef.current) {
+          router.push(pendingPathRef.current)
+          pendingPathRef.current = null
+        }
+      }, 220)
+    },
   })
 
   const handleGPSLocation = async () => {
@@ -459,7 +481,7 @@ export default function QuestionClient({
               <div className="space-y-2 flex flex-col items-center">
                 <div className="w-full">
                   <p className="text-body-sm uppercase font-mono text-muted">Dein Standort</p>
-                  <div className="rounded-full bg-white px-4 py-3 mt-2">
+                  <div className="rounded-2xl bg-white px-4 py-3 mt-2">
                     <p className="mt-1 font-medium">{formatDisplayAddress(resolvedAddress)}</p>
                   </div>
                 </div>
@@ -848,36 +870,59 @@ export default function QuestionClient({
         )}
       </AnimatePresence>
 
-      <div className="mb-4 flex h-[70lvh] w-full flex-row gap-2">
-        <Card variant="purple" className="h-full w-full">
-          <div className="space-y-6">
-            {/* Question */}
-            <div className="px-6 py-8 space-y-6">
-              <div>
-                <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
-                  {question.title}
-                </h1>
-                {question.description && (
-                  <p className="text-body-sm text-muted-foreground">{question.description}</p>
-                )}
-                {question.required && (
-                  <p className="mt-2 text-sm text-muted-foreground">* Pflichtfeld</p>
-                )}
+      <AnimatePresence
+        mode="wait"
+        onExitComplete={() => {
+          if (pendingPathRef.current) {
+            router.push(pendingPathRef.current)
+            pendingPathRef.current = null
+          }
+        }}
+      >
+        {!isExiting ? (
+          <motion.div
+            key={stepNumber}
+            initial={{ y: 48, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -80, opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.4, ease: [0.46, 0.03, 0.52, 0.96] }}
+          >
+            <Card variant="purple" className="h-[70lvh] mb-4 w-[calc(100vw-2rem-16px)]">
+              <div className="space-y-6">
+                {/* Question */}
+                <div className="px-6 py-8 space-y-6">
+                  <div>
+                    <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
+                      {question.title}
+                    </h1>
+                    {question.description && (
+                      <p className="text-body-sm text-muted-foreground">{question.description}</p>
+                    )}
+                    {question.required && (
+                      <p className="mt-2 text-sm text-muted-foreground">* Pflichtfeld</p>
+                    )}
+                  </div>
+
+                  <div>{renderQuestionInput()}</div>
+                </div>
               </div>
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div key="exiting" className="mb-4 h-[70lvh] w-full flex-shrink-0" aria-hidden />
+        )}
+      </AnimatePresence>
 
-              <div>{renderQuestionInput()}</div>
-            </div>
-          </div>
-        </Card>
-
-        <div className="flex h-full min-h-0 flex-shrink-0 flex-col py-2">
-          <PaginationSteps
-            currentStep={stepNumber}
-            totalSteps={totalSteps}
-            direction="vertical"
-            onStepClick={(step) => router.push(`/questionnaire/${questionnaireName}/${step}`)}
-          />
-        </div>
+      <div className="fixed right-2 top-20 flex h-[70lvh] min-h-0 flex-shrink-0 flex-col py-2">
+        <PaginationSteps
+          currentStep={stepNumber}
+          totalSteps={totalSteps}
+          direction="vertical"
+          onStepClick={(step) => {
+            pendingPathRef.current = `/questionnaire/${questionnaireName}/${step}`
+            setIsExiting(true)
+          }}
+        />
       </div>
 
       <QuestionnaireNav
