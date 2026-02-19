@@ -20,6 +20,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  overflow-x: hidden;
+}
+
 @layer base {
   h1,
   h2,
@@ -123,7 +127,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground min-h-[100vh] flex flex-col;
+    @apply bg-background text-foreground min-h-[100vh] flex flex-col hyphens-auto;
     font-family: var(--font-body);
   }
   
@@ -137,4 +141,45 @@
   [data-radix-select-item]:has(span:has(svg[class*="lucide-check"])) {
     @apply bg-primary/20 border-b-2 border-dashed border-primary;
   }
+
+  /* Raster background: horizontal & vertical dotted lines, 80px spacing */
+  .bg-raster-dotted {
+    --raster-size: 80px;
+    --raster-dot: 1px;
+    --raster-gap: 80px;
+    --raster-color: white;
+    background-image:
+      repeating-linear-gradient(
+        180deg,
+        var(--raster-color) 0,
+        var(--raster-color) var(--raster-dot),
+        transparent var(--raster-dot),
+        transparent var(--raster-gap)
+      ),
+      repeating-linear-gradient(
+        90deg,
+        var(--raster-color) 0,
+        var(--raster-color) var(--raster-dot),
+        transparent var(--raster-dot),
+        transparent var(--raster-gap)
+      );
+    background-size: var(--raster-size) var(--raster-size);
+  }
 }
+
+.background-grid {
+  --s: 80px;  /* control the size of the grid */
+  --n: 6;      /* control the granularity */
+  --t: 1px;    /* the thickness */
+  --g: 6px;   /* the gap between dashes */
+  
+  --c:#333335 25%,#0000 0;
+  background: 
+    conic-gradient(at var(--g) var(--t),var(--c))
+     calc((var(--s)/var(--n) - var(--g) + var(--t))/2) 0/
+     calc(var(--s)/var(--n)) var(--s),
+    conic-gradient(from 180deg at var(--t) var(--g),var(--c))
+     0 calc((var(--s)/var(--n) - var(--g) + var(--t))/2)/
+     var(--s) calc(var(--s)/var(--n));
+}
+  

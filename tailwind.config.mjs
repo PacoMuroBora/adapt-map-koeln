@@ -31,6 +31,7 @@ const config = {
     'text-h4',
     'text-h5',
     'text-h6',
+    'text-deco',
     'text-body',
     'text-body-lg',
     'text-body-sm',
@@ -161,6 +162,10 @@ const config = {
         h6: [
           'clamp(1.5rem, calc(1.5rem + (28 - 24) * (100vw - 320px) / 1120), 1.75rem)',
           { lineHeight: '120%', letterSpacing: '-0.00893em', fontWeight: 600 },
+        ],
+        deco: [
+          'clamp(3rem, calc(3rem + (64 - 42) * (100vw - 320px) / 1120), 5rem)',
+          { lineHeight: '105%', fontWeight: 600 },
         ],
         // Design system body: fixed sizes, lineHeight as %
         'body-lg': ['1.125rem', { lineHeight: '135%' }],

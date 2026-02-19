@@ -6,8 +6,8 @@ import { anyone } from '../../access/anyone'
 export const Questionnaires: CollectionConfig = {
   slug: 'questionnaires',
   admin: {
-    useAsTitle: 'version',
-    defaultColumns: ['version', 'isCurrent', 'status', 'createdAt'],
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'isCurrent', 'status', 'createdAt'],
   },
   access: {
     read: anyone,
@@ -17,14 +17,31 @@ export const Questionnaires: CollectionConfig = {
   },
   fields: [
     {
-      name: 'version',
+      name: 'name',
       type: 'text',
       required: true,
       unique: true,
       index: true,
       admin: {
-        description: 'Version identifier (e.g., "v1.0", "2024-01")',
+        description: 'Name identifier',
       },
+    },
+    {
+      name: 'overline',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      admin: {
+        description: 'Use for eg: "Teil 1", "Teil 2", etc.',
+      },
+    },
+    {
+      name: 'title',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
     },
     {
       name: 'isCurrent',

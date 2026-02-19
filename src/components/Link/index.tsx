@@ -45,7 +45,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   const href = hasSlug
     ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
     : isQuestionnaireRef
-      ? '/questionnaire/1'
+      ? `/questionnaire/${(refValue as { name?: string }).name ?? 'current'}`
       : url
 
   if (!href) return null

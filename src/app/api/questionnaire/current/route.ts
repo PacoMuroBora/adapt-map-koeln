@@ -52,7 +52,7 @@ export async function GET() {
 
     return NextResponse.json({
       id: questionnaire.id,
-      version: questionnaire.version,
+      name: questionnaire.name,
       questionCount: questions.length,
       questions: questions
         .map((q) => {

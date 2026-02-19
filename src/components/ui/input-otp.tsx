@@ -162,7 +162,7 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
         ref={ref}
         className={cn(
           'flex items-center justify-center gap-1',
-          variant === 'plz' && 'rounded-2xl bg-am-purple/25 p-4',
+          variant === 'plz' && 'rounded-2xl bg-am-purple/25',
           className,
         )}
         {...props}

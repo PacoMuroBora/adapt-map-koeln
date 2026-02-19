@@ -8,38 +8,30 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio'
 import { RadioCardGroup, RadioCardItem } from '@/components/ui/radio-card'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { InputOTP } from '@/components/ui/input-otp'
 import HeatIntensitySlider from '@/components/questionnaire/HeatIntensitySlider'
 import IconSelection from '@/components/questionnaire/IconSelection'
 import { AddressSearchInput } from '@/components/questionnaire/AddressSearchInput'
-import ProgressBar from '@/components/questionnaire/ProgressBar'
+import QuestionnaireNav from '@/components/questionnaire/QuestionnaireNav'
 import { LinkButton } from '@/components/ui/link-button'
 import { useSubmission } from '@/providers/Submission'
+import { useQuestionnaireNavigation } from '../../useQuestionnaireNavigation'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import React, { useEffect, useState } from 'react'
-import { STEP_QUESTIONNAIRE_START, TOTAL_STEPS } from '../constants'
 
-import type { Question } from '../questions'
+import type { Question } from '../../questions'
 import { Card } from '@/components/ui/card'
 import { Alert } from '@/components/ui/alert'
 
-import { X, Home, Building, Plus } from 'lucide-react'
+import { Home, Building, Plus, Target, TreePine } from 'lucide-react'
 import { isValidColognePlz } from '@/utilities/colognePlz'
+import PaginationSteps from '@/components/questionnaire/PaginationSteps'
 
 type QuestionClientProps = {
+  questionnaireName: string
   question: Question
   stepNumber: number
   totalSteps: number
@@ -52,6 +44,7 @@ type QuestionClientProps = {
 const STEPS_TO_SKIP_WHEN_GPS = ['plz', 'address'] as const
 
 export default function QuestionClient({
+  questionnaireName,
   question,
   stepNumber,
   totalSteps,
@@ -80,7 +73,6 @@ export default function QuestionClient({
   const [answer, setAnswer] = useState<any>(getInitialAnswer())
   const [error, setError] = useState<string | null>(null)
   const [isGpsLoading, setIsGpsLoading] = useState(false)
-  const [showAbortDialog, setShowAbortDialog] = useState(false)
   const [resolvedAddress, setResolvedAddress] = useState<{
     postal_code: string
     city: string | null
@@ -135,11 +127,19 @@ export default function QuestionClient({
       nextStep++
     }
     if (nextStep <= totalSteps) {
-      router.replace(`/questionnaire/${nextStep}`)
+      router.replace(`/questionnaire/${questionnaireName}/${nextStep}`)
     } else {
       router.replace('/feedback')
     }
-  }, [question.type, stepNumber, totalSteps, questionTypes, state.location?.postal_code, router])
+  }, [
+    questionnaireName,
+    question.type,
+    stepNumber,
+    totalSteps,
+    questionTypes,
+    state.location?.postal_code,
+    router,
+  ])
 
   // Initialize slider with default value if required and not set
   useEffect(() => {
@@ -153,9 +153,6 @@ export default function QuestionClient({
       setAnswer(min)
     }
   }, [question.type, question.required, question.sliderConfig])
-
-  // Calculate actual step number in overall flow (questionnaire starts at STEP_QUESTIONNAIRE_START)
-  const actualStepNumber = STEP_QUESTIONNAIRE_START + stepNumber - 1
 
   const isWeiterDisabled = (): boolean => {
     if (question.type === 'location_GPS') return !resolvedAddress
@@ -256,79 +253,25 @@ export default function QuestionClient({
     return true
   }
 
-  const handleNext = () => {
-    if (!validateAnswer()) {
-      return
-    }
-
-    // Save answers
-    if (question.type === 'group' && question.groupFields) {
-      // Save each sub-question answer individually
-      question.groupFields.forEach((subQ) => {
-        updateAnswer(subQ.key, answer[subQ.key])
-      })
-    } else {
-      updateAnswer(question.key, answer)
-    }
-
-    updateCurrentStep('questionnaire')
-
-    let nextStep = stepNumber + 1
-    if (question.type === 'location_GPS' && state.location?.postal_code) {
-      while (
-        nextStep <= totalSteps &&
-        STEPS_TO_SKIP_WHEN_GPS.includes(
-          questionTypes[nextStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
-        )
-      ) {
-        nextStep++
-      }
-    }
-
-    if (nextStep <= totalSteps) {
-      router.push(`/questionnaire/${nextStep}`)
-    } else {
-      router.push('/feedback')
-    }
-  }
-
-  const handlePrevious = () => {
-    // Save answers before going back
-    if (question.type === 'group' && question.groupFields) {
-      question.groupFields.forEach((subQ) => {
-        updateAnswer(subQ.key, answer[subQ.key])
-      })
-    } else {
-      updateAnswer(question.key, answer)
-    }
-
-    let prevStep = stepNumber - 1
-    if (state.location?.postal_code) {
-      while (
-        prevStep >= 1 &&
-        STEPS_TO_SKIP_WHEN_GPS.includes(
-          questionTypes[prevStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
-        )
-      ) {
-        prevStep--
-      }
-    }
-
-    if (prevStep >= 1) {
-      router.push(`/questionnaire/${prevStep}`)
-    } else {
-      router.push('/personal')
-    }
-  }
-
-  const handleAbortQuestionnaire = () => {
-    setShowAbortDialog(true)
-  }
-
-  const handleConfirmAbort = () => {
-    setShowAbortDialog(false)
-    router.push('/')
-  }
+  const {
+    handleNext,
+    handlePrevious,
+    handleAbortQuestionnaire,
+    handleConfirmAbort,
+    showAbortDialog,
+    setShowAbortDialog,
+  } = useQuestionnaireNavigation(questionnaireName, {
+    mode: 'step',
+    stepNumber,
+    totalSteps,
+    questionTypes,
+    question,
+    answer,
+    state,
+    updateAnswer,
+    updateCurrentStep,
+    validateAnswer,
+  })
 
   const handleGPSLocation = async () => {
     setIsGpsLoading(true)
@@ -501,7 +444,7 @@ export default function QuestionClient({
     updateLocation({ lat: 0, lng: 0, postal_code: null, city: null })
     updateCurrentStep('questionnaire')
     if (stepNumber < totalSteps) {
-      router.push(`/questionnaire/${stepNumber + 1}`)
+      router.push(`/questionnaire/${questionnaireName}/${stepNumber + 1}`)
     } else {
       router.push('/feedback')
     }
@@ -534,7 +477,7 @@ export default function QuestionClient({
                 </Button>
               </div>
               <LinkButton
-                href={`/questionnaire/${stepNumber + 1}`}
+                href={`/questionnaire/${questionnaireName}/${stepNumber + 1}`}
                 onClick={(e) => {
                   e.preventDefault()
                   handleManualAddress()
@@ -572,7 +515,7 @@ export default function QuestionClient({
             </Button>
             <div className="flex justify-center">
               <LinkButton
-                href={`/questionnaire/${stepNumber + 1}`}
+                href={`/questionnaire/${questionnaireName}/${stepNumber + 1}`}
                 onClick={(e) => {
                   e.preventDefault()
                   handleManualAddress()
@@ -606,7 +549,6 @@ export default function QuestionClient({
             variant="plz"
             placeholderChar="0"
             shape="round"
-            size="large"
           />
         )
 
@@ -662,6 +604,10 @@ export default function QuestionClient({
                   <Home className="h-5 w-5" />
                 ) : text.includes('wohnung') || text.includes('apartment') ? (
                   <Building className="h-5 w-5" />
+                ) : text.includes('citycenter') ? (
+                  <Target className="h-5 w-5" />
+                ) : text.includes('outskirts') ? (
+                  <TreePine className="h-5 w-5" />
                 ) : (
                   <Plus className="h-5 w-5" />
                 )
@@ -901,70 +847,50 @@ export default function QuestionClient({
           </motion.div>
         )}
       </AnimatePresence>
-      <Card variant="purple" className="h-[70lvh]">
-        <div className="space-y-6">
-          {/* Progress bar */}
-          {/* <ProgressBar currentStep={actualStepNumber} totalSteps={TOTAL_STEPS} /> */}
 
-          {/* Question */}
-          <div className="px-6 py-8 space-y-6">
-            <div>
-              <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
-                {question.title}
-              </h1>
-              {question.description && (
-                <p className="text-body-sm text-muted-foreground">{question.description}</p>
-              )}
-              {question.required && (
-                <p className="mt-2 text-sm text-muted-foreground">* Pflichtfeld</p>
-              )}
+      <div className="mb-4 flex h-[70lvh] w-full flex-row gap-2">
+        <Card variant="purple" className="h-full w-full">
+          <div className="space-y-6">
+            {/* Question */}
+            <div className="px-6 py-8 space-y-6">
+              <div>
+                <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
+                  {question.title}
+                </h1>
+                {question.description && (
+                  <p className="text-body-sm text-muted-foreground">{question.description}</p>
+                )}
+                {question.required && (
+                  <p className="mt-2 text-sm text-muted-foreground">* Pflichtfeld</p>
+                )}
+              </div>
+
+              <div>{renderQuestionInput()}</div>
             </div>
-
-            <div>{renderQuestionInput()}</div>
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Navigation */}
-      <button onClick={handleAbortQuestionnaire} className="fixed top-4 right-4 z-20">
-        <X className="size-5 text-white" />
-      </button>
-      <div className="relative flex flex-row items-center gap-4 h-14 mt-4">
-        <Button
-          type="button"
-          variant="outline-white"
-          onClick={handlePrevious}
-          iconBefore="arrow-up"
-        />
-        <Button
-          type="button"
-          size="lg"
-          shape="round"
-          variant="white"
-          iconAfter={stepNumber < totalSteps ? 'arrow-down' : 'check'}
-          onClick={handleNext}
-          disabled={isWeiterDisabled()}
-          className={cn('absolute left-1/2 -translate-x-1/2', isWeiterDisabled() && 'opacity-20')}
-        >
-          {stepNumber === totalSteps ? 'Weiter' : nextButtonText}
-        </Button>
+        <div className="flex h-full min-h-0 flex-shrink-0 flex-col py-2">
+          <PaginationSteps
+            currentStep={stepNumber}
+            totalSteps={totalSteps}
+            direction="vertical"
+            onStepClick={(step) => router.push(`/questionnaire/${questionnaireName}/${step}`)}
+          />
+        </div>
       </div>
 
-      {/* Abort confirmation dialog */}
-      <AlertDialog open={showAbortDialog} onOpenChange={setShowAbortDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Abbrechen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bist du sicher, dass du abbrechen möchtest? Deine Angaben werden verloren gehen.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={handleConfirmAbort}>Abbrechen</AlertDialogAction>
-            <AlertDialogCancel>Weiter bearbeiten</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <QuestionnaireNav
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        nextLabel={stepNumber === totalSteps ? 'Weiter' : nextButtonText}
+        nextDisabled={isWeiterDisabled()}
+        nextIcon={stepNumber < totalSteps ? 'arrow-down' : 'check'}
+        onAbort={handleAbortQuestionnaire}
+        showAbortDialog={showAbortDialog}
+        setShowAbortDialog={setShowAbortDialog}
+        onConfirmAbort={handleConfirmAbort}
+      />
     </div>
   )
 }

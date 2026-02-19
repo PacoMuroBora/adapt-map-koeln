@@ -35,7 +35,7 @@ export default function PersonalPage() {
     })
 
     updateCurrentStep('questionnaire')
-    router.push('/questionnaire/1')
+    router.push('/questionnaire/current')
   }
 
   return (

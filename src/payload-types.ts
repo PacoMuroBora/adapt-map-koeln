@@ -462,9 +462,14 @@ export interface User {
 export interface Questionnaire {
   id: string;
   /**
-   * Version identifier (e.g., "v1.0", "2024-01")
+   * Name identifier
    */
-  version: string;
+  name: string;
+  /**
+   * Use for eg: "Teil 1", "Teil 2", etc.
+   */
+  overline: string;
+  title: string;
   /**
    * Mark this as the current active questionnaire
    */
@@ -1974,7 +1979,9 @@ export interface QuestionsSelect<T extends boolean = true> {
  * via the `definition` "questionnaires_select".
  */
 export interface QuestionnairesSelect<T extends boolean = true> {
-  version?: T;
+  name?: T;
+  overline?: T;
+  title?: T;
   isCurrent?: T;
   questions?: T;
   status?: T;

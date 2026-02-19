@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 
 import { cn } from '@/utilities/ui'
 import React from 'react'
@@ -14,6 +14,13 @@ import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 
 import { GeistMono } from 'geist/font/mono'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const siteSettings = (await getCachedGlobal('site-settings', 1)()) as SiteSetting

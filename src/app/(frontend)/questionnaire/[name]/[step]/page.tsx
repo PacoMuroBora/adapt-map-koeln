@@ -1,8 +1,8 @@
 import { getPayloadClient } from '@/lib/payload'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import QuestionClient from './QuestionClient'
-import { mapPayloadQuestionToFrontend } from '../mapQuestion'
+import { mapPayloadQuestionToFrontend } from '../../mapQuestion'
 
 import type { Question as PayloadQuestion, UiCopy } from '@/payload-types'
 
@@ -10,12 +10,13 @@ export const revalidate = 600
 
 type Args = {
   params: Promise<{
+    name: string
     step: string
   }>
 }
 
 export default async function QuestionPage({ params: paramsPromise }: Args) {
-  const { step } = await paramsPromise
+  const { name: nameParam, step } = await paramsPromise
   const stepNumber = parseInt(step, 10)
 
   if (isNaN(stepNumber) || stepNumber < 1) {
@@ -25,13 +26,21 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
     collection: 'questionnaires',
-    where: { isCurrent: { equals: true } },
+    where:
+      nameParam === 'current'
+        ? { isCurrent: { equals: true } }
+        : { name: { equals: nameParam } },
     limit: 1,
     depth: 1,
   })
   const questionnaire = docs[0]
   if (!questionnaire?.questions?.length) {
     notFound()
+  }
+
+  const questionnaireName = questionnaire.name ?? nameParam
+  if (nameParam === 'current' && questionnaireName !== 'current') {
+    redirect(`/questionnaire/${questionnaireName}/${step}`)
   }
 
   const rawQuestions = questionnaire.questions.filter(
@@ -55,6 +64,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
 
   return (
     <QuestionClient
+      questionnaireName={questionnaireName}
       question={currentQuestion}
       stepNumber={stepNumber}
       totalSteps={totalSteps}
