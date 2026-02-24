@@ -17,12 +17,22 @@ export interface AddressSuggestion {
 }
 
 export interface AddressSearchInputProps {
-  value: { street: string; postal_code?: string }
-  onChange: (value: { street: string; postal_code?: string }) => void
+  value: {
+    street?: string
+    housenumber?: string
+    postal_code?: string
+    city?: string
+  }
+  onChange: (value: {
+    street?: string
+    housenumber?: string
+    postal_code?: string
+    city?: string
+  }) => void
   onError?: (error: string | null) => void
   placeholder?: string
   disabled?: boolean
-  /** PLZ to filter suggestions to addresses within Cologne (e.g. from previous step) */
+  /** PLZ to filter suggestions (e.g. from previous PLZ question or GPS) */
   postalCode?: string | null
 }
 
@@ -40,7 +50,7 @@ export function AddressSearchInput({
   disabled = false,
   postalCode,
 }: AddressSearchInputProps) {
-  const [query, setQuery] = useState(value.street || '')
+  const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -230,14 +240,6 @@ export function AddressSearchInput({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    if (justSelectedRef.current) {
-      justSelectedRef.current = false
-      return
-    }
-    setQuery(value.street || '')
-  }, [value.street])
-
   const handleSelect = (suggestion: AddressSuggestion, e?: React.MouseEvent) => {
     e?.preventDefault()
     const displayValue =
@@ -246,19 +248,16 @@ export function AddressSearchInput({
     const hasHouseNumber = Boolean(suggestion.housenumber?.trim())
 
     justSelectedRef.current = true
-    setQuery(displayValue)
+    setQuery('')
     onChange({
-      street: displayValue,
+      street: suggestion.street?.trim() || suggestion.name || displayValue,
+      housenumber: suggestion.housenumber || undefined,
       postal_code: suggestion.postcode || undefined,
+      city: suggestion.city || undefined,
     })
 
-    if (hasHouseNumber) {
-      setShowSuggestions(false)
-      setHouseNumberMode(null)
-    } else {
-      setHouseNumberMode(suggestion.street?.trim() || displayValue)
-      setShowSuggestions(true)
-    }
+    setShowSuggestions(false)
+    setHouseNumberMode(null)
     onError?.(null)
   }
 
@@ -273,20 +272,16 @@ export function AddressSearchInput({
         <div className="relative">
           <input
             type="text"
+            autoComplete="off"
             value={query}
             onChange={(e) => {
               const v = e.target.value
               setQuery(v)
-              // Only clear houseNumberMode when user changes the street part (not when appending digits)
               if (houseNumberMode && !v.startsWith(houseNumberMode)) {
                 setHouseNumberMode(null)
               }
               setShowSuggestions(true)
               onError?.(null)
-              onChange({
-                street: v,
-                postal_code: v ? value.postal_code : undefined,
-              })
             }}
             onFocus={() => {
               if (suggestions.length > 0) setShowSuggestions(true)

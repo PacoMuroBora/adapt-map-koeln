@@ -466,18 +466,83 @@ export interface Questionnaire {
    */
   name: string;
   /**
-   * Use for eg: "Teil 1", "Teil 2", etc.
-   */
-  overline: string;
-  title: string;
-  /**
    * Mark this as the current active questionnaire
    */
   isCurrent?: boolean | null;
   /**
-   * Select questions for this questionnaire
+   * Title for the welcome instruction screen
    */
-  questions: (string | Question)[];
+  instructionTitle?: string | null;
+  /**
+   * Numbered list items on the welcome instruction screen
+   */
+  instructionItems?:
+    | {
+        item: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Sections (each has a cover and steps with questions).
+   */
+  sections?:
+    | {
+        /**
+         * Section title (cover and heading)
+         */
+        sectionTitle: string;
+        /**
+         * Section subtitle
+         */
+        sectionSubtitle?: string | null;
+        /**
+         * Hex color for section card shape and progress bar (e.g. #6366f1)
+         */
+        colorCardProgress?: string | null;
+        /**
+         * Hex color for card background (e.g. #e0e7ff)
+         */
+        colorCardBg?: string | null;
+        /**
+         * Steps in this section
+         */
+        steps: {
+          /**
+           * Step card title
+           */
+          stepTitle?: string | null;
+          /**
+           * Questions in this step
+           */
+          questions: (string | Question)[];
+          id?: string | null;
+        }[];
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Deprecated: used for legacy welcome. Use instructionTitle + sections instead.
+   */
+  overline?: string | null;
+  /**
+   * Deprecated: use instructionTitle + sections instead.
+   */
+  title?: string | null;
+  /**
+   * Deprecated: use sections[].steps instead. Kept for migration.
+   */
+  steps?:
+    | {
+        stepTitle?: string | null;
+        stepDescription?: string | null;
+        questions: (string | Question)[];
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Deprecated: use sections[].steps[].questions instead. Kept for migration.
+   */
+  questions?: (string | Question)[] | null;
   status: 'draft' | 'active' | 'archived';
   updatedAt: string;
   createdAt: string;
@@ -503,7 +568,21 @@ export interface Question {
   /**
    * Type of question input
    */
-  type: 'singleChoice' | 'multiChoice' | 'slider' | 'address' | 'plz' | 'location_GPS' | 'iconSelection' | 'group';
+  type:
+    | 'singleChoice'
+    | 'multiChoice'
+    | 'dropdown'
+    | 'slider'
+    | 'sliderHorizontalRange'
+    | 'sliderVertical'
+    | 'number'
+    | 'address'
+    | 'plz'
+    | 'location_GPS'
+    | 'iconSelection'
+    | 'group'
+    | 'textarea'
+    | 'consent';
   /**
    * Available options for choice/dropdown questions
    */
@@ -519,6 +598,53 @@ export interface Question {
       }[]
     | null;
   /**
+   * Configuration for number questions
+   */
+  numberConfig?: {
+    /**
+     * Minimum value
+     */
+    min?: number | null;
+    /**
+     * Maximum value
+     */
+    max?: number | null;
+    /**
+     * Placeholder text
+     */
+    placeholder?: string | null;
+    /**
+     * Unit label (e.g. "Jahre", "Personen")
+     */
+    unit?: string | null;
+  };
+  /**
+   * Configuration for textarea questions
+   */
+  textareaConfig?: {
+    /**
+     * Max character count
+     */
+    maxLength?: number | null;
+    /**
+     * Visible rows
+     */
+    rows?: number | null;
+  };
+  /**
+   * Configuration for consent checkbox
+   */
+  consentConfig?: {
+    /**
+     * Legal text shown next to the checkbox
+     */
+    consentText: string;
+    /**
+     * Version identifier for this consent
+     */
+    consentVersion?: string | null;
+  };
+  /**
    * Configuration for slider questions
    */
   sliderConfig?: {
@@ -529,6 +655,22 @@ export interface Question {
      * Unit label (e.g., "°C", "%")
      */
     unit?: string | null;
+  };
+  /**
+   * Configuration for vertical slider (top/bottom labels, no units)
+   */
+  sliderVerticalConfig?: {
+    min: number;
+    max: number;
+    step: number;
+    /**
+     * Label above the slider (e.g. "viel zu heiß")
+     */
+    labelTop: string;
+    /**
+     * Label below the slider (e.g. "angenehm")
+     */
+    labelBottom: string;
   };
   /**
    * Whether this question must be answered
@@ -1118,6 +1260,18 @@ export interface Submission {
    * Free text input from user
    */
   user_text?: string | null;
+  /**
+   * Answers that do not map to specific submission fields (question key -> value)
+   */
+  dynamicAnswers?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * AI-generated recommendations
    */
@@ -1936,6 +2090,26 @@ export interface QuestionsSelect<T extends boolean = true> {
         score?: T;
         id?: T;
       };
+  numberConfig?:
+    | T
+    | {
+        min?: T;
+        max?: T;
+        placeholder?: T;
+        unit?: T;
+      };
+  textareaConfig?:
+    | T
+    | {
+        maxLength?: T;
+        rows?: T;
+      };
+  consentConfig?:
+    | T
+    | {
+        consentText?: T;
+        consentVersion?: T;
+      };
   sliderConfig?:
     | T
     | {
@@ -1943,6 +2117,15 @@ export interface QuestionsSelect<T extends boolean = true> {
         max?: T;
         step?: T;
         unit?: T;
+      };
+  sliderVerticalConfig?:
+    | T
+    | {
+        min?: T;
+        max?: T;
+        step?: T;
+        labelTop?: T;
+        labelBottom?: T;
       };
   required?: T;
   category?: T;
@@ -1980,9 +2163,40 @@ export interface QuestionsSelect<T extends boolean = true> {
  */
 export interface QuestionnairesSelect<T extends boolean = true> {
   name?: T;
+  isCurrent?: T;
+  instructionTitle?: T;
+  instructionItems?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  sections?:
+    | T
+    | {
+        sectionTitle?: T;
+        sectionSubtitle?: T;
+        colorCardProgress?: T;
+        colorCardBg?: T;
+        steps?:
+          | T
+          | {
+              stepTitle?: T;
+              questions?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   overline?: T;
   title?: T;
-  isCurrent?: T;
+  steps?:
+    | T
+    | {
+        stepTitle?: T;
+        stepDescription?: T;
+        questions?: T;
+        id?: T;
+      };
   questions?: T;
   status?: T;
   updatedAt?: T;
@@ -2040,6 +2254,7 @@ export interface SubmissionsSelect<T extends boolean = true> {
   problem_index?: T;
   sub_scores?: T;
   user_text?: T;
+  dynamicAnswers?: T;
   aiFields?:
     | T
     | {

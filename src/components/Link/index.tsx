@@ -5,7 +5,7 @@ import type { LinkIconOption } from '@/fields/link'
 import type { Page, Post, Questionnaire } from '@/payload-types'
 
 type CMSLinkType = {
-  appearance?: ButtonProps['variant']
+  appearance?: ButtonProps['variant'] | null
   className?: string
   iconAfter?: LinkIconOption | '' | null
   iconBefore?: LinkIconOption | '' | null
@@ -58,8 +58,8 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
       iconBefore={iconBefore != null && iconBefore !== '' ? iconBefore : undefined}
       newTab={newTab ?? false}
       shape="round"
-      size={size}
-      variant={appearance}
+      size={size ?? undefined}
+      variant={appearance ?? 'default'}
     >
       {label}
     </Button>

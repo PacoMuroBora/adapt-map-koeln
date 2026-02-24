@@ -27,23 +27,6 @@ export const Questionnaires: CollectionConfig = {
       },
     },
     {
-      name: 'overline',
-      type: 'text',
-      required: true,
-      unique: true,
-      index: true,
-      admin: {
-        description: 'Use for eg: "Teil 1", "Teil 2", etc.',
-      },
-    },
-    {
-      name: 'title',
-      type: 'text',
-      required: true,
-      unique: true,
-      index: true,
-    },
-    {
       name: 'isCurrent',
       type: 'checkbox',
       defaultValue: false,
@@ -52,13 +35,129 @@ export const Questionnaires: CollectionConfig = {
       },
     },
     {
+      name: 'instructionTitle',
+      type: 'text',
+      required: false,
+      admin: {
+        description: 'Title for the welcome instruction screen',
+      },
+    },
+    {
+      name: 'instructionItems',
+      type: 'array',
+      required: false,
+      admin: {
+        description: 'Numbered list items on the welcome instruction screen',
+      },
+      fields: [
+        {
+          name: 'item',
+          type: 'text',
+          required: true,
+        },
+      ],
+    },
+    {
+      name: 'sections',
+      type: 'array',
+      required: false,
+      admin: {
+        description: 'Sections (each has a cover and steps with questions).',
+      },
+      fields: [
+        {
+          name: 'sectionTitle',
+          type: 'text',
+          required: true,
+          admin: { description: 'Section title (cover and heading)' },
+        },
+        {
+          name: 'sectionSubtitle',
+          type: 'text',
+          required: false,
+          admin: { description: 'Section subtitle' },
+        },
+        {
+          name: 'colorCardProgress',
+          type: 'text',
+          required: false,
+          admin: {
+            description: 'Hex color for section card shape and progress bar (e.g. #6366f1)',
+          },
+        },
+        {
+          name: 'colorCardBg',
+          type: 'text',
+          required: false,
+          admin: {
+            description: 'Hex color for card background (e.g. #e0e7ff)',
+          },
+        },
+        {
+          name: 'steps',
+          type: 'array',
+          required: true,
+          admin: { description: 'Steps in this section' },
+          fields: [
+            {
+              name: 'stepTitle',
+              type: 'text',
+              required: false,
+              admin: { description: 'Step card title' },
+            },
+            {
+              name: 'questions',
+              type: 'relationship',
+              relationTo: 'questions',
+              hasMany: true,
+              required: true,
+              admin: { description: 'Questions in this step' },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'overline',
+      type: 'text',
+      required: false,
+      admin: {
+        description: 'Deprecated: used for legacy welcome. Use instructionTitle + sections instead.',
+      },
+    },
+    {
+      name: 'title',
+      type: 'text',
+      required: false,
+      admin: { description: 'Deprecated: use instructionTitle + sections instead.' },
+    },
+    {
+      name: 'steps',
+      type: 'array',
+      required: false,
+      admin: {
+        description: 'Deprecated: use sections[].steps instead. Kept for migration.',
+      },
+      fields: [
+        { name: 'stepTitle', type: 'text' },
+        { name: 'stepDescription', type: 'textarea' },
+        {
+          name: 'questions',
+          type: 'relationship',
+          relationTo: 'questions',
+          hasMany: true,
+          required: true,
+        },
+      ],
+    },
+    {
       name: 'questions',
       type: 'relationship',
       relationTo: 'questions',
       hasMany: true,
-      required: true,
+      required: false,
       admin: {
-        description: 'Select questions for this questionnaire',
+        description: 'Deprecated: use sections[].steps[].questions instead. Kept for migration.',
       },
     },
     {
@@ -76,25 +175,19 @@ export const Questionnaires: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, req, operation, originalDoc }) => {
-        // If setting isCurrent to true, unset all other questionnaires
         if (data && data.isCurrent === true) {
-          const whereClause: any = {
-            isCurrent: { equals: true },
-          }
-
-          // Only exclude current document on update
-          if (operation === 'update' && originalDoc?.id) {
-            whereClause.id = { not_equals: originalDoc.id }
-          }
-
           const existing = await req.payload.find({
             collection: 'questionnaires',
-            where: whereClause,
+            where: {
+              isCurrent: { equals: true },
+              ...(operation === 'update' && originalDoc?.id
+                ? { id: { not_equals: originalDoc.id } }
+                : {}),
+            },
             limit: 100,
             overrideAccess: false,
             req,
           })
-
           if (existing.docs.length > 0) {
             await Promise.all(
               existing.docs.map((doc) =>

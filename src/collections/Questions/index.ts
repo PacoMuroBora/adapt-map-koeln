@@ -49,12 +49,18 @@ export const Questions: CollectionConfig = {
       options: [
         { label: 'Single Choice', value: 'singleChoice' },
         { label: 'Multiple Choice', value: 'multiChoice' },
+        { label: 'Dropdown', value: 'dropdown' },
         { label: 'Slider', value: 'slider' },
+        { label: 'Slider (horizontal range)', value: 'sliderHorizontalRange' },
+        { label: 'Slider (vertical)', value: 'sliderVertical' },
+        { label: 'Number', value: 'number' },
         { label: 'Address', value: 'address' },
         { label: 'PLZ', value: 'plz' },
         { label: 'Location_GPS', value: 'location_GPS' },
         { label: 'Icon Selection', value: 'iconSelection' },
         { label: 'Group', value: 'group' },
+        { label: 'Textarea', value: 'textarea' },
+        { label: 'Consent', value: 'consent' },
       ],
       admin: {
         description: 'Type of question input',
@@ -89,10 +95,83 @@ export const Questions: CollectionConfig = {
       ],
     },
     {
+      name: 'numberConfig',
+      type: 'group',
+      admin: {
+        condition: (data) => data.type === 'number',
+        description: 'Configuration for number questions',
+      },
+      fields: [
+        {
+          name: 'min',
+          type: 'number',
+          admin: { description: 'Minimum value' },
+        },
+        {
+          name: 'max',
+          type: 'number',
+          admin: { description: 'Maximum value' },
+        },
+        {
+          name: 'placeholder',
+          type: 'text',
+          admin: { description: 'Placeholder text' },
+        },
+        {
+          name: 'unit',
+          type: 'text',
+          admin: { description: 'Unit label (e.g. "Jahre", "Personen")' },
+        },
+      ],
+    },
+    {
+      name: 'textareaConfig',
+      type: 'group',
+      admin: {
+        condition: (data) => data.type === 'textarea',
+        description: 'Configuration for textarea questions',
+      },
+      fields: [
+        {
+          name: 'maxLength',
+          type: 'number',
+          defaultValue: 2000,
+          admin: { description: 'Max character count' },
+        },
+        {
+          name: 'rows',
+          type: 'number',
+          defaultValue: 4,
+          admin: { description: 'Visible rows' },
+        },
+      ],
+    },
+    {
+      name: 'consentConfig',
+      type: 'group',
+      admin: {
+        condition: (data) => data.type === 'consent',
+        description: 'Configuration for consent checkbox',
+      },
+      fields: [
+        {
+          name: 'consentText',
+          type: 'textarea',
+          required: true,
+          admin: { description: 'Legal text shown next to the checkbox' },
+        },
+        {
+          name: 'consentVersion',
+          type: 'text',
+          admin: { description: 'Version identifier for this consent' },
+        },
+      ],
+    },
+    {
       name: 'sliderConfig',
       type: 'group',
       admin: {
-        condition: (data) => data.type === 'slider',
+        condition: (data) => data.type === 'slider' || data.type === 'sliderHorizontalRange',
         description: 'Configuration for slider questions',
       },
       fields: [
@@ -120,6 +199,31 @@ export const Questions: CollectionConfig = {
           admin: {
             description: 'Unit label (e.g., "°C", "%")',
           },
+        },
+      ],
+    },
+    {
+      name: 'sliderVerticalConfig',
+      type: 'group',
+      admin: {
+        condition: (data) => data.type === 'sliderVertical',
+        description: 'Configuration for vertical slider (top/bottom labels, no units)',
+      },
+      fields: [
+        { name: 'min', type: 'number', required: true, defaultValue: 0 },
+        { name: 'max', type: 'number', required: true, defaultValue: 10 },
+        { name: 'step', type: 'number', required: true, defaultValue: 1 },
+        {
+          name: 'labelTop',
+          type: 'text',
+          required: true,
+          admin: { description: 'Label above the slider (e.g. "viel zu heiß")' },
+        },
+        {
+          name: 'labelBottom',
+          type: 'text',
+          required: true,
+          admin: { description: 'Label below the slider (e.g. "angenehm")' },
         },
       ],
     },
@@ -225,7 +329,8 @@ export const Questions: CollectionConfig = {
           name: 'sliderMapping',
           type: 'group',
           admin: {
-            condition: (data, siblingData) => siblingData.type === 'slider',
+            condition: (data, siblingData) =>
+              siblingData.type === 'slider' || siblingData.type === 'sliderHorizontalRange',
             description: 'How to map slider values to scores',
           },
           fields: [

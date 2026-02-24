@@ -276,6 +276,13 @@ export const Submissions: CollectionConfig = {
       },
     },
     {
+      name: 'dynamicAnswers',
+      type: 'json',
+      admin: {
+        description: 'Answers that do not map to specific submission fields (question key -> value)',
+      },
+    },
+    {
       name: 'aiFields',
       type: 'group',
       admin: {

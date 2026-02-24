@@ -22,15 +22,7 @@ export interface ConsentData {
 
 export interface SubmissionState {
   // Current step in the journey
-  currentStep:
-    | 'landing'
-    | 'consent'
-    | 'location'
-    | 'personal'
-    | 'questionnaire'
-    | 'feedback'
-    | 'results'
-    | null
+  currentStep: 'questionnaire' | 'results' | null
 
   // Consent data
   consent: ConsentData | null
@@ -83,7 +75,7 @@ export interface SubmissionContextType {
 }
 
 export const initialSubmissionState: SubmissionState = {
-  currentStep: 'landing',
+  currentStep: null,
   consent: null,
   location: null,
   personalFields: {},

@@ -1,8 +1,6 @@
 'use client'
 
-import React, { createContext, use, useCallback, useEffect, useState } from 'react'
-
-import canUseDOM from '@/utilities/canUseDOM'
+import React, { createContext, use, useCallback, useState } from 'react'
 
 import type {
   ConsentData,
@@ -30,50 +28,8 @@ const initialContext: SubmissionContextType = {
 
 const SubmissionContext = createContext(initialContext)
 
-const STORAGE_KEY = 'adaptmap-submission-state'
-
 export const SubmissionProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<SubmissionState>(initialSubmissionState)
-
-  // Load state from localStorage on mount
-  useEffect(() => {
-    if (!canUseDOM) return
-
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        // Only restore if it's recent (within 24 hours)
-        const storedTime = parsed._timestamp
-        if (storedTime && Date.now() - storedTime < 24 * 60 * 60 * 1000) {
-          // Remove the timestamp before setting state
-          const { _timestamp, ...restoredState } = parsed
-          // Merge with initial state to ensure defaults (like questionnaireVersion) are set
-          setState({ ...initialSubmissionState, ...restoredState })
-        } else {
-          // Clear old state
-          localStorage.removeItem(STORAGE_KEY)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load submission state from localStorage:', error)
-    }
-  }, [])
-
-  // Save state to localStorage whenever it changes
-  useEffect(() => {
-    if (!canUseDOM) return
-
-    try {
-      const stateToStore = {
-        ...state,
-        _timestamp: Date.now(),
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToStore))
-    } catch (error) {
-      console.error('Failed to save submission state to localStorage:', error)
-    }
-  }, [state])
 
   const updateConsent = useCallback((consent: ConsentData) => {
     setState((prev) => ({ ...prev, consent }))
@@ -142,9 +98,6 @@ export const SubmissionProvider = ({ children }: { children: React.ReactNode }) 
 
   const reset = useCallback(() => {
     setState(initialSubmissionState)
-    if (canUseDOM) {
-      localStorage.removeItem(STORAGE_KEY)
-    }
   }, [])
 
   const contextValue: SubmissionContextType = {

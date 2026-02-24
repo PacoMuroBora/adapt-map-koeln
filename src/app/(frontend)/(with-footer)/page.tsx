@@ -39,7 +39,7 @@ export default async function LandingPage() {
             <p className="mb-8 text-lg text-muted-foreground sm:text-xl md:mb-12">{description}</p>
           )}
           <Button
-            href="/location"
+            href="/questionnaire/current"
             iconAfter={null}
             iconBefore={null}
             newTab={false}

@@ -21,12 +21,16 @@ export type QuestionnaireNavProps = {
   nextLabel: string
   nextDisabled?: boolean
   nextIcon?: 'arrow-down' | 'check'
+  /** Variant for the next/primary CTA. Use 'default' for green (e.g. welcome "FRAGEBOGEN STARTEN"). */
+  nextButtonVariant?: 'white' | 'default'
   onAbort: () => void
   showAbortDialog: boolean
   setShowAbortDialog: (open: boolean) => void
   onConfirmAbort: () => void
   /** When true, the previous button is hidden (e.g. on start page). */
   isFirstPage?: boolean
+  /** When true, the next/primary CTA is hidden (e.g. when CTA is inlined in content). */
+  hideNextButton?: boolean
 }
 
 export default function QuestionnaireNav({
@@ -35,11 +39,13 @@ export default function QuestionnaireNav({
   nextLabel,
   nextDisabled = false,
   nextIcon = 'arrow-down',
+  nextButtonVariant = 'white',
   onAbort,
   showAbortDialog,
   setShowAbortDialog,
   onConfirmAbort,
   isFirstPage = false,
+  hideNextButton = false,
 }: QuestionnaireNavProps) {
   const [prevButtonMounted, setPrevButtonMounted] = useState(false)
   useEffect(() => {
@@ -55,7 +61,8 @@ export default function QuestionnaireNav({
         <X className="size-5 text-white" />
       </button>
 
-      <div className="relative flex h-14 flex-row items-center gap-4">
+      <div className="fixed bottom-8 left-0 right-0 z-10 flex h-20 flex-row items-center justify-center px-4">
+        <div className="relative flex h-14 w-full max-w-2xl flex-row items-center gap-4">
         {!isFirstPage && (
           <div
             className={cn(
@@ -66,18 +73,21 @@ export default function QuestionnaireNav({
             <Button type="button" variant="outline-white" onClick={onPrevious} iconBefore="arrow-up" />
           </div>
         )}
-        <Button
-          type="button"
-          size="lg"
-          shape="round"
-          variant="white"
-          iconAfter={nextIcon}
-          onClick={onNext}
-          disabled={nextDisabled}
-          className={cn('absolute left-1/2 -translate-x-1/2', nextDisabled && 'opacity-20')}
-        >
-          {nextLabel}
-        </Button>
+        {!hideNextButton && (
+          <Button
+            type="button"
+            size="lg"
+            shape="round"
+            variant={nextButtonVariant}
+            iconAfter={nextIcon}
+            onClick={onNext}
+            disabled={nextDisabled}
+            className={cn('absolute left-1/2 -translate-x-1/2', nextDisabled && 'opacity-20')}
+          >
+            {nextLabel}
+          </Button>
+        )}
+      </div>
       </div>
 
       <AlertDialog open={showAbortDialog} onOpenChange={setShowAbortDialog}>

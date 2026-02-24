@@ -13,8 +13,11 @@ export type StepNavigationConfig = {
   stepNumber: number
   totalSteps: number
   questionTypes: Question['type'][]
-  question: Question
-  answer: unknown
+  /** Either single question (legacy) or multiple questions for the step */
+  question?: Question
+  answer?: unknown
+  questions?: Question[]
+  stepAnswers?: Record<string, unknown>
   state: { location?: { postal_code?: string | null } | null }
   updateAnswer: (key: string, value: unknown) => void
   updateCurrentStep: (step: SubmissionState['currentStep']) => void
@@ -50,16 +53,35 @@ export function useQuestionnaireNavigation(
       router.push(`/questionnaire/${questionnaireName}`)
       return
     }
-    const { stepNumber, questionTypes, question, answer, updateAnswer, state } = config
-    if (question.type === 'group' && question.groupFields) {
-      question.groupFields.forEach((subQ) => {
-        updateAnswer(subQ.key, (answer as Record<string, unknown>)[subQ.key])
-      })
-    } else {
-      updateAnswer(question.key, answer)
+    const { stepNumber, questionTypes, question, answer, questions, stepAnswers, updateAnswer, state } = config
+    if (questions?.length && stepAnswers) {
+      for (const q of questions) {
+        if (q.type === 'group' && q.groupFields) {
+          const groupVal = stepAnswers[q.key] as Record<string, unknown> | undefined
+          if (groupVal) {
+            q.groupFields.forEach((subQ) => {
+              updateAnswer(subQ.key, groupVal[subQ.key])
+            })
+          }
+        } else {
+          updateAnswer(q.key, stepAnswers[q.key])
+        }
+      }
+    } else if (question && answer !== undefined) {
+      if (question.type === 'group' && question.groupFields) {
+        question.groupFields.forEach((subQ) => {
+          updateAnswer(subQ.key, (answer as Record<string, unknown>)[subQ.key])
+        })
+      } else {
+        updateAnswer(question.key, answer)
+      }
     }
     let prevStep = stepNumber - 1
-    if (state.location?.postal_code) {
+    if (
+      state.location?.postal_code &&
+      questionTypes.length > 0 &&
+      !questions?.length
+    ) {
       while (
         prevStep >= 1 &&
         STEPS_TO_SKIP_WHEN_GPS.includes(
@@ -91,21 +113,38 @@ export function useQuestionnaireNavigation(
       questionTypes,
       question,
       answer,
+      questions,
+      stepAnswers,
       updateAnswer,
       updateCurrentStep,
       validateAnswer,
     } = config
     if (!validateAnswer()) return
-    if (question.type === 'group' && question.groupFields) {
-      question.groupFields.forEach((subQ) => {
-        updateAnswer(subQ.key, (answer as Record<string, unknown>)[subQ.key])
-      })
-    } else {
-      updateAnswer(question.key, answer)
+    if (questions?.length && stepAnswers) {
+      for (const q of questions) {
+        if (q.type === 'group' && q.groupFields) {
+          const groupVal = stepAnswers[q.key] as Record<string, unknown> | undefined
+          if (groupVal) {
+            q.groupFields.forEach((subQ) => {
+              updateAnswer(subQ.key, groupVal[subQ.key])
+            })
+          }
+        } else {
+          updateAnswer(q.key, stepAnswers[q.key])
+        }
+      }
+    } else if (question && answer !== undefined) {
+      if (question.type === 'group' && question.groupFields) {
+        question.groupFields.forEach((subQ) => {
+          updateAnswer(subQ.key, (answer as Record<string, unknown>)[subQ.key])
+        })
+      } else {
+        updateAnswer(question.key, answer)
+      }
     }
     updateCurrentStep('questionnaire')
     let nextStep = stepNumber + 1
-    if (question.type === 'location_GPS' && config.state.location?.postal_code) {
+    if (question && question.type === 'location_GPS' && config.state.location?.postal_code && questionTypes.length > 0) {
       while (
         nextStep <= totalSteps &&
         STEPS_TO_SKIP_WHEN_GPS.includes(

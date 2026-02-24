@@ -97,7 +97,7 @@ const StatefulInfoBox = React.forwardRef<HTMLDivElement, StatefulInfoBoxProps>(
 
         {showButton && (
           <Button
-            variant={isError ? 'destructive' : 'secondary'}
+            variant={isError ? 'destructive' : 'muted'}
             size="sm"
             onClick={onButtonClick}
             className="rounded-full text-sm h-auto py-1 px-3"
