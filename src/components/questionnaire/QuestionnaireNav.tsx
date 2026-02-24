@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/utilities/ui'
 import { X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export type QuestionnaireNavProps = {
   onPrevious: () => void
@@ -24,6 +25,8 @@ export type QuestionnaireNavProps = {
   showAbortDialog: boolean
   setShowAbortDialog: (open: boolean) => void
   onConfirmAbort: () => void
+  /** When true, the previous button is hidden (e.g. on start page). */
+  isFirstPage?: boolean
 }
 
 export default function QuestionnaireNav({
@@ -36,7 +39,16 @@ export default function QuestionnaireNav({
   showAbortDialog,
   setShowAbortDialog,
   onConfirmAbort,
+  isFirstPage = false,
 }: QuestionnaireNavProps) {
+  const [prevButtonMounted, setPrevButtonMounted] = useState(false)
+  useEffect(() => {
+    if (!isFirstPage) {
+      const raf = requestAnimationFrame(() => setPrevButtonMounted(true))
+      return () => cancelAnimationFrame(raf)
+    }
+  }, [isFirstPage])
+
   return (
     <>
       <button onClick={onAbort} className="fixed top-4 right-4 z-20" type="button">
@@ -44,7 +56,16 @@ export default function QuestionnaireNav({
       </button>
 
       <div className="relative flex h-14 flex-row items-center gap-4">
-        <Button type="button" variant="outline-white" onClick={onPrevious} iconBefore="arrow-up" />
+        {!isFirstPage && (
+          <div
+            className={cn(
+              'transition-all duration-300 ease-out',
+              prevButtonMounted ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0',
+            )}
+          >
+            <Button type="button" variant="outline-white" onClick={onPrevious} iconBefore="arrow-up" />
+          </div>
+        )}
         <Button
           type="button"
           size="lg"

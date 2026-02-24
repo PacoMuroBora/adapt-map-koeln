@@ -407,7 +407,7 @@ export default function LocationPage() {
             ) : (
               <>
                 <MapPin className="mr-2 h-4 w-4" />
-                Standort automatisch ermitteln (GPS)
+                Mein Standort
               </>
             )}
           </Button>

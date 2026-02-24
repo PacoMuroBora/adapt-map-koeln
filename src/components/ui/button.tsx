@@ -156,7 +156,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const content = (
       <>
         {iconBeforeSlot}
-        <span className={isLarge ? 'px-2' : ''}>{children}</span>
+        <span
+          className={cn('flex items-center justify-center', isLarge && 'px-2')}
+        >
+          {children}
+        </span>
         {iconAfterSlot}
       </>
     )

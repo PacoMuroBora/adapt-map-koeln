@@ -50,6 +50,7 @@ export default function QuestionnaireStartView({
         showAbortDialog={showAbortDialog}
         setShowAbortDialog={setShowAbortDialog}
         onConfirmAbort={handleConfirmAbort}
+        isFirstPage
       />
 
       <PaginationSteps currentStep={1} totalSteps={totalSteps} />

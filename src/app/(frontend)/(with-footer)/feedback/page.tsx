@@ -225,17 +225,8 @@ export default function FeedbackPage() {
               Zurück
             </Button>
             <div className="flex gap-4 sm:ml-auto">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleSkip}
-                disabled={isSubmitting}
-                className="w-full sm:w-auto"
-              >
-                Kommentare überspringen
-              </Button>
               <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-                {isSubmitting ? 'Wird gespeichert...' : 'Absenden und Ergebnisse anzeigen'}
+                {isSubmitting ? 'Wird gespeichert...' : 'Absenden'}
               </Button>
             </div>
           </div>
