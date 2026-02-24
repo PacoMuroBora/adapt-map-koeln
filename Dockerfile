@@ -3,8 +3,8 @@
 
 FROM node:22.17.0-alpine AS base
 
-# Install pnpm globally so we don't rely on Corepack's registry fetch (avoids 503 from registry.npmjs.org)
-RUN corepack enable && npm install -g pnpm@9
+# Install pnpm globally (no Corepack — avoids registry 503). --unsafe-perm needed for global install in Docker.
+RUN npm install -g pnpm@9.15.2 --unsafe-perm
 
 # Install dependencies only when needed
 FROM base AS deps
