@@ -80,6 +80,15 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
           stepNumber={stepNumber}
           totalSteps={totalSteps}
           nextButtonText={nextButtonText}
+          sectionsProgress={
+            Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
+              ? questionnaire.sections.map((s) => ({
+                  stepsCount: Array.isArray(s?.steps) ? s.steps.length : 0,
+                  progressColor: s?.colorCardProgress ?? undefined,
+                }))
+              : undefined
+          }
+          currentSectionIndex={resolved.sectionIndex}
         />
       )
     }
@@ -121,6 +130,15 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
             ? resolved.stepIndex + 1
             : undefined
         }
+        sectionsProgress={
+          Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
+            ? questionnaire.sections.map((s) => ({
+                stepsCount: Array.isArray(s?.steps) ? s.steps.length : 0,
+                progressColor: s?.colorCardProgress ?? undefined,
+              }))
+            : undefined
+        }
+        currentSectionIndex={resolved.sectionIndex}
       />
     )
   }

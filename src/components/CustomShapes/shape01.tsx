@@ -1,4 +1,4 @@
-export const Shape01 = ({ color = '#BCB4FF' }: { color?: string }) => {
+export const Shape01 = ({ color = '#BCB4FF', className }: { color?: string; className?: string }) => {
   return (
     <svg
       width="366"
@@ -6,6 +6,7 @@ export const Shape01 = ({ color = '#BCB4FF' }: { color?: string }) => {
       viewBox="0 0 366 240"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className={className}
     >
       <g clipPath="url(#clip0_2524_102158)">
         <path

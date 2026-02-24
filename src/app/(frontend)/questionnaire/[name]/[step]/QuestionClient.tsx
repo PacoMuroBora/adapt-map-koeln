@@ -29,7 +29,7 @@ import { useQuestionnaireNavigation } from '../../useQuestionnaireNavigation'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Question } from '../../questions'
 import { Card } from '@/components/ui/card'
@@ -38,6 +38,7 @@ import { Alert } from '@/components/ui/alert'
 import { Home, Building, Plus, Target, TreePine } from 'lucide-react'
 import { isValidColognePlz } from '@/utilities/colognePlz'
 import PaginationSteps from '@/components/questionnaire/PaginationSteps'
+import { useSetQuestionnaireProgress } from '../../QuestionnaireProgressContext'
 
 type QuestionClientProps = {
   questionnaireName: string
@@ -55,6 +56,9 @@ type QuestionClientProps = {
   /** When set, progress bar is section-scoped (only steps in this section) and only shown on step pages. */
   sectionStepsTotal?: number
   sectionStepNumber?: number
+  /** When set, section-based progress bar is shown (section numbers, expanded current / compressed others). */
+  sectionsProgress?: { stepsCount: number; progressColor?: string }[]
+  currentSectionIndex?: number
 }
 
 const STEPS_TO_SKIP_WHEN_GPS = ['plz', 'address'] as const
@@ -88,6 +92,8 @@ export default function QuestionClient({
   sectionColors,
   sectionStepsTotal,
   sectionStepNumber,
+  sectionsProgress,
+  currentSectionIndex,
 }: QuestionClientProps) {
   const router = useRouter()
   const { state, updateAnswer, updateCurrentStep, updateLocation, updateUserText, updateConsent, updateResults } =
@@ -109,6 +115,50 @@ export default function QuestionClient({
     stepNumber === totalSteps && questions.some((q) => q.type === 'consent')
   const resultsRoute = '/results'
   const feedbackRoute = '/feedback'
+
+  const onStepClickSection = useCallback(
+    (step: number) => {
+      const targetFlat =
+        sectionStepsTotal != null && sectionStepNumber != null
+          ? stepNumber - sectionStepNumber + step
+          : step
+      pendingPathRef.current = `/questionnaire/${questionnaireName}/${targetFlat}`
+      setIsExiting(true)
+    },
+    [
+      questionnaireName,
+      stepNumber,
+      sectionStepNumber,
+      sectionStepsTotal,
+    ],
+  )
+
+  const sectionProgressState = useMemo(() => {
+    if (
+      sectionsProgress == null ||
+      sectionsProgress.length === 0 ||
+      currentSectionIndex == null ||
+      sectionStepsTotal == null ||
+      sectionStepNumber == null
+    ) {
+      return null
+    }
+    return {
+      sections: sectionsProgress,
+      currentSectionIndex,
+      currentStepInSection: sectionStepNumber,
+      progressColor: sectionColors?.cardProgress,
+      onStepClick: onStepClickSection,
+    }
+  }, [
+    sectionsProgress,
+    currentSectionIndex,
+    sectionStepNumber,
+    sectionStepsTotal,
+    sectionColors?.cardProgress,
+    onStepClickSection,
+  ])
+  useSetQuestionnaireProgress(sectionProgressState)
 
   const submitFromLastStep = useCallback(
     async (mergedAnswersOverride?: Record<string, any>) => {
@@ -1358,7 +1408,8 @@ export default function QuestionClient({
   }
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-8 pb-28 md:py-16 md:pb-28">
+    <>
+      <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 py-8 pb-28 md:px-4 md:py-16 md:pb-28">
       {/* Error Alert */}
       <AnimatePresence>
         {error && (
@@ -1389,6 +1440,7 @@ export default function QuestionClient({
         {!isExiting ? (
           <motion.div
             key={stepNumber}
+            className="flex min-h-0 flex-1 flex-col"
             initial={{ y: 48, opacity: 0, scale: 0.98 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -80, opacity: 0, scale: 0.98 }}
@@ -1396,14 +1448,14 @@ export default function QuestionClient({
           >
             <Card
               variant={sectionColors ? 'default' : 'purple'}
-              className="h-[70lvh] mb-4 w-[calc(100vw-2rem-16px)]"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
               style={
                 sectionColors
                   ? { backgroundColor: sectionColors.cardBg, borderColor: sectionColors.cardProgress }
                   : undefined
               }
             >
-              <div className="space-y-6 overflow-y-auto h-full">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto">
                 <div className="px-6 py-8 space-y-8">
                   {(stepTitle || stepDescription) && (
                     <div>
@@ -1443,26 +1495,30 @@ export default function QuestionClient({
             </Card>
           </motion.div>
         ) : (
-          <motion.div key="exiting" className="mb-4 h-[70lvh] w-full flex-shrink-0" aria-hidden />
+          <motion.div key="exiting" className="min-h-0 flex-1 flex-shrink-0" aria-hidden />
         )}
       </AnimatePresence>
-
-      <div className="fixed right-2 top-20 flex h-[70lvh] min-h-0 flex-shrink-0 flex-col py-2">
-        <PaginationSteps
-          currentStep={sectionStepsTotal != null && sectionStepNumber != null ? sectionStepNumber : stepNumber}
-          totalSteps={sectionStepsTotal ?? totalSteps}
-          direction="vertical"
-          progressColor={sectionColors?.cardProgress}
-          onStepClick={(step) => {
-            const targetFlat =
-              sectionStepsTotal != null && sectionStepNumber != null
-                ? stepNumber - sectionStepNumber + step
-                : step
-            pendingPathRef.current = `/questionnaire/${questionnaireName}/${targetFlat}`
-            setIsExiting(true)
-          }}
-        />
       </div>
+
+      {/* Section progress bar is rendered by [step] layout so it stays mounted and can animate. Legacy (no sections) uses PaginationSteps below. */}
+      {sectionProgressState == null && (
+        <div className="fixed right-4 top-20 z-10 flex h-[70lvh] max-h-[calc(100vh-6rem)] min-h-0 flex-col py-2 md:right-6">
+          <PaginationSteps
+            currentStep={sectionStepsTotal != null && sectionStepNumber != null ? sectionStepNumber : stepNumber}
+            totalSteps={sectionStepsTotal ?? totalSteps}
+            direction="vertical"
+            progressColor={sectionColors?.cardProgress}
+            onStepClick={(step) => {
+              const targetFlat =
+                sectionStepsTotal != null && sectionStepNumber != null
+                  ? stepNumber - sectionStepNumber + step
+                  : step
+              pendingPathRef.current = `/questionnaire/${questionnaireName}/${targetFlat}`
+              setIsExiting(true)
+            }}
+          />
+        </div>
+      )}
 
       <QuestionnaireNav
         onPrevious={handlePrevious}
@@ -1477,6 +1533,6 @@ export default function QuestionClient({
         setShowAbortDialog={setShowAbortDialog}
         onConfirmAbort={handleConfirmAbort}
       />
-    </div>
+    </>
   )
 }
