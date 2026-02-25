@@ -11,14 +11,21 @@ export interface RadioCardItemProps extends React.ComponentPropsWithoutRef<
 > {
   icon?: React.ReactNode
   label: string
-  /** Unchecked border: "default" = grey/purple (Teil 1), "orange" = orange (Teil 2) */
-  variant?: RadioCardVariant
+  color: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
 }
 
 const RadioCardItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   RadioCardItemProps
->(({ icon, label, className, disabled, variant = 'default', ...props }, ref) => {
+>(({ icon, label, className, disabled, color = 'purple', ...props }, ref) => {
+  const borderClasses = {
+    purple: 'border-am-purple-alt',
+    orange: 'border-am-orange-alt',
+    green: 'border-am-green-alt',
+    pink: 'border-am-pink-alt',
+    turquoise: 'border-am-turquoise-alt',
+  }
+
   return (
     <RadioGroupPrimitive.Item
       ref={ref}
@@ -26,11 +33,7 @@ const RadioCardItem = React.forwardRef<
       className={cn(
         'group relative flex flex-col justify-end gap-4 px-4 py-3 min-h-[120px] rounded-2xl border transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed',
         // Unchecked states
-        'data-[state=unchecked]:bg-background data-[state=unchecked]:text-foreground',
-        variant === 'default' &&
-          'data-[state=unchecked]:border-border data-[state=unchecked]:hover:bg-[#FBFBF6]',
-        variant === 'orange' &&
-          'data-[state=unchecked]:border-am-orange-alt data-[state=unchecked]:hover:bg-[#FBFBF6]',
+        'data-[state=unchecked]:bg-background data-[state=unchecked]:text-foreground data-[state=unchecked]:hover:bg-[#FBFBF6]',
         // Checked states
         'data-[state=checked]:bg-am-green-alt',
         // Disabled
@@ -38,6 +41,7 @@ const RadioCardItem = React.forwardRef<
           'data-[state=unchecked]:!border-border/40 data-[state=unchecked]:!bg-background data-[state=unchecked]:!text-muted-foreground',
         disabled &&
           'data-[state=checked]:!bg-[#E6F7CC] data-[state=checked]:!border-border/40 data-[state=checked]:!text-muted-foreground',
+        borderClasses[color],
         className,
       )}
       {...props}

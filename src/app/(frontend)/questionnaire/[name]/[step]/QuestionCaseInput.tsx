@@ -23,7 +23,7 @@ import IconSelection from '@/components/questionnaire/IconSelection'
 import { AddressSearchInput } from '@/components/questionnaire/AddressSearchInput'
 import { LinkButton } from '@/components/ui/link-button'
 import { Loader2 } from 'lucide-react'
-import { Home, Building, Plus, Target, TreePine } from 'lucide-react'
+import { Home, Building, Plus, Target, TreePine, Check, X } from 'lucide-react'
 import { isValidColognePlz } from '@/utilities/colognePlz'
 import type { Question } from '../../questions'
 import type { SubmissionState } from '@/providers/Submission/types'
@@ -256,11 +256,21 @@ export function QuestionCaseInput({
                 <Target className="h-5 w-5" />
               ) : text.includes('outskirts') ? (
                 <TreePine className="h-5 w-5" />
+              ) : text.includes('ja') ? (
+                <Check className="h-5 w-5" />
+              ) : text.includes('nein') ? (
+                <X className="h-5 w-5" />
               ) : (
                 <Plus className="h-5 w-5" />
               )
             return (
-              <RadioCardItem key={index} value={option.value} label={option.label} icon={icon} />
+              <RadioCardItem
+                key={index}
+                value={option.value}
+                label={option.label}
+                icon={icon}
+                color={color}
+              />
             )
           })}
         </RadioCardGroup>
