@@ -12,8 +12,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/utilities/ui'
-import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useQuestionnaireClose } from '@/app/(frontend)/questionnaire/QuestionnaireLayoutClient'
 
 export type QuestionnaireNavProps = {
   onPrevious: () => void
@@ -47,7 +47,12 @@ export default function QuestionnaireNav({
   isFirstPage = false,
   hideNextButton = false,
 }: QuestionnaireNavProps) {
+  const { registerClose } = useQuestionnaireClose() ?? {}
   const [prevButtonMounted, setPrevButtonMounted] = useState(false)
+  useEffect(() => {
+    if (!registerClose) return
+    return registerClose(onAbort)
+  }, [registerClose, onAbort])
   useEffect(() => {
     if (!isFirstPage) {
       const raf = requestAnimationFrame(() => setPrevButtonMounted(true))
@@ -57,10 +62,6 @@ export default function QuestionnaireNav({
 
   return (
     <>
-      <button onClick={onAbort} className="fixed top-4 right-4 z-20" type="button">
-        <X className="size-5 text-white" />
-      </button>
-
       <div className="fixed bottom-8 left-0 right-0 z-10 flex h-20 flex-row items-center justify-center px-4">
         <div className="relative flex h-14 w-full flex-row items-center gap-4">
           {!isFirstPage && (
