@@ -77,22 +77,6 @@ export const Questionnaires: CollectionConfig = {
           required: false,
           admin: { description: 'Section subtitle' },
         },
-        // {
-        //   name: 'colorCardProgress',
-        //   type: 'text',
-        //   required: false,
-        //   admin: {
-        //     description: 'Hex color for section card shape and progress bar (e.g. #6366f1)',
-        //   },
-        // },
-        // {
-        //   name: 'colorCardBg',
-        //   type: 'text',
-        //   required: false,
-        //   admin: {
-        //     description: 'Hex color for card background (e.g. #e0e7ff)',
-        //   },
-        // },
         {
           name: 'colorSection',
           type: 'select',
@@ -116,18 +100,44 @@ export const Questionnaires: CollectionConfig = {
           admin: { description: 'Steps in this section' },
           fields: [
             {
-              name: 'stepTitle',
+              name: 'stepIdentifier',
               type: 'text',
               required: false,
-              admin: { description: 'Step card title' },
+              admin: { description: 'Step card title used for identification in the backend' },
             },
             {
-              name: 'questions',
+              name: 'question',
               type: 'relationship',
               relationTo: 'questions',
-              hasMany: true,
               required: true,
               admin: { description: 'Questions in this step' },
+            },
+            {
+              name: 'conditions',
+              type: 'array',
+              required: false,
+              admin: {
+                description: 'Conditional questions',
+              },
+              fields: [
+                {
+                  name: 'showWhenAnswerValue',
+                  type: 'text',
+                  required: true,
+                  admin: {
+                    description: 'Answer value to show conditional question',
+                  },
+                },
+                {
+                  name: 'conditional question',
+                  type: 'relationship',
+                  relationTo: 'questions',
+                  required: true,
+                  admin: {
+                    description: 'Question to show when answer matches',
+                  },
+                },
+              ],
             },
           ],
         },
@@ -157,7 +167,6 @@ export const Questionnaires: CollectionConfig = {
       },
       fields: [
         { name: 'stepTitle', type: 'text' },
-        { name: 'stepDescription', type: 'textarea' },
         {
           name: 'questions',
           type: 'relationship',

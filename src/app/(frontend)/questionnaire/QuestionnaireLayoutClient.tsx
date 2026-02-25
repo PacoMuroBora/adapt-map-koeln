@@ -22,7 +22,7 @@ function CloseButton() {
     <button
       type="button"
       onClick={ctx.onAbort}
-      className="fixed top-4 right-4 z-50"
+      className="fixed top-4 right-4 z-20"
       aria-label="Fragebogen schließen"
     >
       <X className="size-5 text-white" />
@@ -40,7 +40,7 @@ export default function QuestionnaireLayoutClient({ children }: { children: Reac
   return (
     <CloseContext.Provider value={{ onAbort, registerClose }}>
       <div className="fixed inset-0 z-0 bg-black" aria-hidden />
-      <div className="relative z-10 flex h-[calc(100vh-3.5rem)] min-h-[calc(100vh-3.5rem)] flex-col bg-black md:h-auto md:min-h-[calc(100vh-3.5rem)] md:justify-center">
+      <div className="relative flex h-[calc(100vh-3.5rem)] min-h-[calc(100vh-3.5rem)] flex-col bg-black md:h-auto md:min-h-[calc(100vh-3.5rem)] md:justify-center">
         {children}
       </div>
       <CloseButton />

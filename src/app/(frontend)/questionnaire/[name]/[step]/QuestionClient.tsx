@@ -10,7 +10,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Question } from '../../questions'
 import { Card, type CardProps } from '@/components/ui/card'
-import { Alert } from '@/components/ui/alert'
 import { QuestionCaseInput, type QuestionCaseInputContext } from './QuestionCaseInput'
 import {
   STEPS_TO_SKIP_WHEN_GPS,
@@ -23,13 +22,16 @@ import {
 import PaginationSteps, {
   type PaginationStepsProps,
 } from '@/components/questionnaire/PaginationSteps'
-import { useSetQuestionnaireProgress } from '../../QuestionnaireProgressContext'
+import {
+  useQuestionnaireProgress,
+  useSetQuestionnaireProgress,
+} from '../../QuestionnaireProgressContext'
 
 type QuestionClientProps = {
   questionnaireName: string
   questions: Question[]
-  stepTitle?: string
-  stepDescription?: string
+  /** Legacy: main question count. With single question per step this is unused. */
+  mainQuestionCount?: number
   stepNumber: number
   totalSteps: number
   /** Used to skip plz/address steps when user located via GPS */
@@ -51,14 +53,12 @@ type QuestionClientProps = {
 export default function QuestionClient({
   questionnaireName,
   questions,
-  stepTitle,
-  stepDescription,
+  mainQuestionCount,
   stepNumber,
   totalSteps,
   questionTypes,
   allStepQuestionTypes,
   nextButtonText,
-  previousButtonText,
   colorSection,
   sectionStepsTotal,
   sectionStepNumber,
@@ -83,7 +83,7 @@ export default function QuestionClient({
     setStepAnswers((prev) => ({ ...prev, [key]: value }))
   }
   const getAnswer = (key: string) => stepAnswers[key] ?? null
-  const [error, setError] = useState<string | null>(null)
+  const setQuestionnaireError = useQuestionnaireProgress()?.setQuestionnaireError ?? (() => {})
   const [isExiting, setIsExiting] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const pendingPathRef = useRef<string | null>(null)
@@ -142,7 +142,7 @@ export default function QuestionClient({
   const submitFromLastStep = useCallback(
     async (mergedAnswersOverride?: Record<string, any>) => {
       setIsSubmitting(true)
-      setError(null)
+      setQuestionnaireError(null)
       const mergedAnswers = mergedAnswersOverride ?? { ...state.answers, ...stepAnswers }
       const locationAnswer = mergedAnswers.location || {}
 
@@ -281,7 +281,7 @@ export default function QuestionClient({
         updateCurrentStep('results')
         router.push(resultsRoute)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten')
+        setQuestionnaireError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten')
       } finally {
         setIsSubmitting(false)
       }
@@ -305,13 +305,6 @@ export default function QuestionClient({
   )
 
   const [resolvedAddress, setResolvedAddress] = useState<ResolvedAddress | null>(null)
-
-  // Auto-dismiss error alert after 500ms
-  useEffect(() => {
-    if (!error) return
-    const timer = setTimeout(() => setError(null), 2500)
-    return () => clearTimeout(timer)
-  }, [error])
 
   const locationQuestion = questions.find((q) => q.type === 'location_GPS')
 
@@ -396,18 +389,47 @@ export default function QuestionClient({
         const min = q.sliderVerticalConfig?.min ?? 0
         const max = q.sliderVerticalConfig?.max ?? 10
         const step = q.sliderVerticalConfig?.step ?? 1
-        const middle =
-          min + Math.round((max - min) / (2 * step)) * step
+        const middle = min + Math.round((max - min) / (2 * step)) * step
         setAnswer(q.key, middle)
       }
     }
   }, [])
 
-  const validateAnswer = (): boolean => {
+  const validateAnswer = async (): Promise<boolean> => {
     const result = validateAllQuestions(questions, stepAnswers, state.location)
     if (!result.valid) {
-      setError(result.error)
+      setQuestionnaireError(result.error)
       return false
+    }
+    const addressQuestion = questions.find((q) => q.type === 'address')
+    if (addressQuestion) {
+      const raw = stepAnswers[addressQuestion.key]
+      const addr =
+        raw && typeof raw === 'object' && !Array.isArray(raw)
+          ? (raw as { street?: string; housenumber?: string; postal_code?: string })
+          : null
+      const street = addr?.street?.trim()
+      const postal_code = addr?.postal_code?.trim()
+      if (street && postal_code && postal_code.length === 5) {
+        const housenumber = addr?.housenumber?.trim() ?? ''
+        try {
+          const res = await fetch('/api/validate-address', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ street, housenumber, postal_code }),
+          })
+          const data = (await res.json()) as { valid?: boolean; error?: string }
+          if (!data.valid) {
+            setQuestionnaireError(data.error ?? 'Adresse konnte nicht geprüft werden.')
+            return false
+          }
+        } catch {
+          setQuestionnaireError(
+            'Adressprüfung ist derzeit nicht möglich. Bitte versuche es später erneut.',
+          )
+          return false
+        }
+      }
     }
     return true
   }
@@ -460,7 +482,7 @@ export default function QuestionClient({
 
   const handleGPSLocation = async () => {
     setIsGpsLoading(true)
-    setError(null)
+    setQuestionnaireError(null)
 
     try {
       if (!navigator.geolocation) {
@@ -601,19 +623,19 @@ export default function QuestionClient({
 
       const e = err as { code?: number; message?: string }
       if (e.code === 1) {
-        setError(
+        setQuestionnaireError(
           'Standortzugriff wurde verweigert. Bitte erlaube den Standortzugriff in Deinen Browsereinstellungen oder verwende die manuelle Eingabe.',
         )
       } else if (e.code === 2) {
-        setError(
+        setQuestionnaireError(
           'Standort konnte nicht ermittelt werden. Bitte überprüfe Deine GPS-Einstellungen oder verwende die manuelle Eingabe.',
         )
       } else if (e.code === 3 || e.message === 'Timeout') {
-        setError(
+        setQuestionnaireError(
           'Zeitüberschreitung bei der Standortermittlung. Bitte versuche es erneut oder verwende die manuelle Eingabe.',
         )
       } else {
-        setError(
+        setQuestionnaireError(
           e.message || 'Fehler bei der Standortermittlung. Bitte verwende die manuelle Eingabe.',
         )
       }
@@ -638,7 +660,7 @@ export default function QuestionClient({
   const questionInputContext: QuestionCaseInputContext = {
     state,
     stepAnswers,
-    setError,
+    setError: setQuestionnaireError,
     questionnaireName,
     stepNumber,
     totalSteps,
@@ -655,24 +677,6 @@ export default function QuestionClient({
   return (
     <>
       <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 py-8 pb-28 md:px-4 md:py-16 md:pb-28">
-        {/* Error Alert */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              key="alert"
-              initial={{ x: '-50%', y: -100, opacity: 0 }}
-              animate={{ x: '-50%', y: 0, opacity: 1 }}
-              exit={{ x: '-50%', y: -100, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed top-0 left-1/2 w-full max-w-[560px] z-50 p-2"
-            >
-              <Alert variant="error" className="text-sm">
-                {error}
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <AnimatePresence
           mode="wait"
           onExitComplete={() => {
@@ -697,15 +701,15 @@ export default function QuestionClient({
               >
                 <div className="min-h-0 flex-1 space-y-6 overflow-y-auto">
                   <div className="px-6 py-8 space-y-8">
-                    {(stepTitle || stepDescription) && (
+                    {questions[0]?.title != null && (
                       <div>
-                        {stepTitle && (
-                          <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
-                            {stepTitle}
-                          </h1>
-                        )}
-                        {stepDescription && (
-                          <p className="text-body-sm text-muted-foreground">{stepDescription}</p>
+                        <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
+                          {questions[0].title}
+                        </h1>
+                        {questions[0].description != null && (
+                          <p className="text-body-sm text-muted-foreground">
+                            {questions[0].description}
+                          </p>
                         )}
                       </div>
                     )}
@@ -717,16 +721,6 @@ export default function QuestionClient({
                           q.type === 'sliderHorizontalRange' && 'flex flex-col min-h-[55lvh]',
                         )}
                       >
-                        {(!stepTitle || questions.length > 1) && (
-                          <div>
-                            <h2 className="text-base font-headings text-h5 font-semibold uppercase">
-                              {q.title}
-                            </h2>
-                            {q.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{q.description}</p>
-                            )}
-                          </div>
-                        )}
                         <div
                           className={
                             q.type === 'sliderHorizontalRange'
@@ -796,7 +790,9 @@ export default function QuestionClient({
             ? isSubmitting
               ? 'Wird gespeichert...'
               : 'Absenden'
-            : nextButtonText
+            : questions.some((q) => q.required)
+              ? nextButtonText
+              : 'Überspringen'
         }
         nextDisabled={isWeiterDisabled(questions, stepAnswers, resolvedAddress) || isSubmitting}
         nextIcon={

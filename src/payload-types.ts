@@ -504,13 +504,29 @@ export interface Questionnaire {
          */
         steps: {
           /**
-           * Step card title
+           * Step card title used for identification in the backend
            */
-          stepTitle?: string | null;
+          stepIdentifier?: string | null;
           /**
            * Questions in this step
            */
-          questions: (string | Question)[];
+          question: string | Question;
+          /**
+           * Conditional questions
+           */
+          conditions?:
+            | {
+                /**
+                 * Answer value to show conditional question
+                 */
+                showWhenAnswerValue: string;
+                /**
+                 * Question to show when answer matches
+                 */
+                'conditional question': string | Question;
+                id?: string | null;
+              }[]
+            | null;
           id?: string | null;
         }[];
         id?: string | null;
@@ -530,7 +546,6 @@ export interface Questionnaire {
   steps?:
     | {
         stepTitle?: string | null;
-        stepDescription?: string | null;
         questions: (string | Question)[];
         id?: string | null;
       }[]
@@ -579,6 +594,7 @@ export interface Question {
     | 'iconSelection'
     | 'group'
     | 'textarea'
+    | 'text'
     | 'consent';
   /**
    * Available options for choice/dropdown questions
@@ -2177,8 +2193,15 @@ export interface QuestionnairesSelect<T extends boolean = true> {
         steps?:
           | T
           | {
-              stepTitle?: T;
-              questions?: T;
+              stepIdentifier?: T;
+              question?: T;
+              conditions?:
+                | T
+                | {
+                    showWhenAnswerValue?: T;
+                    'conditional question'?: T;
+                    id?: T;
+                  };
               id?: T;
             };
         id?: T;
@@ -2189,7 +2212,6 @@ export interface QuestionnairesSelect<T extends boolean = true> {
     | T
     | {
         stepTitle?: T;
-        stepDescription?: T;
         questions?: T;
         id?: T;
       };

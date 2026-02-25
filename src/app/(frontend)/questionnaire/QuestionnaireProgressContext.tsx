@@ -17,6 +17,8 @@ type ContextValue = {
   progress: QuestionnaireProgressState | null
   setProgress: (state: QuestionnaireProgressState | null) => void
   maxStepReachedInSection: MaxStepReachedInSection
+  questionnaireError: string | null
+  setQuestionnaireError: (message: string | null) => void
 }
 
 const QuestionnaireProgressContext = createContext<ContextValue | null>(null)
@@ -25,6 +27,7 @@ export function QuestionnaireProgressProvider({ children }: { children: React.Re
   const [progress, setProgressState] = useState<QuestionnaireProgressState | null>(null)
   const [maxStepReachedInSection, setMaxStepReachedInSection] =
     useState<MaxStepReachedInSection>(() => ({}))
+  const [questionnaireError, setQuestionnaireError] = useState<string | null>(null)
 
   const setProgress = useCallback((state: QuestionnaireProgressState | null) => {
     setProgressState(state)
@@ -41,7 +44,13 @@ export function QuestionnaireProgressProvider({ children }: { children: React.Re
 
   return (
     <QuestionnaireProgressContext.Provider
-      value={{ progress, setProgress, maxStepReachedInSection }}
+      value={{
+        progress,
+        setProgress,
+        maxStepReachedInSection,
+        questionnaireError,
+        setQuestionnaireError,
+      }}
     >
       {children}
     </QuestionnaireProgressContext.Provider>

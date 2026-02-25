@@ -46,7 +46,11 @@ export function isQuestionDisabled(
     const plz = String(answer ?? '').trim()
     return plz.length !== 5 || !isValidColognePlz(plz)
   }
-  if (question.type === 'singleChoice' || question.type === 'dropdown') {
+  if (
+    question.type === 'singleChoice' ||
+    question.type === 'singleChoiceWithIcon' ||
+    question.type === 'dropdown'
+  ) {
     return answer == null || answer === ''
   }
   if (question.type === 'sliderHorizontalRange') {
@@ -174,6 +178,10 @@ export function validateOneQuestion(
     }
     if (!isValidColognePlz(plz)) {
       return { valid: false, error: 'Bitte gib eine gültige Postleitzahl von Köln ein.' }
+    }
+  } else if (question.type === 'singleChoice' || question.type === 'singleChoiceWithIcon') {
+    if (answer == null || answer === '') {
+      return { valid: false, error: 'Bitte wähle eine Option' }
     }
   } else if (question.type === 'multiChoice') {
     if (!answer || (Array.isArray(answer) && answer.length === 0)) {

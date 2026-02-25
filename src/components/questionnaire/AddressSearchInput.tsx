@@ -34,6 +34,8 @@ export interface AddressSearchInputProps {
   disabled?: boolean
   /** PLZ to filter suggestions (e.g. from previous PLZ question or GPS) */
   postalCode?: string | null
+  /** When true, only search for street (no house-number API fetch). Use a separate input for house number. */
+  disableHouseNumberSearch?: boolean
 }
 
 const PHOTON_URL = process.env.NEXT_PUBLIC_PHOTON_URL || 'https://photon.komoot.io'
@@ -49,8 +51,10 @@ export function AddressSearchInput({
   placeholder = 'STRASSE SUCHEN',
   disabled = false,
   postalCode,
+  disableHouseNumberSearch = false,
 }: AddressSearchInputProps) {
-  const [query, setQuery] = useState('')
+  const streetFromValue = typeof value.street === 'string' ? value.street.trim() : ''
+  const [query, setQuery] = useState(streetFromValue)
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -61,6 +65,13 @@ export function AddressSearchInput({
   const justSelectedRef = useRef(false)
   const houseNumbersCacheRef = useRef<Map<string, AddressSuggestion[]>>(new Map())
 
+  // Restore street display when navigating back with saved value
+  React.useEffect(() => {
+    if (streetFromValue && query !== streetFromValue) {
+      setQuery(streetFromValue)
+    }
+  }, [streetFromValue])
+
   // Parse "Mozartstraße 1" → { street: "Mozartstraße", numberPrefix: "1" }
   const parsedStreetNumber = React.useMemo(() => {
     const m = debouncedQuery.trim().match(/^(.+?)\s+(\d+[a-z]?)$/i)
@@ -68,8 +79,9 @@ export function AddressSearchInput({
   }, [debouncedQuery])
 
   const isHouseNumberMode =
-    houseNumberMode != null ||
-    (parsedStreetNumber != null && parsedStreetNumber.street.length >= 2)
+    !disableHouseNumberSearch &&
+    (houseNumberMode != null ||
+      (parsedStreetNumber != null && parsedStreetNumber.street.length >= 2))
 
   useEffect(() => {
     // House number mode: "Mozartstraße 1" or after selecting "Mozartstraße"

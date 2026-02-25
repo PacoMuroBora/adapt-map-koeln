@@ -2,15 +2,15 @@ import { cn } from '@/utilities/ui'
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
 
-const cardVariants = cva('rounded-3xl border text-card-foreground shadow-sm', {
+const cardVariants = cva('rounded-3xl text-card-foreground shadow-sm', {
   variants: {
     variant: {
-      purple: 'bg-am-purple border-am-purple-alt',
-      orange: 'bg-am-orange border-am-orange-alt',
-      green: 'bg-am-green border-am-green-alt',
-      pink: 'bg-am-pink border-am-pink-alt',
-      turquoise: 'bg-am-turquoise border-am-turquoise-alt',
-      white: 'bg-am-white border-dashed border-input',
+      purple: 'bg-am-purple',
+      orange: 'bg-am-orange',
+      green: 'bg-am-green',
+      pink: 'bg-am-pink',
+      turquoise: 'bg-am-turquoise',
+      white: 'bg-am-white',
     },
   },
   defaultVariants: {

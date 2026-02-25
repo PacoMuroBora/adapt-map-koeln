@@ -15,15 +15,18 @@ export type StepNavigationConfig = {
   questionTypes: Question['type'][]
   /** Flat list of question types per step (index = stepNumber - 1). When set, used to skip plz/address in one go after GPS. */
   allStepQuestionTypes?: Question['type'][][]
-  /** Either single question (legacy) or multiple questions for the step */
+  /** Single question per step (questions array has one element). */
   question?: Question
   answer?: unknown
   questions?: Question[]
   stepAnswers?: Record<string, unknown>
-  state: { location?: { postal_code?: string | null } | null }
+  state: {
+    location?: { postal_code?: string | null } | null
+    answers?: Record<string, unknown>
+  }
   updateAnswer: (key: string, value: unknown) => void
   updateCurrentStep: (step: SubmissionState['currentStep']) => void
-  validateAnswer: () => boolean
+  validateAnswer: () => boolean | Promise<boolean>
   /** When set, called with the next path instead of navigating immediately (e.g. to run exit animation). */
   onBeforeNextNavigate?: (path: string) => void
   /** When set, called with the prev path instead of navigating immediately (e.g. to run exit animation). */
@@ -55,7 +58,17 @@ export function useQuestionnaireNavigation(
       router.push(`/questionnaire/${questionnaireName}`)
       return
     }
-    const { stepNumber, questionTypes, question, answer, questions, stepAnswers, updateAnswer, state } = config
+    const {
+      stepNumber,
+      questionTypes,
+      allStepQuestionTypes,
+      question,
+      answer,
+      questions,
+      stepAnswers,
+      updateAnswer,
+      state,
+    } = config
     if (questions?.length && stepAnswers) {
       for (const q of questions) {
         if (q.type === 'group' && q.groupFields) {
@@ -79,15 +92,11 @@ export function useQuestionnaireNavigation(
       }
     }
     let prevStep = stepNumber - 1
-    if (
-      state.location?.postal_code &&
-      questionTypes.length > 0 &&
-      !questions?.length
-    ) {
+    if (config.state.location?.postal_code && allStepQuestionTypes && allStepQuestionTypes.length >= stepNumber) {
       while (
         prevStep >= 1 &&
-        STEPS_TO_SKIP_WHEN_GPS.includes(
-          questionTypes[prevStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
+        (allStepQuestionTypes[prevStep - 1] ?? []).every((t) =>
+          STEPS_TO_SKIP_WHEN_GPS.includes(t as (typeof STEPS_TO_SKIP_WHEN_GPS)[number]),
         )
       ) {
         prevStep--
@@ -104,7 +113,7 @@ export function useQuestionnaireNavigation(
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (config.mode === 'start') {
       router.push(`/questionnaire/${questionnaireName}/1`)
       return
@@ -122,7 +131,8 @@ export function useQuestionnaireNavigation(
       updateCurrentStep,
       validateAnswer,
     } = config
-    if (!validateAnswer()) return
+    const valid = await Promise.resolve(validateAnswer())
+    if (!valid) return
     if (questions?.length && stepAnswers) {
       for (const q of questions) {
         if (q.type === 'group' && q.groupFields) {
@@ -172,9 +182,7 @@ export function useQuestionnaireNavigation(
       }
     }
     const path =
-      nextStep <= totalSteps
-        ? `/questionnaire/${questionnaireName}/${nextStep}`
-        : '/feedback'
+      nextStep <= totalSteps ? `/questionnaire/${questionnaireName}/${nextStep}` : '/feedback'
     if (config.onBeforeNextNavigate) {
       config.onBeforeNextNavigate(path)
     } else {

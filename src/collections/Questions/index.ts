@@ -61,6 +61,7 @@ export const Questions: CollectionConfig = {
         { label: 'Icon Selection', value: 'iconSelection' },
         { label: 'Group', value: 'group' },
         { label: 'Textarea', value: 'textarea' },
+        { label: 'Text', value: 'text' },
         { label: 'Consent', value: 'consent' },
       ],
       admin: {
@@ -72,7 +73,10 @@ export const Questions: CollectionConfig = {
       type: 'array',
       admin: {
         condition: (data) =>
-          data.type === 'singleChoice' || data.type === 'multiChoice' || data.type === 'dropdown',
+          data.type === 'singleChoice' ||
+          data.type === 'singleChoiceWithIcon' ||
+          data.type === 'multiChoice' ||
+          data.type === 'dropdown',
         description: 'Available options for choice/dropdown questions',
       },
       fields: [

@@ -90,29 +90,28 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
       )
     }
 
-    const rawStepQuestions = Array.isArray(resolved.step.questions)
-      ? resolved.step.questions.filter(
-          (q): q is PayloadQuestion => typeof q === 'object' && q !== null && 'key' in q,
-        )
-      : []
-    const questions = rawStepQuestions.map(mapPayloadQuestionToFrontend)
-    if (questions.length === 0) {
+    const stepQuestion = resolved.step.question
+    const rawStepQuestions =
+      stepQuestion && typeof stepQuestion === 'object' && stepQuestion !== null && 'key' in stepQuestion
+        ? [stepQuestion as PayloadQuestion]
+        : []
+    const allMapped = rawStepQuestions.map(mapPayloadQuestionToFrontend)
+    if (allMapped.length === 0) {
       notFound()
     }
+    const questions = [allMapped[0]]
     const questionTypes = questions.map((q) => q.type)
-    const stepTitle = resolved.step.stepTitle ?? undefined
 
-    // Build flat list of question types per step so navigation can skip plz/address in one go after GPS
+    // Build flat list of question types per step (one question per step) for navigation
     const allStepQuestionTypes: ReturnType<typeof mapPayloadQuestionToFrontend>['type'][][] = []
     for (let i = 1; i <= totalSteps; i++) {
       const pageResolved = getQuestionnairePageByIndex(questionnaire, i)
       if (pageResolved?.type === 'step') {
-        const raw = Array.isArray(pageResolved.step.questions)
-          ? pageResolved.step.questions.filter(
-              (q): q is PayloadQuestion => typeof q === 'object' && q !== null && 'key' in q,
-            )
-          : []
-        allStepQuestionTypes.push(raw.map(mapPayloadQuestionToFrontend).map((q) => q.type))
+        const q = pageResolved.step.question
+        const raw =
+          q && typeof q === 'object' && q !== null && 'key' in q ? [q as PayloadQuestion] : []
+        const mapped = raw.map(mapPayloadQuestionToFrontend)
+        allStepQuestionTypes.push(mapped.length > 0 ? [mapped[0].type] : [])
       } else {
         allStepQuestionTypes.push([])
       }
@@ -122,8 +121,6 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
       <QuestionClient
         questionnaireName={questionnaireName}
         questions={questions}
-        stepTitle={stepTitle}
-        stepDescription={undefined}
         stepNumber={stepNumber}
         totalSteps={totalSteps}
         questionTypes={questionTypes}
@@ -159,8 +156,6 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
   const useSteps = Array.isArray(steps) && steps.length > 0
 
   let totalSteps: number
-  let stepTitle: string | undefined
-  let stepDescription: string | undefined
   let questions: ReturnType<typeof mapPayloadQuestionToFrontend>[]
 
   if (useSteps && steps) {
@@ -176,12 +171,11 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     const rawStepQuestions = Array.isArray(stepQuestions)
       ? stepQuestions.filter(ensurePayloadQuestion)
       : []
-    questions = rawStepQuestions.map(mapPayloadQuestionToFrontend)
-    stepTitle = (stepEntry as { stepTitle?: string }).stepTitle
-    stepDescription = (stepEntry as { stepDescription?: string }).stepDescription
-    if (questions.length === 0) {
+    const stepMapped = rawStepQuestions.map(mapPayloadQuestionToFrontend)
+    if (stepMapped.length === 0) {
       notFound()
     }
+    questions = [stepMapped[0]]
   } else {
     const rawQuestions = Array.isArray(legacyQuestions)
       ? legacyQuestions.filter(ensurePayloadQuestion)
@@ -196,8 +190,6 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
       notFound()
     }
     questions = [currentQuestion]
-    stepTitle = currentQuestion.title
-    stepDescription = currentQuestion.description
   }
 
   const uiCopy = (await getCachedGlobal('ui-copy', 0)()) as UiCopy
@@ -207,8 +199,6 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     <QuestionClient
       questionnaireName={questionnaireName}
       questions={questions}
-      stepTitle={stepTitle}
-      stepDescription={stepDescription}
       stepNumber={stepNumber}
       totalSteps={totalSteps}
       questionTypes={questionTypes}
