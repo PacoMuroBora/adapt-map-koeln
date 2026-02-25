@@ -512,7 +512,7 @@ export interface Questionnaire {
            */
           question: string | Question;
           /**
-           * Conditional questions
+           * Conditional questions (only used for single choice questions)
            */
           conditions?:
             | {
@@ -686,7 +686,7 @@ export interface Question {
     labelBottom: string;
   };
   /**
-   * Whether this question must be answered
+   * Whether this question must be answered. If yes button says "Weiter", if no button says "Überspringen".
    */
   required?: boolean | null;
   /**

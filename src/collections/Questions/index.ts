@@ -237,7 +237,8 @@ export const Questions: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description: 'Whether this question must be answered',
+        description:
+          'Whether this question must be answered. If yes button says "Weiter", if no button says "Überspringen".',
       },
     },
     {

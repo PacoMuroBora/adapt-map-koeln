@@ -7,6 +7,8 @@ import { mapPayloadQuestionToFrontend } from '../../mapQuestion'
 import {
   getQuestionnairePageByIndex,
   getQuestionnaireTotalPages,
+  getSectionExpandedStepCount,
+  getExpandedStepNumberInSection,
   hasSections,
 } from '../../getQuestionnairePageByIndex'
 
@@ -67,6 +69,12 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     const previousButtonText = uiCopy?.questionnaire?.previousButton || 'Zurück'
 
     if (resolved.type === 'section-cover') {
+      const sectionsProgress = Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
+        ? questionnaire.sections.map((s) => ({
+            stepsCount: getSectionExpandedStepCount(s),
+            variant: s.colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
+          }))
+        : undefined
       return (
         <SectionCoverView
           questionnaireName={questionnaireName}
@@ -77,15 +85,98 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
           stepNumber={stepNumber}
           totalSteps={totalSteps}
           nextButtonText={nextButtonText}
-          sectionsProgress={
-            Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
-              ? questionnaire.sections.map((s) => ({
-                  stepsCount: Array.isArray(s?.steps) ? s.steps.length : 0,
-                  variant: s.colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
-                }))
-              : undefined
-          }
+          sectionsProgress={sectionsProgress}
           currentSectionIndex={resolved.sectionIndex}
+        />
+      )
+    }
+
+    // Conditional follow-up step: question resolved on client from parent answer
+    if (resolved.type === 'conditional-step') {
+      const parentQuestion = resolved.step.question
+      const parentKey =
+        parentQuestion && typeof parentQuestion === 'object' && 'key' in parentQuestion
+          ? (parentQuestion as PayloadQuestion).key
+          : null
+      if (!parentKey) notFound()
+      const conditionsWithMapped = (resolved.conditions ?? [])
+        .map((c) => {
+          const condQ = c && typeof c === 'object' && 'conditional question' in c
+            ? (c as { 'conditional question': unknown })['conditional question']
+            : null
+          const payloadQ =
+            condQ && typeof condQ === 'object' && condQ !== null && 'key' in condQ
+              ? (condQ as PayloadQuestion)
+              : null
+          if (!payloadQ || !c) return null
+          return {
+            showWhenAnswerValue: (c as { showWhenAnswerValue: string }).showWhenAnswerValue,
+            question: mapPayloadQuestionToFrontend(payloadQ),
+          }
+        })
+        .filter((x): x is { showWhenAnswerValue: string; question: ReturnType<typeof mapPayloadQuestionToFrontend> } => x != null)
+      const conditionalStepConfig =
+        conditionsWithMapped.length > 0
+          ? { parentQuestionKey: parentKey, conditions: conditionsWithMapped }
+          : undefined
+
+      const allStepQuestionTypes: ReturnType<typeof mapPayloadQuestionToFrontend>['type'][][] = []
+      for (let i = 1; i <= totalSteps; i++) {
+        const pageResolved = getQuestionnairePageByIndex(questionnaire, i)
+        if (pageResolved?.type === 'step') {
+          const q = pageResolved.step.question
+          const raw =
+            q && typeof q === 'object' && q !== null && 'key' in q ? [q as PayloadQuestion] : []
+          const mapped = raw.map(mapPayloadQuestionToFrontend)
+          allStepQuestionTypes.push(mapped.length > 0 ? [mapped[0].type] : [])
+        } else if (pageResolved?.type === 'conditional-step') {
+          const types = (pageResolved.conditions ?? [])
+            .map((c) => {
+              const condQ = c && typeof c === 'object' && 'conditional question' in c
+                ? (c as { 'conditional question': unknown })['conditional question']
+                : null
+              const payloadQ =
+                condQ && typeof condQ === 'object' && condQ !== null && 'key' in condQ
+                  ? (condQ as PayloadQuestion)
+                  : null
+              return payloadQ ? mapPayloadQuestionToFrontend(payloadQ).type : null
+            })
+            .filter((t): t is NonNullable<typeof t> => t != null)
+          allStepQuestionTypes.push(types.length > 0 ? types : [])
+        } else {
+          allStepQuestionTypes.push([])
+        }
+      }
+
+      const sectionStepsTotal = getSectionExpandedStepCount(resolved.section)
+      const sectionStepNumber = getExpandedStepNumberInSection(
+        resolved.section,
+        resolved.stepIndex,
+        true,
+      )
+      const sectionsProgress = Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
+        ? questionnaire.sections.map((s) => ({
+            stepsCount: getSectionExpandedStepCount(s),
+            variant: s.colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
+          }))
+        : undefined
+
+      return (
+        <QuestionClient
+          questionnaireName={questionnaireName}
+          questions={[]}
+          stepNumber={stepNumber}
+          totalSteps={totalSteps}
+          questionTypes={[]}
+          allStepQuestionTypes={allStepQuestionTypes}
+          nextButtonText={nextButtonText}
+          previousButtonText={previousButtonText}
+          colorSection={resolved.section.colorSection ?? undefined}
+          sectionStepsTotal={sectionStepsTotal}
+          sectionStepNumber={sectionStepNumber}
+          sectionsProgress={sectionsProgress}
+          currentSectionIndex={resolved.sectionIndex}
+          conditionalStepConfig={conditionalStepConfig}
         />
       )
     }
@@ -112,10 +203,37 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
           q && typeof q === 'object' && q !== null && 'key' in q ? [q as PayloadQuestion] : []
         const mapped = raw.map(mapPayloadQuestionToFrontend)
         allStepQuestionTypes.push(mapped.length > 0 ? [mapped[0].type] : [])
+      } else if (pageResolved?.type === 'conditional-step') {
+        const types = (pageResolved.conditions ?? [])
+          .map((c) => {
+            const condQ = c && typeof c === 'object' && 'conditional question' in c
+              ? (c as { 'conditional question': unknown })['conditional question']
+              : null
+            const payloadQ =
+              condQ && typeof condQ === 'object' && condQ !== null && 'key' in condQ
+                ? (condQ as PayloadQuestion)
+                : null
+            return payloadQ ? mapPayloadQuestionToFrontend(payloadQ).type : null
+          })
+          .filter((t): t is NonNullable<typeof t> => t != null)
+        allStepQuestionTypes.push(types.length > 0 ? types : [])
       } else {
         allStepQuestionTypes.push([])
       }
     }
+
+    const sectionStepsTotal = getSectionExpandedStepCount(resolved.section)
+    const sectionStepNumber = getExpandedStepNumberInSection(
+      resolved.section,
+      resolved.stepIndex,
+      false,
+    )
+    const sectionsProgress = Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
+      ? questionnaire.sections.map((s) => ({
+          stepsCount: getSectionExpandedStepCount(s),
+          variant: s.colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
+        }))
+      : undefined
 
     return (
       <QuestionClient
@@ -128,24 +246,9 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
         nextButtonText={nextButtonText}
         previousButtonText={previousButtonText}
         colorSection={resolved.section.colorSection ?? undefined}
-        sectionStepsTotal={
-          Array.isArray(resolved.section.steps) && resolved.section.steps.length > 0
-            ? resolved.section.steps.length
-            : undefined
-        }
-        sectionStepNumber={
-          Array.isArray(resolved.section.steps) && resolved.section.steps.length > 0
-            ? resolved.stepIndex + 1
-            : undefined
-        }
-        sectionsProgress={
-          Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
-            ? questionnaire.sections.map((s) => ({
-                stepsCount: Array.isArray(s?.steps) ? s.steps.length : 0,
-                variant: s.colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
-              }))
-            : undefined
-        }
+        sectionStepsTotal={sectionStepsTotal}
+        sectionStepNumber={sectionStepNumber}
+        sectionsProgress={sectionsProgress}
         currentSectionIndex={resolved.sectionIndex}
       />
     )

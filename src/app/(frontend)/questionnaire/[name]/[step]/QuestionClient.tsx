@@ -27,6 +27,11 @@ import {
   useSetQuestionnaireProgress,
 } from '../../QuestionnaireProgressContext'
 
+export type ConditionalStepConfig = {
+  parentQuestionKey: string
+  conditions: { showWhenAnswerValue: string; question: Question }[]
+}
+
 type QuestionClientProps = {
   questionnaireName: string
   questions: Question[]
@@ -48,6 +53,8 @@ type QuestionClientProps = {
   /** When set, section-based progress bar is shown (section numbers, expanded current / compressed others). */
   sectionsProgress?: { stepsCount: number; progressClass?: string }[]
   currentSectionIndex?: number
+  /** When set, this step shows the conditional question that matches the parent step answer; question list is resolved on client. */
+  conditionalStepConfig?: ConditionalStepConfig
 }
 
 export default function QuestionClient({
@@ -64,6 +71,7 @@ export default function QuestionClient({
   sectionStepNumber,
   sectionsProgress,
   currentSectionIndex,
+  conditionalStepConfig,
 }: QuestionClientProps) {
   const router = useRouter()
   const {
@@ -76,9 +84,42 @@ export default function QuestionClient({
     updateResults,
   } = useSubmission()
 
+  const resolvedConditionalQuestions = useMemo(() => {
+    if (!conditionalStepConfig) return null
+    const parentAnswer = state.answers[conditionalStepConfig.parentQuestionKey]
+    const value = parentAnswer != null ? String(parentAnswer) : ''
+    const match = conditionalStepConfig.conditions.find(
+      (c) => c.showWhenAnswerValue === value,
+    )
+    return match ? [match.question] : []
+  }, [conditionalStepConfig, state.answers])
+
+  const effectiveQuestions =
+    conditionalStepConfig && resolvedConditionalQuestions
+      ? resolvedConditionalQuestions.length > 0
+        ? resolvedConditionalQuestions
+        : []
+      : questions
+
+  const effectiveQuestionTypes = effectiveQuestions.map((q) => q.type)
+
   const [stepAnswers, setStepAnswers] = useState<Record<string, any>>(() =>
     getInitialStepAnswers(questions, state.answers),
   )
+  const conditionalSyncedRef = useRef(false)
+  useEffect(() => {
+    if (
+      conditionalStepConfig &&
+      effectiveQuestions.length > 0 &&
+      !conditionalSyncedRef.current
+    ) {
+      setStepAnswers((prev) => ({
+        ...prev,
+        ...getInitialStepAnswers(effectiveQuestions, state.answers),
+      }))
+      conditionalSyncedRef.current = true
+    }
+  }, [conditionalStepConfig, effectiveQuestions, state.answers])
   const setAnswer = (key: string, value: any) => {
     setStepAnswers((prev) => ({ ...prev, [key]: value }))
   }
@@ -89,7 +130,25 @@ export default function QuestionClient({
   const pendingPathRef = useRef<string | null>(null)
   const [isGpsLoading, setIsGpsLoading] = useState(false)
   const isLastStepWithConsent =
-    stepNumber === totalSteps && questions.some((q) => q.type === 'consent')
+    stepNumber === totalSteps && effectiveQuestions.some((q) => q.type === 'consent')
+
+  // When conditional step has no matching condition, skip to next step
+  useEffect(() => {
+    if (!conditionalStepConfig) return
+    if ((resolvedConditionalQuestions?.length ?? 0) > 0) return
+    const nextPath =
+      stepNumber < totalSteps
+        ? `/questionnaire/${questionnaireName}/${stepNumber + 1}`
+        : '/feedback'
+    router.replace(nextPath)
+  }, [
+    conditionalStepConfig,
+    resolvedConditionalQuestions?.length,
+    stepNumber,
+    totalSteps,
+    questionnaireName,
+    router,
+  ])
   const resultsRoute = '/results'
   const feedbackRoute = '/feedback'
 
@@ -107,8 +166,8 @@ export default function QuestionClient({
 
   const isSkippableStep =
     Boolean(state.location?.postal_code) &&
-    questions.length > 0 &&
-    questions.every((q) =>
+    effectiveQuestions.length > 0 &&
+    effectiveQuestions.every((q) =>
       STEPS_TO_SKIP_WHEN_GPS.includes(q.type as (typeof STEPS_TO_SKIP_WHEN_GPS)[number]),
     )
 
@@ -227,7 +286,7 @@ export default function QuestionClient({
         }
       }
 
-      const freeTextQuestion = questions.find((q) => q.type === 'textarea')
+      const freeTextQuestion = effectiveQuestions.find((q) => q.type === 'textarea')
       const freeText = freeTextQuestion
         ? String(mergedAnswers[freeTextQuestion.key] ?? '').trim() || undefined
         : state.userText || undefined
@@ -295,7 +354,7 @@ export default function QuestionClient({
       stepAnswers,
       stepNumber,
       totalSteps,
-      questions,
+      effectiveQuestions,
       updateConsent,
       updateResults,
       updateUserText,
@@ -306,7 +365,7 @@ export default function QuestionClient({
 
   const [resolvedAddress, setResolvedAddress] = useState<ResolvedAddress | null>(null)
 
-  const locationQuestion = questions.find((q) => q.type === 'location_GPS')
+  const locationQuestion = effectiveQuestions.find((q) => q.type === 'location_GPS')
 
   // Sync resolvedAddress from state when user navigates back with existing location
   useEffect(() => {
@@ -330,7 +389,7 @@ export default function QuestionClient({
   useEffect(() => {
     if (!state.location?.postal_code) return
     if (
-      !questions.every((q) =>
+      !effectiveQuestions.every((q) =>
         STEPS_TO_SKIP_WHEN_GPS.includes(q.type as (typeof STEPS_TO_SKIP_WHEN_GPS)[number]),
       )
     )
@@ -355,7 +414,7 @@ export default function QuestionClient({
     questionnaireName,
     stepNumber,
     totalSteps,
-    questions,
+    effectiveQuestions,
     state.location?.postal_code,
     router,
     allStepQuestionTypes,
@@ -363,7 +422,7 @@ export default function QuestionClient({
 
   // Initialize slider default for any slider question in step
   useEffect(() => {
-    for (const q of questions) {
+    for (const q of effectiveQuestions) {
       if (
         q.type === 'slider' &&
         q.required &&
@@ -396,12 +455,12 @@ export default function QuestionClient({
   }, [])
 
   const validateAnswer = async (): Promise<boolean> => {
-    const result = validateAllQuestions(questions, stepAnswers, state.location)
+    const result = validateAllQuestions(effectiveQuestions, stepAnswers, state.location)
     if (!result.valid) {
       setQuestionnaireError(result.error)
       return false
     }
-    const addressQuestion = questions.find((q) => q.type === 'address')
+    const addressQuestion = effectiveQuestions.find((q) => q.type === 'address')
     if (addressQuestion) {
       const raw = stepAnswers[addressQuestion.key]
       const addr =
@@ -445,9 +504,9 @@ export default function QuestionClient({
     mode: 'step',
     stepNumber,
     totalSteps,
-    questionTypes,
+    questionTypes: effectiveQuestionTypes,
     allStepQuestionTypes,
-    questions,
+    questions: effectiveQuestions,
     stepAnswers,
     state,
     updateAnswer,
@@ -674,6 +733,10 @@ export default function QuestionClient({
     isGpsLoading,
   }
 
+  if (conditionalStepConfig && effectiveQuestions.length === 0) {
+    return null
+  }
+
   return (
     <>
       <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 py-8 pb-28 md:px-4 md:py-16 md:pb-28">
@@ -701,19 +764,19 @@ export default function QuestionClient({
               >
                 <div className="min-h-0 flex-1 space-y-6 overflow-y-auto">
                   <div className="px-6 py-8 space-y-8">
-                    {questions[0]?.title != null && (
+                    {effectiveQuestions[0]?.title != null && (
                       <div>
                         <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
-                          {questions[0].title}
+                          {effectiveQuestions[0].title}
                         </h1>
-                        {questions[0].description != null && (
+                        {effectiveQuestions[0].description != null && (
                           <p className="text-body-sm text-muted-foreground">
-                            {questions[0].description}
+                            {effectiveQuestions[0].description}
                           </p>
                         )}
                       </div>
                     )}
-                    {questions.map((q) => (
+                    {effectiveQuestions.map((q) => (
                       <div
                         key={q.id}
                         className={cn(
@@ -790,11 +853,11 @@ export default function QuestionClient({
             ? isSubmitting
               ? 'Wird gespeichert...'
               : 'Absenden'
-            : questions.some((q) => q.required)
+            : effectiveQuestions.some((q) => q.required)
               ? nextButtonText
               : 'Überspringen'
         }
-        nextDisabled={isWeiterDisabled(questions, stepAnswers, resolvedAddress) || isSubmitting}
+        nextDisabled={isWeiterDisabled(effectiveQuestions, stepAnswers, resolvedAddress) || isSubmitting}
         nextIcon={
           isLastStepWithConsent ? 'check' : stepNumber < totalSteps ? 'arrow-down' : 'check'
         }

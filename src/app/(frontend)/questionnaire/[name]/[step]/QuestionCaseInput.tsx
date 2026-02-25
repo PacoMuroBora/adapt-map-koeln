@@ -476,18 +476,7 @@ export function QuestionCaseInput({
     }
 
     case 'text':
-      return (
-        <Textarea
-          value={answer || ''}
-          onChange={(e) => {
-            setAnswerForQ(e.target.value)
-            setError(null)
-          }}
-          color={color}
-          placeholder="Schreib etwas..."
-          rows={4}
-        />
-      )
+      return null
 
     case 'number': {
       const numConfig = question.numberConfig
@@ -701,7 +690,9 @@ export function QuestionCaseInput({
                     const addrAnswer = {
                       street: String(subAddr.street ?? ''),
                       housenumber: String(
-                        subAddr.housenumber ?? (subAddr as { house_number?: string }).house_number ?? '',
+                        subAddr.housenumber ??
+                          (subAddr as { house_number?: string }).house_number ??
+                          '',
                       ),
                       postal_code: String(subAddr.postal_code ?? ''),
                       city: String(subAddr.city ?? 'Köln'),

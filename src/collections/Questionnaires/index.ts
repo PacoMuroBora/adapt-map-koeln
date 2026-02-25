@@ -117,7 +117,7 @@ export const Questionnaires: CollectionConfig = {
               type: 'array',
               required: false,
               admin: {
-                description: 'Conditional questions',
+                description: 'Conditional questions (only used for single choice questions)',
               },
               fields: [
                 {
