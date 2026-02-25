@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useCallback, useContext, useState } from 'react'
 
 export type QuestionnaireProgressState = {
   sections: { stepsCount: number; progressColor?: string }[]
@@ -10,17 +10,39 @@ export type QuestionnaireProgressState = {
   onStepClick?: (step: number) => void
 }
 
+/** Per-section max step number (1-based) the user has visited. Used to keep steps filled and clickable when going back. */
+export type MaxStepReachedInSection = Record<number, number>
+
 type ContextValue = {
   progress: QuestionnaireProgressState | null
   setProgress: (state: QuestionnaireProgressState | null) => void
+  maxStepReachedInSection: MaxStepReachedInSection
 }
 
 const QuestionnaireProgressContext = createContext<ContextValue | null>(null)
 
 export function QuestionnaireProgressProvider({ children }: { children: React.ReactNode }) {
-  const [progress, setProgress] = useState<QuestionnaireProgressState | null>(null)
+  const [progress, setProgressState] = useState<QuestionnaireProgressState | null>(null)
+  const [maxStepReachedInSection, setMaxStepReachedInSection] =
+    useState<MaxStepReachedInSection>(() => ({}))
+
+  const setProgress = useCallback((state: QuestionnaireProgressState | null) => {
+    setProgressState(state)
+    if (state) {
+      setMaxStepReachedInSection((prev) => ({
+        ...prev,
+        [state.currentSectionIndex]: Math.max(
+          prev[state.currentSectionIndex] ?? 0,
+          state.currentStepInSection,
+        ),
+      }))
+    }
+  }, [])
+
   return (
-    <QuestionnaireProgressContext.Provider value={{ progress, setProgress }}>
+    <QuestionnaireProgressContext.Provider
+      value={{ progress, setProgress, maxStepReachedInSection }}
+    >
       {children}
     </QuestionnaireProgressContext.Provider>
   )

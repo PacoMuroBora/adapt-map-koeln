@@ -13,8 +13,9 @@ export const Textarea: React.FC<
     errors: Partial<FieldErrorsImpl>
     register: UseFormRegister<FieldValues>
     rows?: number
+    color: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
   }
-> = ({ name, defaultValue, errors, label, register, required, rows = 3, width }) => {
+> = ({ name, defaultValue, color, errors, label, register, required, rows = 3, width }) => {
   return (
     <Width width={width}>
       <Label htmlFor={name}>
@@ -28,6 +29,7 @@ export const Textarea: React.FC<
       </Label>
 
       <TextAreaComponent
+        color={color}
         defaultValue={defaultValue}
         id={name}
         rows={rows}

@@ -566,6 +566,7 @@ export interface Question {
    */
   type:
     | 'singleChoice'
+    | 'singleChoiceWithIcon'
     | 'multiChoice'
     | 'dropdown'
     | 'slider'

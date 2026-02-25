@@ -394,7 +394,11 @@ export default function QuestionClient({
         (getAnswer(q.key) === null || getAnswer(q.key) === undefined)
       ) {
         const min = q.sliderVerticalConfig?.min ?? 0
-        setAnswer(q.key, min)
+        const max = q.sliderVerticalConfig?.max ?? 10
+        const step = q.sliderVerticalConfig?.step ?? 1
+        const middle =
+          min + Math.round((max - min) / (2 * step)) * step
+        setAnswer(q.key, middle)
       }
     }
   }, [])

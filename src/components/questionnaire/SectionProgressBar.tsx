@@ -7,6 +7,8 @@ export type SectionProgressBarProps = {
   sections: { stepsCount: number; variant?: string }[]
   currentSectionIndex: number
   currentStepInSection: number
+  /** Steps in the current section that count as filled (e.g. have a value or were visited). Stay filled and clickable when moving back. */
+  filledStepNumbersInSection?: number[]
   variant?: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
   onStepClick?: (step: number) => void
   className?: string
@@ -27,10 +29,14 @@ export default function SectionProgressBar({
   sections,
   currentSectionIndex,
   currentStepInSection,
+  filledStepNumbersInSection,
   variant = DEFAULT_VARIANT,
   onStepClick,
   className,
 }: SectionProgressBarProps) {
+  const filledSet = filledStepNumbersInSection
+    ? new Set(filledStepNumbersInSection)
+    : undefined
   const resolvedVariant = variant ?? DEFAULT_VARIANT
   const dotClasses = {
     bgPast: {
@@ -86,8 +92,10 @@ export default function SectionProgressBar({
                 const isActive =
                   isCurrent && currentStepInSection > 0 && step === currentStepInSection
                 const isPast = isCurrent && currentStepInSection > 0 && step < currentStepInSection
-                const filled = isCompleted || isPast
-                const isClickable = isPast && onStepClick != null
+                const isFilledByValue = filledSet?.has(step) ?? false
+                const filled = isCompleted || isPast || isFilledByValue
+                const isClickable =
+                  (isPast || isFilledByValue) && onStepClick != null
                 const gapPx = isCurrent ? GAP_EXPANDED : GAP_COMPRESSED
                 const isLastBar = i === stepsCount - 1
 
@@ -102,6 +110,7 @@ export default function SectionProgressBar({
                     className={cn(
                       'block w-2 shrink-0 rounded-[50px] border border-solid transition-colors duration-300 ease-in-out outline-none ring-0',
                       isClickable && 'cursor-pointer',
+                      filled && 'is-filled',
                       isActive &&
                         isCurrent &&
                         `${dotClasses.bgActive[resolvedVariant]} ${dotClasses.border[resolvedVariant]}`,

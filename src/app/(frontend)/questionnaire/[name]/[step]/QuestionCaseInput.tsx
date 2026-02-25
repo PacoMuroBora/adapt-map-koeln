@@ -245,6 +245,27 @@ export function QuestionCaseInput({
         >
           {question.options.map((option, index) => {
             const text = `${option.value} ${option.label}`.toLowerCase()
+            return (
+              <RadioCardItem key={index} value={option.value} label={option.label} color={color} />
+            )
+          })}
+        </RadioCardGroup>
+      )
+
+    case 'singleChoiceWithIcon':
+      if (!question.options || !Array.isArray(question.options)) return null
+      return (
+        <RadioCardGroup
+          value={answer || ''}
+          onValueChange={(value) => {
+            setAnswerForQ(value)
+            setError(null)
+          }}
+          name={question.key}
+          className="grid grid-cols-2 gap-2"
+        >
+          {question.options.map((option, index) => {
+            const text = `${option.value} ${option.label}`.toLowerCase()
             const icon =
               text.includes('haus') || text.includes('house') ? (
                 <Home className="h-5 w-5" />
@@ -383,8 +404,9 @@ export function QuestionCaseInput({
       const vStep = vConfig?.step ?? 1
       const vLabelTop = vConfig?.labelTop ?? ''
       const vLabelBottom = vConfig?.labelBottom ?? ''
+      const vDefault = vMin + Math.round((vMax - vMin) / (2 * vStep)) * vStep
       const vValue =
-        answer !== null && answer !== undefined && typeof answer === 'number' ? answer : vMin
+        answer !== null && answer !== undefined && typeof answer === 'number' ? answer : vDefault
 
       return (
         <VerticalSlider
@@ -492,8 +514,7 @@ export function QuestionCaseInput({
             color={color}
             className="resize-none"
           />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Maximal {maxLen} Zeichen</span>
+          <div className="flex justify-end px-2 text-sm text-muted-foreground">
             <span className={len >= maxLen ? 'text-destructive' : ''}>
               {maxLen - len} verbleibend
             </span>

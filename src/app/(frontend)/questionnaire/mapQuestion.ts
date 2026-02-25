@@ -4,6 +4,7 @@ import type { Question } from './questions'
 
 const BE_TYPE_TO_FRONTEND: Record<PayloadQuestion['type'], Question['type']> = {
   singleChoice: 'singleChoice',
+  singleChoiceWithIcon: 'singleChoiceWithIcon',
   multiChoice: 'multiChoice',
   dropdown: 'dropdown',
   slider: 'slider',

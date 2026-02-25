@@ -56,7 +56,7 @@ export default function HeatIntensitySlider({
         {/* Container for gradient bar and slider */}
         <div className="relative">
           {/* Color gradient bar */}
-          <div className="relative h-12 w-full overflow-hidden rounded-lg border-2 border-gray-800 pointer-events-none">
+          <div className="relative h-12 w-full overflow-hidden rounded-lg border border-muted pointer-events-none">
             {/* Gradient background */}
             <div
               className="absolute inset-0"

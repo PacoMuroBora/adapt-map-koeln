@@ -48,6 +48,7 @@ export const Questions: CollectionConfig = {
       required: true,
       options: [
         { label: 'Single Choice', value: 'singleChoice' },
+        { label: 'Single Choice with Icon', value: 'singleChoiceWithIcon' },
         { label: 'Multiple Choice', value: 'multiChoice' },
         { label: 'Dropdown', value: 'dropdown' },
         { label: 'Slider', value: 'slider' },

@@ -13,6 +13,7 @@ export interface Question {
     | 'location_GPS'
     | 'plz'
     | 'singleChoice'
+    | 'singleChoiceWithIcon'
     | 'multiChoice'
     | 'dropdown'
     | 'slider'

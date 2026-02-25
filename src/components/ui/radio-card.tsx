@@ -31,7 +31,7 @@ const RadioCardItem = React.forwardRef<
       ref={ref}
       disabled={disabled}
       className={cn(
-        'group relative flex flex-col justify-end gap-4 px-4 py-3 min-h-[120px] rounded-2xl border transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed',
+        'group relative flex flex-col justify-end gap-4 px-4 py-3 rounded-2xl border transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed',
         // Unchecked states
         'data-[state=unchecked]:bg-background data-[state=unchecked]:text-foreground data-[state=unchecked]:hover:bg-[#FBFBF6]',
         // Checked states
@@ -42,6 +42,7 @@ const RadioCardItem = React.forwardRef<
         disabled &&
           'data-[state=checked]:!bg-[#E6F7CC] data-[state=checked]:!border-border/40 data-[state=checked]:!text-muted-foreground',
         borderClasses[color],
+        icon && 'min-h-[120px]',
         className,
       )}
       {...props}
