@@ -1409,7 +1409,7 @@ export default function QuestionClient({
 
   return (
     <>
-      <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 py-8 pb-28 md:px-4 md:py-16 md:pb-28">
+      <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 py-8 pb-36 md:px-4 md:py-16 md:pb-28">
       {/* Error Alert */}
       <AnimatePresence>
         {error && (
@@ -1448,7 +1448,7 @@ export default function QuestionClient({
           >
             <Card
               variant={sectionColors ? 'default' : 'purple'}
-              className="flex min-h-0 flex-1 flex-col overflow-hidden"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden md:min-h-0 md:max-h-[min(calc(100vh-12rem),44rem)] md:flex-initial"
               style={
                 sectionColors
                   ? { backgroundColor: sectionColors.cardBg, borderColor: sectionColors.cardProgress }
