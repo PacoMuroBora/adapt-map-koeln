@@ -96,7 +96,7 @@ export const UICopy: GlobalConfig = {
         {
           name: 'title',
           type: 'text',
-          defaultValue: 'Ihre Ergebnisse',
+          defaultValue: 'Deine Ergebnisse',
         },
         {
           name: 'aiRecommendationCta',

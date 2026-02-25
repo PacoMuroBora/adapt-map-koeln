@@ -1,16 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import {
-  Droplets,
-  Leaf,
-  Sun,
-  Trees,
-  Waves,
-  Wind,
-  Building2,
-  Sprout,
-} from 'lucide-react'
+import { Droplets, Leaf, Sun, Trees, Waves, Wind, Building2, Sprout } from 'lucide-react'
 import React from 'react'
 
 interface IconOption {
@@ -108,14 +99,10 @@ export default function IconSelection({
               type="button"
               onClick={() => handleToggle(option.value)}
               className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-4 transition-all hover:bg-muted ${
-                isSelected
-                  ? 'border-primary bg-primary/10'
-                  : 'border-muted bg-card'
+                isSelected ? 'border-primary bg-primary/10' : 'border-muted bg-card'
               }`}
             >
-              <Icon
-                className={`h-8 w-8 ${isSelected ? iconColor : 'text-muted-foreground'}`}
-              />
+              <Icon className={`h-8 w-8 ${isSelected ? iconColor : 'text-muted-foreground'}`} />
               <span
                 className={`text-sm font-medium ${
                   isSelected ? 'text-foreground' : 'text-muted-foreground'
@@ -128,9 +115,7 @@ export default function IconSelection({
         })}
       </div>
       {required && value.length === 0 && (
-        <p className="text-sm text-destructive">
-          Bitte wählen Sie mindestens eine Option aus.
-        </p>
+        <p className="text-sm text-destructive">Bitte wähle mindestens eine Option aus.</p>
       )}
     </div>
   )

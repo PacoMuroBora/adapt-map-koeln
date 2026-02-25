@@ -100,7 +100,7 @@ test.describe('Location Capture', () => {
 
     // Should show error message
     await expect(
-      page.getByText(/Standortzugriff wurde verweigert|Bitte verwenden Sie die manuelle Eingabe/),
+      page.getByText(/Standortzugriff wurde verweigert|Bitte verwende die manuelle Eingabe/),
     ).toBeVisible({ timeout: 5000 })
   })
 
@@ -173,4 +173,3 @@ test.describe('Location Capture', () => {
     await expect(page.getByText('Adresse manuell eingeben')).toBeVisible()
   })
 })
-

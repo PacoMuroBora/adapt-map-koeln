@@ -48,7 +48,7 @@ export function AIRecommendationCTA() {
 
   const handleGenerate = async () => {
     if (!state.submissionId) {
-      setError('Keine Submission-ID gefunden. Bitte starten Sie die Umfrage erneut.')
+      setError('Keine Submission-ID gefunden. Bitte starte die Umfrage erneut.')
       return
     }
 
@@ -90,7 +90,7 @@ export function AIRecommendationCTA() {
         <div>
           <h3 className="mb-2 text-lg font-semibold">KI-Empfehlung erhalten</h3>
           <p className="text-sm text-muted-foreground">
-            Basierend auf Ihren Antworten erstellt unsere KI personalisierte Empfehlungen für Ihre
+            Basierend auf Deinen Antworten erstellt unsere KI personalisierte Empfehlungen für Deine
             Situation.
           </p>
         </div>

@@ -18,7 +18,7 @@ export default function ConsentPage() {
     e.preventDefault()
 
     if (!dataCollection) {
-      setError('Bitte akzeptieren Sie die Datenerhebung, um fortzufahren.')
+      setError('Bitte akzeptiere die Datenerhebung, um fortzufahren.')
       return
     }
 
@@ -47,8 +47,8 @@ export default function ConsentPage() {
         <div>
           <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Einverständniserklärung</h1>
           <p className="text-muted-foreground">
-            Bevor Sie Ihre Ergebnisse sehen können, benötigen wir Ihr Einverständnis zur Datenerhebung und
-            -verarbeitung.
+            Bevor Du Deine Ergebnisse sehen kannst, benötigen wir Dein Einverständnis zur
+            Datenerhebung und -verarbeitung.
           </p>
         </div>
 
@@ -81,14 +81,14 @@ export default function ConsentPage() {
 
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>
-              Weitere Informationen finden Sie in unserer{' '}
+              Weitere Informationen findest Du in unserer{' '}
               <Link href="/legal/privacy" className="text-primary underline hover:no-underline">
                 Datenschutzerklärung
               </Link>
               .
             </p>
             <p>
-              Lesen Sie auch unsere{' '}
+              Lies auch unsere{' '}
               <Link href="/legal/terms" className="text-primary underline hover:no-underline">
                 Nutzungsbedingungen
               </Link>

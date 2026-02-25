@@ -241,10 +241,10 @@ export default function QuestionClient({
 
       try {
         if (!mergedLocation?.postal_code) {
-          throw new Error('Standort fehlt. Bitte kehren Sie zur Standortseite zurück.')
+          throw new Error('Standort fehlt. Bitte kehre zur Standortseite zurück.')
         }
         if (Object.keys(mergedAnswers).length === 0) {
-          throw new Error('Keine Antworten gefunden. Bitte beantworten Sie die Fragen.')
+          throw new Error('Keine Antworten gefunden. Bitte beantworte die Fragen.')
         }
         updateConsent({
           dataCollection: true,
@@ -460,7 +460,7 @@ export default function QuestionClient({
 
     try {
       if (!navigator.geolocation) {
-        throw new Error('Geolocation wird von Ihrem Browser nicht unterstützt.')
+        throw new Error('Geolocation wird von Deinem Browser nicht unterstützt.')
       }
 
       const cachedPosition = localStorage.getItem('gps_position')
@@ -557,12 +557,11 @@ export default function QuestionClient({
         const errorData = await response.json().catch(() => ({}))
         if (response.status === 429) {
           throw new Error(
-            'Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut oder verwenden Sie die manuelle Eingabe.',
+            'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut oder verwende die manuelle Eingabe.',
           )
         }
         throw new Error(
-          errorData.error ||
-            'Geocodierung fehlgeschlagen. Bitte verwenden Sie die manuelle Eingabe.',
+          errorData.error || 'Geocodierung fehlgeschlagen. Bitte verwende die manuelle Eingabe.',
         )
       }
 
@@ -570,7 +569,7 @@ export default function QuestionClient({
 
       if (!data.postal_code) {
         throw new Error(
-          'Postleitzahl konnte nicht ermittelt werden. Bitte verwenden Sie die manuelle Eingabe.',
+          'Postleitzahl konnte nicht ermittelt werden. Bitte verwende die manuelle Eingabe.',
         )
       }
 
@@ -599,20 +598,19 @@ export default function QuestionClient({
       const e = err as { code?: number; message?: string }
       if (e.code === 1) {
         setError(
-          'Standortzugriff wurde verweigert. Bitte erlauben Sie den Standortzugriff in Ihren Browsereinstellungen oder verwenden Sie die manuelle Eingabe.',
+          'Standortzugriff wurde verweigert. Bitte erlaube den Standortzugriff in Deinen Browsereinstellungen oder verwende die manuelle Eingabe.',
         )
       } else if (e.code === 2) {
         setError(
-          'Standort konnte nicht ermittelt werden. Bitte überprüfen Sie Ihre GPS-Einstellungen oder verwenden Sie die manuelle Eingabe.',
+          'Standort konnte nicht ermittelt werden. Bitte überprüfe Deine GPS-Einstellungen oder verwende die manuelle Eingabe.',
         )
       } else if (e.code === 3 || e.message === 'Timeout') {
         setError(
-          'Zeitüberschreitung bei der Standortermittlung. Bitte versuchen Sie es erneut oder verwenden Sie die manuelle Eingabe.',
+          'Zeitüberschreitung bei der Standortermittlung. Bitte versuche es erneut oder verwende die manuelle Eingabe.',
         )
       } else {
         setError(
-          e.message ||
-            'Fehler bei der Standortermittlung. Bitte verwenden Sie die manuelle Eingabe.',
+          e.message || 'Fehler bei der Standortermittlung. Bitte verwende die manuelle Eingabe.',
         )
       }
     } finally {
@@ -737,7 +735,9 @@ export default function QuestionClient({
                             answer={getAnswer(q.key)}
                             setAnswer={(v) => setAnswer(q.key, v)}
                             context={questionInputContext}
-                            color={colorSection}
+                            color={
+                              colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
+                            }
                           />
                         </div>
                       </div>

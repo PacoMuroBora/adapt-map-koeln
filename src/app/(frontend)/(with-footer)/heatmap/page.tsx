@@ -19,8 +19,8 @@ export default function HeatmapPage() {
           <p className="text-muted-foreground">
             Raster-Heatmap der hitzebezogenen Probleme. Jede Kachel zeigt die durchschnittliche
             Problem-Index-Farbe (0–100). Kachelgröße und weitere Einstellungen sind in den
-            Site-Einstellungen festgelegt. Fahren Sie mit der Maus über eine Kachel oder tippen Sie
-            darauf, um die Verteilung der Werte zu sehen.
+            Site-Einstellungen festgelegt. Fahre mit der Maus über eine Kachel oder tippe darauf, um
+            die Verteilung der Werte zu sehen.
           </p>
         </div>
 

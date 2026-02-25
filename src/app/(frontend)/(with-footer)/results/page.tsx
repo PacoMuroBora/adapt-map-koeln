@@ -41,9 +41,9 @@ export default function ResultsPage() {
     <div className="container mx-auto max-w-2xl px-4 py-8 md:py-16">
       <div className="space-y-6">
         <div>
-          <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Ihre Ergebnisse</h1>
+          <h1 className="mb-4 text-2xl font-bold sm:text-3xl">Deine Ergebnisse</h1>
           <p className="text-muted-foreground">
-            Basierend auf Ihren Antworten haben wir einen Hitze-Problem-Index berechnet.
+            Basierend auf Deinen Antworten haben wir einen Hitze-Problem-Index berechnet.
           </p>
         </div>
 
@@ -79,10 +79,10 @@ export default function ResultsPage() {
             <div className="rounded-lg bg-muted p-4">
               <p className="text-sm">
                 {problemIndex >= 70
-                  ? 'Ihr Hitze-Problem-Index ist hoch. Es gibt erhebliche hitzebezogene Probleme in Ihrer Umgebung.'
+                  ? 'Ihr Hitze-Problem-Index ist hoch. Es gibt erhebliche hitzebezogene Probleme in Deiner Umgebung.'
                   : problemIndex >= 40
                     ? 'Ihr Hitze-Problem-Index ist mittel. Es gibt einige hitzebezogene Herausforderungen.'
-                    : 'Ihr Hitze-Problem-Index ist niedrig. Die hitzebezogenen Probleme in Ihrer Umgebung sind gering.'}
+                    : 'Ihr Hitze-Problem-Index ist niedrig. Die hitzebezogenen Probleme in Deiner Umgebung sind gering.'}
               </p>
             </div>
           </div>

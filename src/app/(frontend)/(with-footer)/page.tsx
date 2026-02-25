@@ -24,7 +24,7 @@ export default async function LandingPage() {
   const description =
     uiData?.landingPage?.description ||
     siteData?.siteDescription ||
-    'Berichten Sie über hitzebezogene Probleme in Ihrer Umgebung.'
+    'Berichte über hitzebezogene Probleme in Deiner Umgebung.'
   const ctaButton = uiData?.landingPage?.ctaButton || "Los geht's"
 
   return (
@@ -66,7 +66,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: siteSettings?.siteName || 'AdaptMap Köln',
     description:
-      siteSettings?.siteDescription ||
-      'Berichten Sie über hitzebezogene Probleme in Ihrer Umgebung.',
+      siteSettings?.siteDescription || 'Berichte über hitzebezogene Probleme in Deiner Umgebung.',
   }
 }

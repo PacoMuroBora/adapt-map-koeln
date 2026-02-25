@@ -80,7 +80,8 @@ export function isWeiterDisabled(
   resolvedAddress: ResolvedAddress | null,
 ): boolean {
   for (const q of questions) {
-    const ans = q.type === 'group' && q.groupFields ? stepAnswers[q.key] : stepAnswers[q.key] ?? null
+    const ans =
+      q.type === 'group' && q.groupFields ? stepAnswers[q.key] : (stepAnswers[q.key] ?? null)
     if (q.required && isQuestionDisabled(q, ans, resolvedAddress)) return true
   }
   return false
@@ -101,18 +102,24 @@ export function validateOneQuestion(
         const subAnswer = (answer as Record<string, unknown>)?.[subQ.key]
         if (subQ.type === 'text') {
           if (!subAnswer || String(subAnswer).trim() === '') {
-            return { valid: false, error: `Bitte beantworten Sie: ${subQ.title}` }
+            return { valid: false, error: `Bitte beantworte: ${subQ.title}` }
           }
         } else if (subQ.type === 'plz') {
           const plz = String(subAnswer ?? '').trim()
           if (!plz || plz.length !== 5) {
-            return { valid: false, error: `Bitte geben Sie eine gültige 5-stellige Postleitzahl ein: ${subQ.title}` }
+            return {
+              valid: false,
+              error: `Bitte gib eine gültige 5-stellige Postleitzahl ein: ${subQ.title}`,
+            }
           }
           if (!isValidColognePlz(plz)) {
-            return { valid: false, error: 'Bitte geben Sie eine gültige Postleitzahl von Köln ein.' }
+            return {
+              valid: false,
+              error: 'Bitte gib eine gültige Postleitzahl von Köln ein.',
+            }
           }
         } else if (subAnswer === null || subAnswer === undefined || subAnswer === '') {
-          return { valid: false, error: `Bitte beantworten Sie: ${subQ.title}` }
+          return { valid: false, error: `Bitte beantworte: ${subQ.title}` }
         }
       }
     }
@@ -120,11 +127,11 @@ export function validateOneQuestion(
   }
   if (question.type === 'iconSelection') {
     if (!answer || !Array.isArray(answer) || answer.length === 0) {
-      return { valid: false, error: 'Bitte wählen Sie mindestens eine Option aus.' }
+      return { valid: false, error: 'Bitte wähle mindestens eine Option aus.' }
     }
   } else if (question.type === 'slider') {
     if (answer === null || answer === undefined) {
-      return { valid: false, error: 'Bitte wählen Sie einen Wert aus.' }
+      return { valid: false, error: 'Bitte wähle einen Wert aus.' }
     }
   } else if (question.type === 'sliderHorizontalRange') {
     if (
@@ -133,16 +140,16 @@ export function validateOneQuestion(
       typeof answer[0] !== 'number' ||
       typeof answer[1] !== 'number'
     ) {
-      return { valid: false, error: 'Bitte wählen Sie einen Bereich aus.' }
+      return { valid: false, error: 'Bitte wähle einen Bereich aus.' }
     }
   } else if (question.type === 'sliderVertical') {
     if (answer === null || answer === undefined || typeof answer !== 'number') {
-      return { valid: false, error: 'Bitte wählen Sie einen Wert aus.' }
+      return { valid: false, error: 'Bitte wähle einen Wert aus.' }
     }
   } else if (question.type === 'address') {
     const a = answer as { street?: string; postal_code?: string; city?: string } | null
     if (!a || !a.street || (a.street as string).trim() === '') {
-      return { valid: false, error: 'Bitte geben Sie eine Straße ein.' }
+      return { valid: false, error: 'Bitte gib eine Straße ein.' }
     }
     const hasPlz =
       a.postal_code &&
@@ -150,36 +157,35 @@ export function validateOneQuestion(
       isValidColognePlz(String(a.postal_code).trim())
     const hasCity = a.city && (a.city as string).trim() !== ''
     if (!hasPlz && !hasCity) {
-      return { valid: false, error: 'Bitte geben Sie eine PLZ (Köln) oder Stadt ein.' }
+      return { valid: false, error: 'Bitte gib Deine PLZ (Köln) oder Stadt ein.' }
     }
   } else if (question.type === 'location_GPS') {
     if (!options.stateLocation?.postal_code) {
       return {
         valid: false,
-        error:
-          'Bitte ermitteln Sie Ihren Standort oder geben Sie die Adresse manuell ein.',
+        error: 'Bitte ermittel Deinen Standort oder gib Deine Adresse manuell ein.',
       }
     }
     return { valid: true }
   } else if (question.type === 'plz') {
     const plz = String(answer ?? '').trim()
     if (!plz || plz.length !== 5) {
-      return { valid: false, error: 'Bitte geben Sie eine gültige 5-stellige Postleitzahl ein.' }
+      return { valid: false, error: 'Bitte gib eine gültige 5-stellige Postleitzahl ein.' }
     }
     if (!isValidColognePlz(plz)) {
-      return { valid: false, error: 'Bitte geben Sie eine gültige Postleitzahl von Köln ein.' }
+      return { valid: false, error: 'Bitte gib eine gültige Postleitzahl von Köln ein.' }
     }
   } else if (question.type === 'multiChoice') {
     if (!answer || (Array.isArray(answer) && answer.length === 0)) {
-      return { valid: false, error: 'Bitte wählen Sie mindestens eine Option aus.' }
+      return { valid: false, error: 'Bitte wähle mindestens eine Option aus.' }
     }
   } else if (question.type === 'consent') {
     if (answer !== true) {
-      return { valid: false, error: 'Bitte akzeptieren Sie die Datenerhebung, um fortzufahren.' }
+      return { valid: false, error: 'Bitte akzeptiere die Datenerhebung, um fortzufahren.' }
     }
   } else {
     if (!answer || answer === '') {
-      return { valid: false, error: 'Bitte beantworten Sie diese Frage.' }
+      return { valid: false, error: 'Bitte beantworte diese Frage.' }
     }
   }
   return { valid: true }

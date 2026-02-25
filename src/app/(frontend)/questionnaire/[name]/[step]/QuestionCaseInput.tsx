@@ -174,9 +174,7 @@ export function QuestionCaseInput({
             setAnswerForQ(val)
             if (val.length === 5) {
               setError(
-                isValidColognePlz(val)
-                  ? null
-                  : 'Bitte geben Sie eine gültige Postleitzahl von Köln ein.',
+                isValidColognePlz(val) ? null : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
               )
             } else {
               setError(null)
@@ -612,7 +610,7 @@ export function QuestionCaseInput({
                         setError(
                           isValidColognePlz(val)
                             ? null
-                            : 'Bitte geben Sie eine gültige Postleitzahl von Köln ein.',
+                            : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
                         )
                       } else {
                         setError(null)
