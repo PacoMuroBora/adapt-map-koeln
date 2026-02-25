@@ -37,9 +37,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
   const { docs } = await payload.find({
     collection: 'questionnaires',
     where:
-      nameParam === 'current'
-        ? { isCurrent: { equals: true } }
-        : { name: { equals: nameParam } },
+      nameParam === 'current' ? { isCurrent: { equals: true } } : { name: { equals: nameParam } },
     limit: 1,
     depth: 2,
   })
@@ -75,8 +73,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
           sectionIndex={resolved.sectionIndex}
           sectionTitle={resolved.section.sectionTitle}
           sectionSubtitle={resolved.section.sectionSubtitle ?? undefined}
-          colorCardProgress={resolved.section.colorCardProgress ?? undefined}
-          colorCardBg={resolved.section.colorCardBg ?? undefined}
+          colorSection={resolved.section.colorSection ?? undefined}
           stepNumber={stepNumber}
           totalSteps={totalSteps}
           nextButtonText={nextButtonText}
@@ -84,7 +81,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
             Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
               ? questionnaire.sections.map((s) => ({
                   stepsCount: Array.isArray(s?.steps) ? s.steps.length : 0,
-                  progressColor: s?.colorCardProgress ?? undefined,
+                  variant: s.colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
                 }))
               : undefined
           }
@@ -105,6 +102,22 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
     const questionTypes = questions.map((q) => q.type)
     const stepTitle = resolved.step.stepTitle ?? undefined
 
+    // Build flat list of question types per step so navigation can skip plz/address in one go after GPS
+    const allStepQuestionTypes: ReturnType<typeof mapPayloadQuestionToFrontend>['type'][][] = []
+    for (let i = 1; i <= totalSteps; i++) {
+      const pageResolved = getQuestionnairePageByIndex(questionnaire, i)
+      if (pageResolved?.type === 'step') {
+        const raw = Array.isArray(pageResolved.step.questions)
+          ? pageResolved.step.questions.filter(
+              (q): q is PayloadQuestion => typeof q === 'object' && q !== null && 'key' in q,
+            )
+          : []
+        allStepQuestionTypes.push(raw.map(mapPayloadQuestionToFrontend).map((q) => q.type))
+      } else {
+        allStepQuestionTypes.push([])
+      }
+    }
+
     return (
       <QuestionClient
         questionnaireName={questionnaireName}
@@ -114,12 +127,10 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
         stepNumber={stepNumber}
         totalSteps={totalSteps}
         questionTypes={questionTypes}
+        allStepQuestionTypes={allStepQuestionTypes}
         nextButtonText={nextButtonText}
         previousButtonText={previousButtonText}
-        sectionColors={{
-          cardProgress: resolved.section.colorCardProgress ?? '#6366f1',
-          cardBg: resolved.section.colorCardBg ?? '#e0e7ff',
-        }}
+        colorSection={resolved.section.colorSection ?? undefined}
         sectionStepsTotal={
           Array.isArray(resolved.section.steps) && resolved.section.steps.length > 0
             ? resolved.section.steps.length
@@ -134,7 +145,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
           Array.isArray(questionnaire.sections) && questionnaire.sections.length > 0
             ? questionnaire.sections.map((s) => ({
                 stepsCount: Array.isArray(s?.steps) ? s.steps.length : 0,
-                progressColor: s?.colorCardProgress ?? undefined,
+                variant: s.colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
               }))
             : undefined
         }

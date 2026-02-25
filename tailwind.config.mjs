@@ -116,6 +116,8 @@ const config = {
           'purple-alt': 'hsl(var(--am-purple-alt))',
           orange: 'hsl(var(--am-orange))',
           'orange-alt': 'hsl(var(--am-orange-alt))',
+          turquoise: 'hsl(var(--am-turq))',
+          'turquoise-alt': 'hsl(var(--am-turq-alt))',
         },
         success: 'hsl(var(--success))',
         error: 'hsl(var(--error))',

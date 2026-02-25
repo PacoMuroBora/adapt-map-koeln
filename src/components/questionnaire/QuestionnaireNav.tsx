@@ -62,32 +62,37 @@ export default function QuestionnaireNav({
       </button>
 
       <div className="fixed bottom-8 left-0 right-0 z-10 flex h-20 flex-row items-center justify-center px-4">
-        <div className="relative flex h-14 w-full max-w-2xl flex-row items-center gap-4">
-        {!isFirstPage && (
-          <div
-            className={cn(
-              'transition-all duration-300 ease-out',
-              prevButtonMounted ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0',
-            )}
-          >
-            <Button type="button" variant="outline-white" onClick={onPrevious} iconBefore="arrow-up" />
-          </div>
-        )}
-        {!hideNextButton && (
-          <Button
-            type="button"
-            size="lg"
-            shape="round"
-            variant={nextButtonVariant}
-            iconAfter={nextIcon}
-            onClick={onNext}
-            disabled={nextDisabled}
-            className={cn('absolute left-1/2 -translate-x-1/2', nextDisabled && 'opacity-20')}
-          >
-            {nextLabel}
-          </Button>
-        )}
-      </div>
+        <div className="relative flex h-14 w-full flex-row items-center gap-4">
+          {!isFirstPage && (
+            <div
+              className={cn(
+                'transition-all duration-300 ease-out',
+                prevButtonMounted ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0',
+              )}
+            >
+              <Button
+                type="button"
+                variant="outline-white"
+                onClick={onPrevious}
+                iconBefore="arrow-up"
+              />
+            </div>
+          )}
+          {!hideNextButton && (
+            <Button
+              type="button"
+              size="lg"
+              shape="round"
+              variant={nextButtonVariant}
+              iconAfter={nextIcon}
+              onClick={onNext}
+              disabled={nextDisabled}
+              className={cn('absolute left-1/2 -translate-x-1/2', nextDisabled && 'opacity-20')}
+            >
+              {nextLabel}
+            </Button>
+          )}
+        </div>
       </div>
 
       <AlertDialog open={showAbortDialog} onOpenChange={setShowAbortDialog}>

@@ -4,10 +4,10 @@ import { cn } from '@/utilities/ui'
 import { motion } from 'motion/react'
 
 export type SectionProgressBarProps = {
-  sections: { stepsCount: number; progressColor?: string }[]
+  sections: { stepsCount: number; variant?: string }[]
   currentSectionIndex: number
   currentStepInSection: number
-  progressColor?: string
+  variant?: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
   onStepClick?: (step: number) => void
   className?: string
 }
@@ -21,14 +21,41 @@ const EASE = [0.33, 1, 0.68, 1] as const // ease-out: starts fast, no perceived 
 const DURATION = 0.4
 const TRANSITION = { duration: DURATION, ease: EASE }
 
+const DEFAULT_VARIANT = 'purple' satisfies SectionProgressBarProps['variant']
+
 export default function SectionProgressBar({
   sections,
   currentSectionIndex,
   currentStepInSection,
-  progressColor,
+  variant = DEFAULT_VARIANT,
   onStepClick,
   className,
 }: SectionProgressBarProps) {
+  const resolvedVariant = variant ?? DEFAULT_VARIANT
+  const dotClasses = {
+    bgPast: {
+      purple: 'bg-am-purple/20',
+      orange: 'bg-am-orange/20',
+      green: 'bg-am-green/20',
+      pink: 'bg-am-pink/20',
+      turquoise: 'bg-am-turquoise/20',
+    },
+    bgActive: {
+      purple: 'bg-am-purple-alt',
+      orange: 'bg-am-orange-alt',
+      green: 'bg-am-green-alt',
+      pink: 'bg-am-pink-alt',
+      turquoise: 'bg-am-turquoise-alt',
+    },
+    border: {
+      purple: 'border-am-purple-alt',
+      orange: 'border-am-orange-alt',
+      green: 'border-am-green-alt',
+      pink: 'border-am-pink-alt',
+      turquoise: 'border-am-turquoise-alt',
+    },
+  }
+
   return (
     <div
       className={cn('flex flex-col items-center justify-end gap-4', className)}
@@ -43,7 +70,6 @@ export default function SectionProgressBar({
         const isCompleted = sectionIdx < currentSectionIndex
         const stepsCount = Math.max(1, section.stepsCount)
         const label = String(sectionIdx + 1).padStart(2, '0')
-        const sectionColor = section.progressColor ?? progressColor
 
         return (
           <div
@@ -54,15 +80,12 @@ export default function SectionProgressBar({
             <p className="shrink-0 font-mono text-xs font-normal uppercase leading-tight text-white">
               {label}
             </p>
-            <motion.div
-              className="flex w-2 flex-col"
-            >
+            <motion.div className="flex w-2 flex-col">
               {Array.from({ length: stepsCount }, (_, i) => {
                 const step = i + 1
                 const isActive =
                   isCurrent && currentStepInSection > 0 && step === currentStepInSection
-                const isPast =
-                  isCurrent && currentStepInSection > 0 && step < currentStepInSection
+                const isPast = isCurrent && currentStepInSection > 0 && step < currentStepInSection
                 const filled = isCompleted || isPast
                 const isClickable = isPast && onStepClick != null
                 const gapPx = isCurrent ? GAP_EXPANDED : GAP_COMPRESSED
@@ -79,28 +102,16 @@ export default function SectionProgressBar({
                     className={cn(
                       'block w-2 shrink-0 rounded-[50px] border border-solid transition-colors duration-300 ease-in-out outline-none ring-0',
                       isClickable && 'cursor-pointer',
-                      isActive && !sectionColor && 'border-transparent bg-am-purple-alt',
-                      !isActive && filled && !sectionColor && 'bg-white/40',
-                      !isActive && filled && isCurrent && !sectionColor && 'border-white/40',
-                      !isActive && filled && !isCurrent && !sectionColor && 'border-transparent',
-                      !isActive && !filled && !sectionColor && 'border-white/40 bg-white/10',
-                      isPast && !isActive && !sectionColor && 'hover:bg-am-purple-alt/40',
+                      isActive &&
+                        isCurrent &&
+                        `${dotClasses.bgActive[resolvedVariant]} ${dotClasses.border[resolvedVariant]}`,
+                      filled &&
+                        isCurrent &&
+                        !isActive &&
+                        `${dotClasses.bgPast[resolvedVariant]} ${dotClasses.border[resolvedVariant]}`,
+                      !isActive && !filled && 'bg-white/10 border-white/40',
+                      !isCurrent && 'bg-white/10 border-white/40',
                     )}
-                    style={
-                      isActive && sectionColor
-                        ? { backgroundColor: sectionColor, borderColor: 'transparent' }
-                        : !isActive && filled && sectionColor
-                          ? {
-                              backgroundColor: `${sectionColor}${isCurrent ? '66' : '99'}`,
-                              borderColor: sectionColor,
-                            }
-                          : !isActive && !filled && sectionColor
-                            ? {
-                                borderColor: sectionColor,
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                              }
-                            : undefined
-                    }
                     animate={{
                       height: isCurrent ? BAR_HEIGHT_EXPANDED : BAR_HEIGHT_COMPRESSED,
                       marginBottom: isLastBar ? 0 : gapPx,

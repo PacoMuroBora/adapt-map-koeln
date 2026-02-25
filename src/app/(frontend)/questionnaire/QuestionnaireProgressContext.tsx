@@ -6,7 +6,7 @@ export type QuestionnaireProgressState = {
   sections: { stepsCount: number; progressColor?: string }[]
   currentSectionIndex: number
   currentStepInSection: number
-  progressColor?: string
+  variant?: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
   onStepClick?: (step: number) => void
 }
 

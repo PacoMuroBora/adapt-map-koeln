@@ -5,14 +5,16 @@ import * as React from 'react'
 const cardVariants = cva('rounded-3xl border text-card-foreground shadow-sm', {
   variants: {
     variant: {
-      default: 'bg-card border-border-light/10',
-      purple: 'bg-am-purple border-border',
-      orange: 'bg-am-orange border-border-orange',
+      purple: 'bg-am-purple border-am-purple-alt',
+      orange: 'bg-am-orange border-am-orange-alt',
+      green: 'bg-am-green border-am-green-alt',
+      pink: 'bg-am-pink border-am-pink-alt',
+      turquoise: 'bg-am-turquoise border-am-turquoise-alt',
       white: 'bg-am-white border-dashed border-input',
     },
   },
   defaultVariants: {
-    variant: 'default',
+    variant: 'purple',
   },
 })
 

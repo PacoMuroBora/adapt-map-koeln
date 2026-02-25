@@ -245,10 +245,9 @@ export function AddressSearchInput({
     const displayValue =
       [suggestion.street, suggestion.housenumber].filter(Boolean).join(' ').trim() ||
       suggestion.name
-    const hasHouseNumber = Boolean(suggestion.housenumber?.trim())
 
     justSelectedRef.current = true
-    setQuery('')
+    setQuery(displayValue)
     onChange({
       street: suggestion.street?.trim() || suggestion.name || displayValue,
       housenumber: suggestion.housenumber || undefined,

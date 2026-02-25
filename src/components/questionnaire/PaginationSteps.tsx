@@ -7,12 +7,11 @@ export type PaginationStepsProps = {
   currentStep: number
   totalSteps: number
   className?: string
-  variant?: 'purple' | 'orange'
+  variant?: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
   direction?: 'horizontal' | 'vertical'
   /** When set, past steps are clickable and call this with the step number (1-based). */
   onStepClick?: (step: number) => void
   /** Optional hex color for progress indicator and dots (overrides variant). */
-  progressColor?: string
 }
 
 /**
@@ -26,10 +25,30 @@ export default function PaginationSteps({
   variant = 'purple',
   direction = 'horizontal',
   onStepClick,
-  progressColor,
 }: PaginationStepsProps) {
-  const activeStyle = progressColor ? { backgroundColor: progressColor } : undefined
-  const pastStyle = progressColor ? { backgroundColor: `${progressColor}66`, borderColor: progressColor } : undefined
+  const dotVariants = {
+    bgPast: {
+      purple: 'bg-am-purple/20',
+      orange: 'bg-am-orange/20',
+      green: 'bg-am-green/20',
+      pink: 'bg-am-pink/20',
+      turquoise: 'bg-am-turquoise/20',
+    },
+    bgActive: {
+      purple: 'bg-am-purple-alt',
+      orange: 'bg-am-orange-alt',
+      green: 'bg-am-green-alt',
+      pink: 'bg-am-pink-alt',
+      turquoise: 'bg-am-turquoise-alt',
+    },
+    border: {
+      purple: 'border-am-purple-alt',
+      orange: 'border-am-orange-alt',
+      green: 'border-am-green-alt',
+      pink: 'border-am-pink-alt',
+      turquoise: 'border-am-turquoise-alt',
+    },
+  }
 
   return (
     <Pagination
@@ -41,8 +60,11 @@ export default function PaginationSteps({
       </span>
       {direction === 'vertical' && (
         <span
-          className={cn('text-[12px] font-mono uppercase tracking-wide mb-2', !progressColor && 'text-white')}
-          style={progressColor ? { color: progressColor } : undefined}
+          className={cn(
+            'text-[12px] font-mono uppercase tracking-wide mb-2',
+            !variant && 'text-white',
+          )}
+          style={variant ? { color: variant } : undefined}
         >
           {String(currentStep).padStart(2, '0')}
         </span>
@@ -56,12 +78,6 @@ export default function PaginationSteps({
           const isPast = step < currentStep
           const isClickable = isPast && onStepClick != null
           const El = isClickable ? 'button' : 'span'
-          const dotStyle =
-            progressColor && (isActive || isPast)
-              ? isActive
-                ? activeStyle
-                : pastStyle
-              : undefined
           return (
             <PaginationItem key={step} className="list-none min-w-0 flex-1">
               <El
@@ -69,17 +85,14 @@ export default function PaginationSteps({
                 aria-current={isActive ? 'step' : undefined}
                 aria-label={isClickable ? `Zu Schritt ${step} wechseln` : undefined}
                 onClick={isClickable ? () => onStepClick(step) : undefined}
-                style={dotStyle}
                 className={cn(
                   'block w-full rounded-full transition-colors duration-300 ease-in-out',
                   direction === 'horizontal' ? 'h-2' : 'h-full w-2',
                   'outline-none ring-0',
                   isClickable && 'cursor-pointer',
-                  !progressColor && isActive && (variant === 'purple' ? 'bg-am-purple-alt' : 'bg-am-orange-alt'),
-                  !progressColor && !isActive && 'border border-white/40',
-                  !progressColor && isPast && 'bg-am-white/40 hover:bg-am-purple-alt/40 hover:border-border',
-                  !progressColor && !isActive && !isPast && 'bg-am-white/15',
-                  progressColor && !isActive && 'border border-white/40',
+                  isActive && [dotVariants.bgActive[variant], dotVariants.border[variant]],
+                  isPast && !isActive && [dotVariants.bgPast[variant], dotVariants.border[variant]],
+                  !isActive && !isPast && ['bg-white/10 border-white/40'],
                 )}
               />
             </PaginationItem>

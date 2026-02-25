@@ -13,6 +13,8 @@ export type StepNavigationConfig = {
   stepNumber: number
   totalSteps: number
   questionTypes: Question['type'][]
+  /** Flat list of question types per step (index = stepNumber - 1). When set, used to skip plz/address in one go after GPS. */
+  allStepQuestionTypes?: Question['type'][][]
   /** Either single question (legacy) or multiple questions for the step */
   question?: Question
   answer?: unknown
@@ -111,6 +113,7 @@ export function useQuestionnaireNavigation(
       stepNumber,
       totalSteps,
       questionTypes,
+      allStepQuestionTypes,
       question,
       answer,
       questions,
@@ -144,14 +147,28 @@ export function useQuestionnaireNavigation(
     }
     updateCurrentStep('questionnaire')
     let nextStep = stepNumber + 1
-    if (question && question.type === 'location_GPS' && config.state.location?.postal_code && questionTypes.length > 0) {
-      while (
-        nextStep <= totalSteps &&
-        STEPS_TO_SKIP_WHEN_GPS.includes(
-          questionTypes[nextStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
-        )
-      ) {
-        nextStep++
+    const isGpsStep =
+      (question && question.type === 'location_GPS') ||
+      (questionTypes.length > 0 && questionTypes.includes('location_GPS'))
+    if (isGpsStep && config.state.location?.postal_code) {
+      if (allStepQuestionTypes && allStepQuestionTypes.length >= totalSteps) {
+        while (
+          nextStep <= totalSteps &&
+          (allStepQuestionTypes[nextStep - 1] ?? []).every((t) =>
+            STEPS_TO_SKIP_WHEN_GPS.includes(t as (typeof STEPS_TO_SKIP_WHEN_GPS)[number]),
+          )
+        ) {
+          nextStep++
+        }
+      } else if (questionTypes.length > 0) {
+        while (
+          nextStep <= totalSteps &&
+          STEPS_TO_SKIP_WHEN_GPS.includes(
+            questionTypes[nextStep - 1] as (typeof STEPS_TO_SKIP_WHEN_GPS)[number],
+          )
+        ) {
+          nextStep++
+        }
       }
     }
     const path =

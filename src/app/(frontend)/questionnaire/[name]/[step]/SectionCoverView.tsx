@@ -13,9 +13,8 @@ export type SectionCoverViewProps = {
   sectionTitle: string
   /** From CMS; may contain "Teil 2" etc. Shown as overline. */
   sectionSubtitle?: string
-  /** Section color for the cover figure and progress bar (e.g. purple, orange). */
-  colorCardProgress?: string
-  colorCardBg?: string
+  /** Section color (e.g. purple, orange). Used for cover figure and progress bar. */
+  colorSection: string
   stepNumber: number
   totalSteps: number
   nextButtonText: string
@@ -29,8 +28,7 @@ export default function SectionCoverView({
   sectionIndex,
   sectionTitle,
   sectionSubtitle,
-  colorCardProgress,
-  colorCardBg: _colorCardBg,
+  colorSection,
   stepNumber,
   totalSteps: _totalSteps,
   nextButtonText,
@@ -38,12 +36,8 @@ export default function SectionCoverView({
   currentSectionIndex = 0,
 }: SectionCoverViewProps) {
   const router = useRouter()
-  const {
-    handleAbortQuestionnaire,
-    showAbortDialog,
-    setShowAbortDialog,
-    handleConfirmAbort,
-  } = useQuestionnaireNavigation(questionnaireName, { mode: 'start' })
+  const { handleAbortQuestionnaire, showAbortDialog, setShowAbortDialog, handleConfirmAbort } =
+    useQuestionnaireNavigation(questionnaireName, { mode: 'start' })
 
   const handleNext = () => {
     router.push(`/questionnaire/${questionnaireName}/${stepNumber + 1}`)
@@ -57,7 +51,15 @@ export default function SectionCoverView({
     }
   }
 
-  const figureColor = colorCardProgress ?? '#BCB4FF'
+  const figureColor = {
+    colorSection: {
+      purple: '#9F94FF',
+      orange: '#FF8429',
+      green: '#DAFA38',
+      pink: '#E286F4',
+      turquoise: '#278674',
+    }[colorSection],
+  }
 
   const progressState = useMemo(
     () =>
@@ -66,10 +68,10 @@ export default function SectionCoverView({
             sections: sectionsProgress,
             currentSectionIndex,
             currentStepInSection: 0 as const,
-            progressColor: colorCardProgress,
+            variant: colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise',
           }
         : null,
-    [sectionsProgress, currentSectionIndex, colorCardProgress],
+    [sectionsProgress, currentSectionIndex, colorSection],
   )
   useSetQuestionnaireProgress(progressState)
 
@@ -78,16 +80,15 @@ export default function SectionCoverView({
       {/* Background grid */}
       <div className="fixed inset-0 z-0 h-screen w-screen background-grid" />
 
-      {/* Cover figure: color from CMS — relatively positioned, almost centered with shift, scales with viewport */}
-      <div className="relative left-1/2 top-8 z-10 w-[min(85vw,65vmin)] max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-[8%]">
-        <Shape01 color={figureColor} className="h-auto w-full" />
+      <div className="fixed -right-4 top-20 z-10 w-[min(85vw,85vmin)] max-w-[calc(100%-2rem)]">
+        <Shape01 color={figureColor.colorSection} className="h-auto w-full" />
       </div>
 
       {/* Progress bar rendered by [step] layout so it stays mounted and can animate */}
 
       {/* Section text at bottom: CMS subtitle as overline, then title (spaced up for nav) — same container as welcome/steps */}
-      <div className="relative z-10 flex flex-1 flex-col justify-end">
-        <div className="mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg flex flex-col gap-3 pb-10">
+      <div className="relative z-10 flex flex-1 flex-col justify-end md:px-4">
+        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg flex flex-col gap-3 pb-10">
           {sectionSubtitle && (
             <p className="font-mono text-body-sm uppercase tracking-wide text-white">
               {sectionSubtitle}

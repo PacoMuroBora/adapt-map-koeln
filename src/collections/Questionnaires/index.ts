@@ -77,20 +77,36 @@ export const Questionnaires: CollectionConfig = {
           required: false,
           admin: { description: 'Section subtitle' },
         },
+        // {
+        //   name: 'colorCardProgress',
+        //   type: 'text',
+        //   required: false,
+        //   admin: {
+        //     description: 'Hex color for section card shape and progress bar (e.g. #6366f1)',
+        //   },
+        // },
+        // {
+        //   name: 'colorCardBg',
+        //   type: 'text',
+        //   required: false,
+        //   admin: {
+        //     description: 'Hex color for card background (e.g. #e0e7ff)',
+        //   },
+        // },
         {
-          name: 'colorCardProgress',
-          type: 'text',
-          required: false,
+          name: 'colorSection',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Purple', value: 'purple' },
+            { label: 'Orange', value: 'orange' },
+            { label: 'Green', value: 'green' },
+            { label: 'Pink', value: 'pink' },
+            { label: 'Turquoise', value: 'turquoise' },
+          ],
           admin: {
-            description: 'Hex color for section card shape and progress bar (e.g. #6366f1)',
-          },
-        },
-        {
-          name: 'colorCardBg',
-          type: 'text',
-          required: false,
-          admin: {
-            description: 'Hex color for card background (e.g. #e0e7ff)',
+            description:
+              'Select the color of the section, this will be used for the section card background and progress bar.',
           },
         },
         {
@@ -122,7 +138,8 @@ export const Questionnaires: CollectionConfig = {
       type: 'text',
       required: false,
       admin: {
-        description: 'Deprecated: used for legacy welcome. Use instructionTitle + sections instead.',
+        description:
+          'Deprecated: used for legacy welcome. Use instructionTitle + sections instead.',
       },
     },
     {

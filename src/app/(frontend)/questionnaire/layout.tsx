@@ -6,9 +6,7 @@ export default function QuestionnaireLayout({ children }: { children: React.Reac
       {/* Full-viewport background so it covers the entire screen including behind the navbar */}
       <div className="fixed inset-0 z-0 bg-black" aria-hidden />
       <div className="relative z-10 flex min-h-[calc(100vh-3.5rem)] flex-col bg-black md:justify-center">
-        <div className="h-full w-full md:mx-auto md:flex md:min-h-[min(100vh,52rem)] md:max-w-xl md:flex-col md:items-center md:justify-center">
-          {children}
-        </div>
+        {children}
       </div>
     </>
   )

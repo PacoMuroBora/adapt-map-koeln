@@ -496,13 +496,9 @@ export interface Questionnaire {
          */
         sectionSubtitle?: string | null;
         /**
-         * Hex color for section card shape and progress bar (e.g. #6366f1)
+         * Select the color of the section, this will be used for the section card background and progress bar.
          */
-        colorCardProgress?: string | null;
-        /**
-         * Hex color for card background (e.g. #e0e7ff)
-         */
-        colorCardBg?: string | null;
+        colorSection: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise';
         /**
          * Steps in this section
          */
@@ -2176,8 +2172,7 @@ export interface QuestionnairesSelect<T extends boolean = true> {
     | {
         sectionTitle?: T;
         sectionSubtitle?: T;
-        colorCardProgress?: T;
-        colorCardBg?: T;
+        colorSection?: T;
         steps?:
           | T
           | {

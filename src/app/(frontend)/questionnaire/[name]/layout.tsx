@@ -1,7 +1,10 @@
 'use client'
 
 import type React from 'react'
-import { QuestionnaireProgressProvider, useQuestionnaireProgress } from '../QuestionnaireProgressContext'
+import {
+  QuestionnaireProgressProvider,
+  useQuestionnaireProgress,
+} from '../QuestionnaireProgressContext'
 import SectionProgressBar from '@/components/questionnaire/SectionProgressBar'
 
 function ProgressBarSlot() {
@@ -14,7 +17,7 @@ function ProgressBarSlot() {
         sections={progress.sections}
         currentSectionIndex={progress.currentSectionIndex}
         currentStepInSection={progress.currentStepInSection}
-        progressColor={progress.progressColor}
+        variant={progress.variant}
         onStepClick={progress.onStepClick}
         className="h-full"
       />
