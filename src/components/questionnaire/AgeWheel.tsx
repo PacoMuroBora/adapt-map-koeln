@@ -155,7 +155,7 @@ export default function AgeWheel({
       <div className="absolute inset-x-0 -top-6 w-full">
         <svg
           className="w-full h-auto"
-          viewBox="0 0 1 1"
+          viewBox="0 0 1 2"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMax meet"
@@ -164,6 +164,7 @@ export default function AgeWheel({
             d="M0.501582 0C0.683503 0 0.853876 0.0503165 1 0.138018V1H0V0.139927C0.146827 0.0510478 0.318346 0 0.501582 0Z"
             fill="#9F94FF"
           />
+          <rect x="0" y="1" width="1" height="1" fill="#9F94FF" />
         </svg>
       </div>
       {/* active value indicator */}
@@ -230,7 +231,7 @@ export default function AgeWheel({
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col justify-center text-body-sm text-muted-foreground flex items-center gap-1 ml-2">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center gap-1 text-body-sm text-muted-foreground text-center">
         <MoveHorizontal className="w-4 h-4" />
         <p>ziehe zum Auswählen</p>
       </div>
