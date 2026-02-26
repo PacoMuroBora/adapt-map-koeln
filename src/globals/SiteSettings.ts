@@ -132,6 +132,17 @@ export const SiteSettings: GlobalConfig = {
                   },
                   defaultValue: '/webhook/kb/sync',
                 },
+                {
+                  name: 'audioTranscribe',
+                  type: 'text',
+                  required: true,
+                  admin: {
+                    description:
+                      'n8n webhook URL for audio-to-text transcription. Dev: https://n8n.adaptmap.de/webhook/audio-to-transcribe | Prod: /webhook/audio-to-transcribe',
+                    placeholder: '/webhook/audio-to-transcribe',
+                  },
+                  defaultValue: '/webhook/audio-to-transcribe',
+                },
               ],
             },
           ],

@@ -22,6 +22,7 @@ import VerticalSlider from '@/components/questionnaire/VerticalSlider'
 import IconSelection from '@/components/questionnaire/IconSelection'
 import AgeWheel from '@/components/questionnaire/AgeWheel'
 import { AddressSearchInput } from '@/components/questionnaire/AddressSearchInput'
+import { AudioTranscribeButton } from '@/components/questionnaire/AudioTranscribeButton'
 import { LinkButton } from '@/components/ui/link-button'
 import { Loader2 } from 'lucide-react'
 import { Home, Building, Plus, Target, TreePine, Check, X } from 'lucide-react'
@@ -573,23 +574,39 @@ export function QuestionCaseInput({
       const rows = taConfig?.rows ?? 4
       const len = String(answer ?? '').length
       return (
-        <div className="space-y-2">
-          <Textarea
-            value={answer || ''}
-            onChange={(e) => {
-              const v = e.target.value
-              if (v.length <= maxLen) setAnswerForQ(v)
-              setError(null)
-            }}
-            placeholder="Schreib etwas..."
-            rows={rows}
-            color={color}
-            className="resize-none"
-          />
-          <div className="flex justify-end px-2 text-sm text-muted">
-            <span className={len >= maxLen ? 'text-destructive' : ''}>
-              {maxLen - len} verbleibend
-            </span>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-2 overflow-auto">
+            <Textarea
+              value={answer || ''}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v.length <= maxLen) setAnswerForQ(v)
+                setError(null)
+              }}
+              placeholder="Schreib etwas..."
+              rows={rows}
+              color={color}
+              className="resize-none"
+            />
+            <div className="flex justify-end px-2">
+              <span
+                className={
+                  len >= maxLen ? 'text-sm text-destructive' : 'text-sm text-muted'
+                }
+              >
+                {maxLen - len} verbleibend
+              </span>
+            </div>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-end">
+            <AudioTranscribeButton
+              color={color}
+              onTranscript={(text) => {
+                const current = String(answer ?? '')
+                const newVal = current ? `${current} ${text}` : text
+                if (newVal.length <= maxLen) setAnswerForQ(newVal)
+              }}
+            />
           </div>
         </div>
       )

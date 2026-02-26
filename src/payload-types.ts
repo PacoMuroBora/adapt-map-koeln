@@ -2821,6 +2821,10 @@ export interface SiteSetting {
      * n8n webhook URL for knowledge base synchronization. Dev: https://n8n.adaptmap.de/webhook/kb/sync | Prod: /webhook/kb/sync
      */
     kbSync: string;
+    /**
+     * n8n webhook URL for audio-to-text transcription. Dev: https://n8n.adaptmap.de/webhook/audio-to-transcribe | Prod: /webhook/audio-to-transcribe
+     */
+    audioTranscribe: string;
   };
   /**
    * Default meta title for the site (used in <title> tag and OpenGraph)
@@ -3044,6 +3048,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         aiRecommendation?: T;
         kbSync?: T;
+        audioTranscribe?: T;
       };
   metaTitle?: T;
   metaDescription?: T;

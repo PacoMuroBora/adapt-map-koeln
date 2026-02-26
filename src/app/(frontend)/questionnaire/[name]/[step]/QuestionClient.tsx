@@ -727,47 +727,61 @@ export default function QuestionClient({
                 variant={(colorSection ?? 'purple') as CardProps['variant']}
                 className="flex min-h-0 h-[70vh] flex-col overflow-hidden"
               >
-                <div className="relative min-h-0 flex-1 space-y-6 overflow-hidden">
-                  <div className="px-6 py-8 space-y-8">
-                    {effectiveQuestions[0]?.title != null && (
-                      <div>
-                        <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
-                          {effectiveQuestions[0].title}
-                        </h1>
-                        {effectiveQuestions[0].description != null && (
-                          <p className="text-body-sm text-muted-foreground">
-                            {effectiveQuestions[0].description}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {effectiveQuestions.map((q) => (
-                      <div
-                        key={q.id}
-                        className={cn(
-                          'space-y-3',
-                          q.type === 'sliderHorizontalRange' && 'flex flex-col min-h-[55lvh]',
-                        )}
-                      >
+                <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+                  <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+                    <div
+                      className={cn(
+                        'space-y-8 px-6 py-8',
+                        effectiveQuestions.some((q) => q.type === 'textarea') &&
+                          'flex min-h-full flex-1 flex-col',
+                      )}
+                    >
+                      {effectiveQuestions[0]?.title != null && (
+                        <div>
+                          <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
+                            {effectiveQuestions[0].title}
+                          </h1>
+                          {effectiveQuestions[0].description != null && (
+                            <p className="text-body-sm text-muted-foreground">
+                              {effectiveQuestions[0].description}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {effectiveQuestions.map((q) => (
                         <div
-                          className={
-                            q.type === 'sliderHorizontalRange'
-                              ? 'relative flex flex-1 min-h-0 flex-col'
-                              : undefined
-                          }
+                          key={q.id}
+                          className={cn(
+                            'space-y-3',
+                            q.type === 'sliderHorizontalRange' && 'flex flex-col min-h-[55lvh]',
+                            q.type === 'textarea' && 'flex min-h-0 flex-1 flex-col',
+                          )}
                         >
-                          <QuestionCaseInput
+                          <div
+                            className={cn(
+                              q.type === 'sliderHorizontalRange' &&
+                                'relative flex min-h-0 flex-1 flex-col',
+                              q.type === 'textarea' && 'flex min-h-0 flex-1 flex-col',
+                            )}
+                          >
+                            <QuestionCaseInput
                             question={q}
                             answer={getAnswer(q.key)}
                             setAnswer={(v) => setAnswer(q.key, v)}
                             context={questionInputContext}
                             color={
-                              colorSection as 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
+                              (colorSection ?? 'purple') as
+                                | 'purple'
+                                | 'orange'
+                                | 'green'
+                                | 'pink'
+                                | 'turquoise'
                             }
-                          />
+                            />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </Card>

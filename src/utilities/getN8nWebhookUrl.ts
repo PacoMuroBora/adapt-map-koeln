@@ -6,22 +6,28 @@ import type { SiteSetting } from '@/payload-types'
  * Get the full n8n webhook URL based on environment and SiteSettings configuration.
  * In development, uses full URL. In production, strips domain and uses internal routing.
  *
- * @param webhookPath - The webhook path (e.g., 'aiRecommendation' or 'kbSync')
+ * @param webhookPath - The webhook path (e.g., 'aiRecommendation', 'kbSync', or 'audioTranscribe')
  * @returns The full webhook URL
  */
 export async function getN8nWebhookUrl(
-  webhookPath: 'aiRecommendation' | 'kbSync',
+  webhookPath: 'aiRecommendation' | 'kbSync' | 'audioTranscribe',
 ): Promise<string> {
   const siteSettings = (await getCachedGlobal('site-settings', 0)()) as SiteSetting
 
   const webhookPathValue =
     webhookPath === 'aiRecommendation'
       ? siteSettings?.n8nWebhooks?.aiRecommendation
-      : siteSettings?.n8nWebhooks?.kbSync
+      : webhookPath === 'kbSync'
+        ? siteSettings?.n8nWebhooks?.kbSync
+        : siteSettings?.n8nWebhooks?.audioTranscribe
 
   // Fallback to default paths if not configured in SiteSettings
   const defaultPath =
-    webhookPath === 'aiRecommendation' ? '/webhook/ai/recommendation' : '/webhook/kb/sync'
+    webhookPath === 'aiRecommendation'
+      ? '/webhook/ai/recommendation'
+      : webhookPath === 'kbSync'
+        ? '/webhook/kb/sync'
+        : '/webhook/audio-to-transcribe'
   const configuredPath = webhookPathValue || defaultPath
 
   // Extract path from full URL if provided (strip domain)
