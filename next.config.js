@@ -6,9 +6,12 @@ const NEXT_PUBLIC_SERVER_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : undefined || process.env.__NEXT_PRIVATE_ORIGIN || 'http://localhost:3000'
 
+// Keep this logic: standalone is required for Linux deployment (Hostinger VM / Docker).
+// Do not force output: 'standalone' on all platforms — it fails on Windows (EPERM symlinks) unless Developer Mode is on.
+const isWindows = process.platform === 'win32'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone', // For Hostinger VM / Docker (Linux); local Windows may need Developer Mode for symlinks
+  ...(isWindows ? {} : { output: 'standalone' }),
   images: {
     remotePatterns: [
       ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
