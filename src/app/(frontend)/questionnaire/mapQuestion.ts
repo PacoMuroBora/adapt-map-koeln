@@ -74,7 +74,11 @@ export function mapPayloadQuestionToFrontend(p: PayloadQuestion): Question {
       : undefined,
     ageWheelConfig:
       p.type === 'ageWheel' && p.ageWheelConfig != null
-        ? { min: p.ageWheelConfig.min, max: p.ageWheelConfig.max }
+        ? {
+            min: p.ageWheelConfig.min,
+            max: p.ageWheelConfig.max,
+            startValue: p.ageWheelConfig.startValue ?? undefined,
+          }
         : undefined,
     groupFields: p.type === 'group' ? [] : undefined,
   }

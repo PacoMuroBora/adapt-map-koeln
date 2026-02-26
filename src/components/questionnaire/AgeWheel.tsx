@@ -14,11 +14,14 @@ const GAP = 12
 /** Curve steepness: vertical offset = CURVE_STRENGTH * dist². Lower = flatter arc. */
 const CURVE_STRENGTH = 4
 
+const HEIGHT = 300
+
 export type AgeWheelProps = {
   value: number
   onValueChange: (value: number) => void
   min?: number
   max?: number
+  startValue?: number
   className?: string
 }
 
@@ -27,6 +30,7 @@ export default function AgeWheel({
   onValueChange,
   min = 1,
   max = 110,
+  startValue = 28,
   className,
 }: AgeWheelProps) {
   const N = max - min + 1
@@ -78,7 +82,7 @@ export default function AgeWheel({
     }
     if (!containerWidth) return
     const v = Math.min(Math.max(value, min), max)
-    const centerIndex = middleStart + (v - min) - (VISIBLE_COUNT - 1) / 2
+    const centerIndex = middleStart + (v - min)
     const targetX = containerWidth / 2 - itemWidth / 2 - centerIndex * step
     x.set(targetX)
     setTranslateX(targetX)
@@ -133,8 +137,6 @@ export default function AgeWheel({
     )
   }
 
-  const height = 280
-
   return (
     <div className="absolute left-0 bottom-0 w-full">
       {/* background shape */}
@@ -152,13 +154,14 @@ export default function AgeWheel({
           />
         </svg>
       </div>
+      {/* active value indicator */}
       <div
-        className="absolute left-1/2 -top-12 w-0.5 bg-am-darker"
+        className="absolute left-1/2 -top-10 w-0.5 bg-am-darker"
         style={{ height: 40 }}
         aria-hidden
       />
       <div className="relative w-full overflow-hidden touch-none select-none">
-        <div ref={containerRef} className="-translate-x-3" style={{ height: height }}>
+        <div ref={containerRef} className="-translate-x-3" style={{ height: HEIGHT }}>
           <motion.div
             drag="x"
             dragElastic={0}
@@ -172,7 +175,7 @@ export default function AgeWheel({
             style={{
               left: 0,
               top: 0,
-              height: height,
+              height: HEIGHT,
               width: stripWidth,
               gap: GAP,
               x,
@@ -200,10 +203,10 @@ export default function AgeWheel({
                     width: isCenter ? itemWidth * 2 : itemWidth,
                     minWidth: isCenter ? itemWidth * 2 : itemWidth,
                     maxWidth: isCenter ? itemWidth * 2 : itemWidth,
-                    height: height,
+                    height: HEIGHT,
                     boxSizing: 'border-box',
                     transform: `translateY(${yOffset}px) scale(${scale})`,
-                    paddingTop: isCenter ? 2 : 0,
+                    paddingTop: isCenter ? 4 : 0,
                     opacity,
                   }}
                 >

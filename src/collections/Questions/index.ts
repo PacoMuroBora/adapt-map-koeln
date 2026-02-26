@@ -243,6 +243,7 @@ export const Questions: CollectionConfig = {
       fields: [
         { name: 'min', type: 'number', required: true, defaultValue: 0 },
         { name: 'max', type: 'number', required: true, defaultValue: 120 },
+        { name: 'startValue', type: 'number', required: true, defaultValue: 28 },
       ],
     },
     {

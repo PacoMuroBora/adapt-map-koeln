@@ -480,11 +480,19 @@ export function QuestionCaseInput({
       const aConfig = question.ageWheelConfig
       const aMin = aConfig?.min ?? 1
       const aMax = aConfig?.max ?? 110
-      const aDefault = Math.min(aMax, Math.max(aMin, Math.round((aMin + aMax) / 2)))
-      const aValue =
-        answer !== null && answer !== undefined && typeof answer === 'number'
-          ? Math.min(aMax, Math.max(aMin, answer))
-          : aDefault
+      const defaultStart = 28
+      const aStartValue =
+        aConfig?.startValue != null && aConfig.startValue >= aMin && aConfig.startValue <= aMax
+          ? aConfig.startValue
+          : Math.min(aMax, Math.max(aMin, defaultStart))
+      const aDefault = aStartValue
+      const midpoint = Math.round((aMin + aMax) / 2)
+      const hasStoredAnswer = answer !== null && answer !== undefined && typeof answer === 'number'
+      const storedClamped = hasStoredAnswer ? Math.min(aMax, Math.max(aMin, answer)) : null
+      const isOldMidpointDefault =
+        hasStoredAnswer && storedClamped === midpoint && midpoint !== aDefault
+      const aValue: number =
+        hasStoredAnswer && !isOldMidpointDefault && storedClamped != null ? storedClamped : aDefault
 
       return (
         <AgeWheel
@@ -495,6 +503,7 @@ export function QuestionCaseInput({
           }}
           min={aMin}
           max={aMax}
+          startValue={aDefault}
         />
       )
     }

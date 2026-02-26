@@ -59,6 +59,7 @@ export interface Question {
   ageWheelConfig?: {
     min: number
     max: number
+    startValue?: number
   }
   groupFields?: Question[]
 }

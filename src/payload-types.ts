@@ -692,6 +692,7 @@ export interface Question {
   ageWheelConfig?: {
     min: number;
     max: number;
+    startValue: number;
   };
   /**
    * Whether this question must be answered. If yes button says "Weiter", if no button says "Überspringen".
@@ -2153,6 +2154,7 @@ export interface QuestionsSelect<T extends boolean = true> {
     | {
         min?: T;
         max?: T;
+        startValue?: T;
       };
   required?: T;
   category?: T;
