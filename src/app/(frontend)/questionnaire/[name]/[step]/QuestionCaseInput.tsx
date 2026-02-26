@@ -503,7 +503,6 @@ export function QuestionCaseInput({
           }}
           min={aMin}
           max={aMax}
-          startValue={aDefault}
         />
       )
     }

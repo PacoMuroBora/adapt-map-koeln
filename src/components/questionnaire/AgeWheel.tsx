@@ -11,8 +11,10 @@ const COPIES = 3
 const ITEM_WIDTH = 32
 /** Horizontal gap between numbers (included in step for all position math) */
 const GAP = 12
-/** Curve steepness: vertical offset = CURVE_STRENGTH * dist². Lower = flatter arc. */
-const CURVE_STRENGTH = 4
+/** Curve steepness */
+const CURVE_STRENGTH_MOBILE = 4
+const CURVE_STRENGTH_DESKTOP = 2.5
+const CURVE_BREAKPOINT = 768
 
 const HEIGHT = 300
 
@@ -21,7 +23,6 @@ export type AgeWheelProps = {
   onValueChange: (value: number) => void
   min?: number
   max?: number
-  startValue?: number
   className?: string
 }
 
@@ -30,13 +31,15 @@ export default function AgeWheel({
   onValueChange,
   min = 1,
   max = 110,
-  startValue = 28,
   className,
 }: AgeWheelProps) {
   const N = max - min + 1
   const totalItems = N * COPIES
   const containerRef = React.useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = React.useState(0)
+  const [windowWidth, setWindowWidth] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth : CURVE_BREAKPOINT,
+  )
   const [translateX, setTranslateX] = React.useState(0)
 
   // Fixed item width; step = distance from start of one item to next. All position math uses step.
@@ -114,10 +117,19 @@ export default function AgeWheel({
     return () => ro.disconnect()
   }, [])
 
+  React.useEffect(() => {
+    const onResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   const centerIndex =
     containerWidth > 0
       ? (-translateX + containerWidth / 2 - itemWidth / 2) / step
       : middleStart + (value - min)
+
+  const curveStrength =
+    windowWidth < CURVE_BREAKPOINT ? CURVE_STRENGTH_MOBILE : CURVE_STRENGTH_DESKTOP
 
   const getItemValue = (index: number) => min + (index % N)
 
@@ -140,7 +152,7 @@ export default function AgeWheel({
   return (
     <div className="absolute left-0 bottom-0 w-full">
       {/* background shape */}
-      <div className="absolute inset-x-0 bottom-0 w-full">
+      <div className="absolute inset-x-0 -top-6 w-full">
         <svg
           className="w-full h-auto"
           viewBox="0 0 1 1"
@@ -187,7 +199,7 @@ export default function AgeWheel({
               const isCenter = absDist < 0.5
               const scale = isCenter ? 1 : 0.8
               const opacity = isCenter ? 1 : 0.5
-              const yOffset = CURVE_STRENGTH * dist * dist
+              const yOffset = curveStrength * dist * dist
               return (
                 <motion.div
                   key={i}
@@ -206,7 +218,7 @@ export default function AgeWheel({
                     height: HEIGHT,
                     boxSizing: 'border-box',
                     transform: `translateY(${yOffset}px) scale(${scale})`,
-                    paddingTop: isCenter ? 4 : 0,
+                    paddingTop: isCenter ? 8 : 0,
                     opacity,
                   }}
                 >
