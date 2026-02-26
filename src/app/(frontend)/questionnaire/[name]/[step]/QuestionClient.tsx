@@ -727,7 +727,7 @@ export default function QuestionClient({
                 variant={(colorSection ?? 'purple') as CardProps['variant']}
                 className="flex min-h-0 h-[70vh] flex-col overflow-hidden"
               >
-                <div className="relative min-h-0 flex-1 space-y-6 overflow-y-auto">
+                <div className="relative min-h-0 flex-1 space-y-6 overflow-hidden">
                   <div className="px-6 py-8 space-y-8">
                     {effectiveQuestions[0]?.title != null && (
                       <div>

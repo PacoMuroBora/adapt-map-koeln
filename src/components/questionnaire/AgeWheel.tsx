@@ -151,11 +151,11 @@ export default function AgeWheel({
 
   return (
     <div className="absolute left-0 bottom-0 w-full">
-      {/* background shape */}
+      {/* background shape: semicircle + rect below (absolute so no layout shift) */}
       <div className="absolute inset-x-0 -top-6 w-full">
         <svg
-          className="w-full h-auto"
-          viewBox="0 0 1 2"
+          className="relative z-0 w-full h-auto"
+          viewBox="0 0 1 1"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMax meet"
@@ -164,8 +164,11 @@ export default function AgeWheel({
             d="M0.501582 0C0.683503 0 0.853876 0.0503165 1 0.138018V1H0V0.139927C0.146827 0.0510478 0.318346 0 0.501582 0Z"
             fill="#9F94FF"
           />
-          <rect x="0" y="1" width="1" height="1" fill="#9F94FF" />
         </svg>
+        <div
+          className="absolute left-0 right-0 top-full z-0 h-[100vh] bg-[#9F94FF]"
+          aria-hidden
+        />
       </div>
       {/* active value indicator */}
       <div
