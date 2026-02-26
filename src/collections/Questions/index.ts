@@ -63,6 +63,7 @@ export const Questions: CollectionConfig = {
         { label: 'Textarea', value: 'textarea' },
         { label: 'Text', value: 'text' },
         { label: 'Consent', value: 'consent' },
+        { label: 'Age Wheel', value: 'ageWheel' },
       ],
       admin: {
         description: 'Type of question input',
@@ -230,6 +231,18 @@ export const Questions: CollectionConfig = {
           required: true,
           admin: { description: 'Label below the slider (e.g. "angenehm")' },
         },
+      ],
+    },
+    {
+      name: 'ageWheelConfig',
+      type: 'group',
+      admin: {
+        condition: (data) => data.type === 'ageWheel',
+        description: 'Configuration for age wheel picker (min/max age)',
+      },
+      fields: [
+        { name: 'min', type: 'number', required: true, defaultValue: 0 },
+        { name: 'max', type: 'number', required: true, defaultValue: 120 },
       ],
     },
     {

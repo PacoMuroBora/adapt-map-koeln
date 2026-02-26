@@ -595,7 +595,8 @@ export interface Question {
     | 'group'
     | 'textarea'
     | 'text'
-    | 'consent';
+    | 'consent'
+    | 'ageWheel';
   /**
    * Available options for choice/dropdown questions
    */
@@ -684,6 +685,13 @@ export interface Question {
      * Label below the slider (e.g. "angenehm")
      */
     labelBottom: string;
+  };
+  /**
+   * Configuration for age wheel picker (min/max age)
+   */
+  ageWheelConfig?: {
+    min: number;
+    max: number;
   };
   /**
    * Whether this question must be answered. If yes button says "Weiter", if no button says "Überspringen".
@@ -2139,6 +2147,12 @@ export interface QuestionsSelect<T extends boolean = true> {
         step?: T;
         labelTop?: T;
         labelBottom?: T;
+      };
+  ageWheelConfig?:
+    | T
+    | {
+        min?: T;
+        max?: T;
       };
   required?: T;
   category?: T;

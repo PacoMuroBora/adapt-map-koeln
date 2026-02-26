@@ -20,6 +20,7 @@ import HeatIntensitySlider from '@/components/questionnaire/HeatIntensitySlider'
 import HorizontalRangeSlider from '@/components/questionnaire/HorizontalRangeSlider'
 import VerticalSlider from '@/components/questionnaire/VerticalSlider'
 import IconSelection from '@/components/questionnaire/IconSelection'
+import AgeWheel from '@/components/questionnaire/AgeWheel'
 import { AddressSearchInput } from '@/components/questionnaire/AddressSearchInput'
 import { LinkButton } from '@/components/ui/link-button'
 import { Loader2 } from 'lucide-react'
@@ -471,6 +472,29 @@ export function QuestionCaseInput({
           step={vStep}
           labelTop={vLabelTop}
           labelBottom={vLabelBottom}
+        />
+      )
+    }
+
+    case 'ageWheel': {
+      const aConfig = question.ageWheelConfig
+      const aMin = aConfig?.min ?? 1
+      const aMax = aConfig?.max ?? 110
+      const aDefault = Math.min(aMax, Math.max(aMin, Math.round((aMin + aMax) / 2)))
+      const aValue =
+        answer !== null && answer !== undefined && typeof answer === 'number'
+          ? Math.min(aMax, Math.max(aMin, answer))
+          : aDefault
+
+      return (
+        <AgeWheel
+          value={aValue}
+          onValueChange={(v) => {
+            setAnswerForQ(v)
+            setError(null)
+          }}
+          min={aMin}
+          max={aMax}
         />
       )
     }

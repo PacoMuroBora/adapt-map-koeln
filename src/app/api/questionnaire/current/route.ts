@@ -69,6 +69,7 @@ export async function GET() {
             type?: string
             options?: unknown
             sliderConfig?: unknown
+            ageWheelConfig?: unknown
             required?: boolean
             category?: unknown
             editorFields?: unknown
@@ -81,6 +82,7 @@ export async function GET() {
             type: qu.type,
             options: qu.options,
             sliderConfig: qu.sliderConfig,
+            ageWheelConfig: qu.ageWheelConfig,
             required: qu.required,
             category: qu.category,
             editorFields: qu.editorFields,

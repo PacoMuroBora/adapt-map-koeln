@@ -64,6 +64,9 @@ export function isQuestionDisabled(
   if (question.type === 'sliderVertical') {
     return answer === null || answer === undefined || typeof answer !== 'number'
   }
+  if (question.type === 'ageWheel') {
+    return answer === null || answer === undefined || typeof answer !== 'number'
+  }
   if (question.type === 'consent') {
     return answer !== true
   }
@@ -190,6 +193,16 @@ export function validateOneQuestion(
   } else if (question.type === 'consent') {
     if (answer !== true) {
       return { valid: false, error: 'Bitte akzeptiere die Datenerhebung, um fortzufahren.' }
+    }
+  } else if (question.type === 'ageWheel') {
+    if (answer === null || answer === undefined || typeof answer !== 'number') {
+      return { valid: false, error: 'Bitte wähle ein Alter aus.' }
+    }
+    const cfg = question.ageWheelConfig
+    const min = cfg?.min ?? 0
+    const max = cfg?.max ?? 120
+    if (answer < min || answer > max) {
+      return { valid: false, error: 'Bitte wähle ein gültiges Alter aus.' }
     }
   } else {
     if (!answer || answer === '') {

@@ -88,9 +88,7 @@ export default function QuestionClient({
     if (!conditionalStepConfig) return null
     const parentAnswer = state.answers[conditionalStepConfig.parentQuestionKey]
     const value = parentAnswer != null ? String(parentAnswer) : ''
-    const match = conditionalStepConfig.conditions.find(
-      (c) => c.showWhenAnswerValue === value,
-    )
+    const match = conditionalStepConfig.conditions.find((c) => c.showWhenAnswerValue === value)
     return match ? [match.question] : []
   }, [conditionalStepConfig, state.answers])
 
@@ -108,11 +106,7 @@ export default function QuestionClient({
   )
   const conditionalSyncedRef = useRef(false)
   useEffect(() => {
-    if (
-      conditionalStepConfig &&
-      effectiveQuestions.length > 0 &&
-      !conditionalSyncedRef.current
-    ) {
+    if (conditionalStepConfig && effectiveQuestions.length > 0 && !conditionalSyncedRef.current) {
       setStepAnswers((prev) => ({
         ...prev,
         ...getInitialStepAnswers(effectiveQuestions, state.answers),
@@ -762,7 +756,7 @@ export default function QuestionClient({
                 variant={(colorSection ?? 'purple') as CardProps['variant']}
                 className="flex min-h-0 h-[70vh] flex-col overflow-hidden"
               >
-                <div className="min-h-0 flex-1 space-y-6 overflow-y-auto">
+                <div className="relative min-h-0 flex-1 space-y-6 overflow-y-auto">
                   <div className="px-6 py-8 space-y-8">
                     {effectiveQuestions[0]?.title != null && (
                       <div>
@@ -787,7 +781,7 @@ export default function QuestionClient({
                         <div
                           className={
                             q.type === 'sliderHorizontalRange'
-                              ? 'flex flex-1 min-h-0 flex-col'
+                              ? 'relative flex flex-1 min-h-0 flex-col'
                               : undefined
                           }
                         >
@@ -857,7 +851,9 @@ export default function QuestionClient({
               ? nextButtonText
               : 'Überspringen'
         }
-        nextDisabled={isWeiterDisabled(effectiveQuestions, stepAnswers, resolvedAddress) || isSubmitting}
+        nextDisabled={
+          isWeiterDisabled(effectiveQuestions, stepAnswers, resolvedAddress) || isSubmitting
+        }
         nextIcon={
           isLastStepWithConsent ? 'check' : stepNumber < totalSteps ? 'arrow-down' : 'check'
         }

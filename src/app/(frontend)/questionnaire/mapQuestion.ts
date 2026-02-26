@@ -17,7 +17,9 @@ const BE_TYPE_TO_FRONTEND: Record<PayloadQuestion['type'], Question['type']> = {
   iconSelection: 'iconSelection',
   group: 'group',
   textarea: 'textarea',
+  text: 'text',
   consent: 'consent',
+  ageWheel: 'ageWheel',
 }
 
 /**
@@ -70,6 +72,10 @@ export function mapPayloadQuestionToFrontend(p: PayloadQuestion): Question {
           consentVersion: p.consentConfig.consentVersion ?? undefined,
         }
       : undefined,
+    ageWheelConfig:
+      p.type === 'ageWheel' && p.ageWheelConfig != null
+        ? { min: p.ageWheelConfig.min, max: p.ageWheelConfig.max }
+        : undefined,
     groupFields: p.type === 'group' ? [] : undefined,
   }
 }

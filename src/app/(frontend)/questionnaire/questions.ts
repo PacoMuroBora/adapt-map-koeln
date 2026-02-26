@@ -19,6 +19,7 @@ export interface Question {
     | 'slider'
     | 'sliderHorizontalRange'
     | 'sliderVertical'
+    | 'ageWheel'
     | 'number'
     | 'textarea'
     | 'consent'
@@ -54,6 +55,10 @@ export interface Question {
   consentConfig?: {
     consentText: string
     consentVersion?: string
+  }
+  ageWheelConfig?: {
+    min: number
+    max: number
   }
   groupFields?: Question[]
 }
