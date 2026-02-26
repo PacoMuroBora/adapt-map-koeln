@@ -496,6 +496,10 @@ export interface Questionnaire {
          */
         sectionSubtitle?: string | null;
         /**
+         * Section shape
+         */
+        sectionFigure?: ('shape01' | 'shape02') | null;
+        /**
          * Select the color of the section, this will be used for the section card background and progress bar.
          */
         colorSection: 'purple' | 'orange' | 'green' | 'pink' | 'turquoise';
@@ -2205,6 +2209,7 @@ export interface QuestionnairesSelect<T extends boolean = true> {
     | {
         sectionTitle?: T;
         sectionSubtitle?: T;
+        sectionFigure?: T;
         colorSection?: T;
         steps?:
           | T

@@ -6,6 +6,7 @@ import QuestionnaireNav from '@/components/questionnaire/QuestionnaireNav'
 import { useSetQuestionnaireProgress } from '../../QuestionnaireProgressContext'
 import { useQuestionnaireNavigation } from '../../useQuestionnaireNavigation'
 import { Shape01 } from '@/components/CustomShapes/shape01'
+import { Shape02 } from '@/components/CustomShapes/shape02'
 
 export type SectionCoverViewProps = {
   questionnaireName: string
@@ -21,6 +22,7 @@ export type SectionCoverViewProps = {
   /** Progress bar: sections list and current section index. When set, progress bar is shown. */
   sectionsProgress?: { stepsCount: number; progressColor?: string }[]
   currentSectionIndex?: number
+  sectionFigure?: 'shape01' | 'shape02'
 }
 
 export default function SectionCoverView({
@@ -34,6 +36,7 @@ export default function SectionCoverView({
   nextButtonText,
   sectionsProgress,
   currentSectionIndex = 0,
+  sectionFigure = 'shape01',
 }: SectionCoverViewProps) {
   const router = useRouter()
   const { handleAbortQuestionnaire, showAbortDialog, setShowAbortDialog, handleConfirmAbort } =
@@ -78,11 +81,18 @@ export default function SectionCoverView({
   return (
     <div className="relative flex min-h-[calc(100vh-3.5rem)] h-full w-full flex-col overflow-hidden px-4 pt-4 pb-28">
       {/* Background grid */}
-      <div className="fixed inset-0 z-0 h-screen w-screen background-grid" />
+      <div className="fixed -left-2 -top-2 z-0 h-[110vh] w-[110vw] background-grid" />
 
-      <div className="fixed -right-4 top-20 z-10 w-[min(85vw,85vmin)] max-w-[calc(100%-2rem)]">
-        <Shape01 color={figureColor.colorSection} className="h-auto w-full" />
-      </div>
+      {/* Section figure, default shape 01 */}
+      {sectionFigure === 'shape02' ? (
+        <div className="fixed -right-4 -top-10 z-10 w-[min(80vw,80vmin)] sm:max-w-[65vw] md:max-w-[50vw] lg:max-w-[35vw]">
+          <Shape02 color={figureColor.colorSection} className="h-auto w-full" />
+        </div>
+      ) : (
+        <div className="fixed -right-4 top-20 z-10 w-[min(85vw,85vmin)] max-w-[calc(100%-2rem)]">
+          <Shape01 color={figureColor.colorSection} className="h-auto w-full" />
+        </div>
+      )}
 
       {/* Progress bar rendered by [step] layout so it stays mounted and can animate */}
 

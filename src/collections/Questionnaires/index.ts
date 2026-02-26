@@ -78,6 +78,17 @@ export const Questionnaires: CollectionConfig = {
           admin: { description: 'Section subtitle' },
         },
         {
+          name: 'sectionFigure',
+          type: 'select',
+          required: false,
+          options: [
+            { label: 'Shape 01', value: 'shape01' },
+            { label: 'Shape 02', value: 'shape02' },
+          ],
+          defaultValue: 'shape01',
+          admin: { description: 'Section shape' },
+        },
+        {
           name: 'colorSection',
           type: 'select',
           required: true,

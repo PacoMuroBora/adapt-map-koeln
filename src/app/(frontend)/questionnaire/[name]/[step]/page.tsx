@@ -87,6 +87,7 @@ export default async function QuestionPage({ params: paramsPromise }: Args) {
           nextButtonText={nextButtonText}
           sectionsProgress={sectionsProgress}
           currentSectionIndex={resolved.sectionIndex}
+          sectionFigure={(resolved.section.sectionFigure as 'shape01' | 'shape02') ?? 'shape01'}
         />
       )
     }

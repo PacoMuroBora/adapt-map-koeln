@@ -15,6 +15,7 @@ import {
   STEPS_TO_SKIP_WHEN_GPS,
   getInitialStepAnswers,
   formatDisplayAddress,
+  hasAnyFilledAnswer,
   isWeiterDisabled,
   validateAllQuestions,
   type ResolvedAddress,
@@ -454,36 +455,6 @@ export default function QuestionClient({
       setQuestionnaireError(result.error)
       return false
     }
-    const addressQuestion = effectiveQuestions.find((q) => q.type === 'address')
-    if (addressQuestion) {
-      const raw = stepAnswers[addressQuestion.key]
-      const addr =
-        raw && typeof raw === 'object' && !Array.isArray(raw)
-          ? (raw as { street?: string; housenumber?: string; postal_code?: string })
-          : null
-      const street = addr?.street?.trim()
-      const postal_code = addr?.postal_code?.trim()
-      if (street && postal_code && postal_code.length === 5) {
-        const housenumber = addr?.housenumber?.trim() ?? ''
-        try {
-          const res = await fetch('/api/validate-address', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ street, housenumber, postal_code }),
-          })
-          const data = (await res.json()) as { valid?: boolean; error?: string }
-          if (!data.valid) {
-            setQuestionnaireError(data.error ?? 'Adresse konnte nicht geprüft werden.')
-            return false
-          }
-        } catch {
-          setQuestionnaireError(
-            'Adressprüfung ist derzeit nicht möglich. Bitte versuche es später erneut.',
-          )
-          return false
-        }
-      }
-    }
     return true
   }
 
@@ -849,7 +820,9 @@ export default function QuestionClient({
               : 'Absenden'
             : effectiveQuestions.some((q) => q.required)
               ? nextButtonText
-              : 'Überspringen'
+              : hasAnyFilledAnswer(effectiveQuestions, stepAnswers)
+                ? nextButtonText
+                : 'Überspringen'
         }
         nextDisabled={
           isWeiterDisabled(effectiveQuestions, stepAnswers, resolvedAddress) || isSubmitting

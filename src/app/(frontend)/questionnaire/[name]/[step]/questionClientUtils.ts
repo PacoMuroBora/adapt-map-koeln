@@ -94,6 +94,65 @@ export function isWeiterDisabled(
   return false
 }
 
+/** Returns true if the answer counts as "filled" for optional questions (e.g. to show "Weiter" instead of "Überspringen"). */
+function isAnswerFilled(question: Question, answer: unknown): boolean {
+  if (answer == null || answer === '') return false
+  if (question.type === 'group' && question.groupFields) {
+    const group = answer as Record<string, unknown>
+    return question.groupFields.some((subQ) => isAnswerFilled(subQ, group[subQ.key]))
+  }
+  if (question.type === 'text' || question.type === 'textarea')
+    return String(answer).trim().length > 0
+  if (question.type === 'plz') return String(answer).trim().length === 5
+  if (question.type === 'address') {
+    const a = answer as Record<string, unknown>
+    const street = (a?.street as string)?.trim?.()
+    const housenumber = (a?.housenumber as string)?.trim?.()
+    const postalCode = (a?.postal_code as string)?.trim?.()
+    return !!(street || housenumber || (postalCode && postalCode.length === 5))
+  }
+  if (question.type === 'number')
+    return typeof answer === 'number' || (typeof answer === 'string' && String(answer).trim() !== '')
+  if (
+    question.type === 'singleChoice' ||
+    question.type === 'singleChoiceWithIcon' ||
+    question.type === 'dropdown' ||
+    question.type === 'radio'
+  )
+    return answer !== ''
+  if (
+    question.type === 'slider' ||
+    question.type === 'sliderVertical' ||
+    question.type === 'ageWheel'
+  )
+    return typeof answer === 'number'
+  if (question.type === 'sliderHorizontalRange')
+    return (
+      Array.isArray(answer) &&
+      answer.length === 2 &&
+      typeof answer[0] === 'number' &&
+      typeof answer[1] === 'number'
+    )
+  if (question.type === 'consent') return answer === true
+  if (question.type === 'iconSelection' || question.type === 'multiChoice')
+    return Array.isArray(answer) && answer.length > 0
+  if (question.type === 'location_GPS') return false
+  return false
+}
+
+/** True if at least one question in the step has a filled answer (used for optional-only steps to show "Weiter" vs "Überspringen"). */
+export function hasAnyFilledAnswer(
+  questions: Question[],
+  stepAnswers: Record<string, unknown>,
+): boolean {
+  for (const q of questions) {
+    const ans =
+      q.type === 'group' && q.groupFields ? stepAnswers[q.key] : stepAnswers[q.key] ?? null
+    if (isAnswerFilled(q, ans)) return true
+  }
+  return false
+}
+
 export type ValidationResult = { valid: true } | { valid: false; error: string }
 
 export function validateOneQuestion(

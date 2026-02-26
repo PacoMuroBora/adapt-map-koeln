@@ -129,6 +129,8 @@ body {
   body {
     @apply bg-background text-foreground min-h-[100vh] flex flex-col hyphens-auto;
     font-family: var(--font-body);
+    /* Only hyphenate words longer than 7 letters (min 8 chars, min 2 before/after hyphen) */
+    hyphenate-limit-chars: 8 2 2;
   }
   
   h1, h2, h3, h4, h5, h6 {
