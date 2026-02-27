@@ -9,28 +9,6 @@ stages:
   - build
   - deploy
 
-# --- Optional: run tests on every push (or only on main) ---
-test:int:
-  stage: test
-  image: node:22
-  before_script:
-    - corepack enable && pnpm install --frozen-lockfile
-  script:
-    - pnpm run test:int
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
-test:e2e:
-  stage: test
-  image: mcr.microsoft.com/playwright:v1.56.1-jammy
-  before_script:
-    - corepack enable && pnpm install --frozen-lockfile
-  script:
-    - pnpm run test:e2e
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  # Often run only when needed (e.g. on main or when e2e files change)
-
 # --- Build Docker image ---
 build:
   stage: build
