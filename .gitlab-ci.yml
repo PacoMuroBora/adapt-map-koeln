@@ -1,0 +1,97 @@
+# .gitlab-ci.yml
+
+variables:
+  IMAGE_NAME: adaptmap-app
+  STACK_NAME: adaptmap-app
+
+stages:
+  #- test      # optional
+  - build
+  - deploy
+
+# --- Optional: run tests on every push (or only on main) ---
+test:int:
+  stage: test
+  image: node:22
+  before_script:
+    - corepack enable && pnpm install --frozen-lockfile
+  script:
+    - pnpm run test:int
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+test:e2e:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.56.1-jammy
+  before_script:
+    - corepack enable && pnpm install --frozen-lockfile
+  script:
+    - pnpm run test:e2e
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  # Often run only when needed (e.g. on main or when e2e files change)
+
+# --- Build Docker image ---
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+  before_script:
+    - docker info
+  script:
+    - |
+      if [ -z "$DOMAIN_NAME" ] || [ -z "$DATABASE_URI" ] || [ -z "$PAYLOAD_SECRET" ]; then
+        echo "Missing required variables (DOMAIN_NAME, DATABASE_URI, PAYLOAD_SECRET)"
+        exit 1
+      fi
+    - |
+      docker build \
+        --build-arg NEXT_PUBLIC_SERVER_URL=https://$DOMAIN_NAME \
+        --build-arg NEXT_PUBLIC_PHOTON_URL=https://photon.komoot.io \
+        --build-arg DATABASE_URI="$DATABASE_URI" \
+        --build-arg PAYLOAD_SECRET="$PAYLOAD_SECRET" \
+        -t $IMAGE_NAME:latest .
+    - docker save $IMAGE_NAME:latest | gzip -c > image.tar.gz
+  artifacts:
+    paths:
+      - image.tar.gz
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# --- Deploy to server (only when build succeeded) ---
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+  script:
+    - scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P "${DEPLOY_PORT:-22}" image.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/tmp/"
+    - |
+      ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p "${DEPLOY_PORT:-22}" "$DEPLOY_USER@$DEPLOY_HOST" "
+        gunzip -c /tmp/image.tar.gz | docker load
+        rm -f /tmp/image.tar.gz
+        cd /docker/services || { echo 'Error: /docker/services not found'; exit 1; }
+        COMPOSE_FILE=\"docker-compose.hostinger.yml\"
+        [ ! -f \"\$COMPOSE_FILE\" ] && COMPOSE_FILE=\"docker-compose.yml\"
+        [ ! -f \"\$COMPOSE_FILE\" ] && { echo 'No compose file'; ls -la; exit 1; }
+        docker tag $IMAGE_NAME:latest $IMAGE_NAME:$(date +%Y%m%d-%H%M%S)
+        docker compose -f \"\$COMPOSE_FILE\" stop app || true
+        docker compose -f \"\$COMPOSE_FILE\" up -d --force-recreate --no-deps app
+        sleep 10
+        docker compose -f \"\$COMPOSE_FILE\" ps app
+        docker compose -f \"\$COMPOSE_FILE\" logs --tail=30 app || true
+        docker images $IMAGE_NAME --format '{{.ID}} {{.CreatedAt}}' | sort -rk 2 | tail -n +4 | awk '{print \$1}' | xargs -r docker rmi -f || true
+        docker image prune -f
+      "
+  dependencies:
+    - build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
