@@ -14,9 +14,12 @@ build:
   stage: build
   image: docker:24
   services:
-    - docker:24-dind
+    - name: docker:24-dind
+      alias: docker
   variables:
-    DOCKER_TLS_CERTDIR: '/certs'
+    # Disable TLS so job can connect to dind on K8s (no cert volume wiring)
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
   before_script:
     - docker info
   script:
