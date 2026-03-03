@@ -7,6 +7,9 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 
+import { DecoHeadingFeature } from '@/features/richtext/DecoHeadingFeature/server'
+import { LargeBodyFeature } from '@/features/richtext/LargeBodyFeature/server'
+import { OverlineFeature } from '@/features/richtext/OverlineFeature/server'
 import { linkGroup } from '../../fields/linkGroup'
 
 export const CallToAction: Block = {
@@ -19,8 +22,11 @@ export const CallToAction: Block = {
       editor: lexicalEditor({
         features: ({ rootFeatures }) => {
           return [
+            DecoHeadingFeature(),
+            LargeBodyFeature(),
+            OverlineFeature(),
             ...rootFeatures,
-            HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4'] }),
+            HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] }),
             FixedToolbarFeature(),
             InlineToolbarFeature(),
           ]

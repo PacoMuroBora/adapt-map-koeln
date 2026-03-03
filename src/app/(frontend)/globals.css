@@ -144,7 +144,7 @@ body {
   --t: 1px;    /* the thickness */
   --g: 6px;   /* the gap between dashes */
   
-  --c:#333335 25%,#0000 0;
+  --c:#333335 25%,#1E1E20 0;
   background: 
     conic-gradient(at var(--g) var(--t),var(--c))
      calc((var(--s)/var(--n) - var(--g) + var(--t))/2) 0/
@@ -152,7 +152,6 @@ body {
     conic-gradient(from 180deg at var(--t) var(--g),var(--c))
      0 calc((var(--s)/var(--n) - var(--g) + var(--t))/2)/
      var(--s) calc(var(--s)/var(--n));
-
 }
 
 .background-grid-primary {

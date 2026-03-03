@@ -169,7 +169,7 @@ export interface UserAuthOperations {
 export interface Page {
   id: string;
   title: string;
-  contentBlocks: (HeroBlock | CallToActionBlock | ContentBlock | MediaBlock)[];
+  contentBlocks: (HeroBlock | CallToActionBlock | ContentBlock | HeatmapBlock | MediaBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -826,6 +826,20 @@ export interface CallToActionBlock {
  * via the `definition` "ContentBlock".
  */
 export interface ContentBlock {
+  /**
+   * Use a purple card layout for this block.
+   */
+  cardLayout?: boolean | null;
+  /**
+   * Optional small label above the headline.
+   */
+  overline?: string | null;
+  /**
+   * Optional headline above the columns.
+   */
+  headline?: string | null;
+  headlineSize?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  headlineTag?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
   columns?:
     | {
         size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
@@ -911,9 +925,113 @@ export interface ContentBlock {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Optional button below the columns.
+   */
+  buttons?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered (Button variant).
+           */
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
+            | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'content';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeatmapBlock".
+ */
+export interface HeatmapBlock {
+  /**
+   * Headline displayed above the heatmap.
+   */
+  headline: string;
+  headlineSize?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  headlineTag?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  /**
+   * Optional rich text displayed below the heatmap.
+   */
+  richText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'heatmap';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1764,6 +1882,7 @@ export interface PagesSelect<T extends boolean = true> {
         hero?: T | HeroBlockSelect<T>;
         cta?: T | CallToActionBlockSelect<T>;
         content?: T | ContentBlockSelect<T>;
+        heatmap?: T | HeatmapBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
       };
   meta?:
@@ -1843,6 +1962,11 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
  * via the `definition` "ContentBlock_select".
  */
 export interface ContentBlockSelect<T extends boolean = true> {
+  cardLayout?: T;
+  overline?: T;
+  headline?: T;
+  headlineSize?: T;
+  headlineTag?: T;
   columns?:
     | T
     | {
@@ -1864,6 +1988,36 @@ export interface ContentBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  buttons?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeatmapBlock_select".
+ */
+export interface HeatmapBlockSelect<T extends boolean = true> {
+  headline?: T;
+  headlineSize?: T;
+  headlineTag?: T;
+  richText?: T;
   id?: T;
   blockName?: T;
 }
@@ -2620,7 +2774,28 @@ export interface Header {
  */
 export interface Footer {
   id: string;
-  navItems?:
+  /**
+   * Footer address block (e.g. organisation name, street, city).
+   */
+  address?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Links for Imprint, Privacy, Terms, etc.
+   */
+  legalLinks?:
     | {
         link: {
           type?: ('reference' | 'custom') | null;
@@ -2641,49 +2816,33 @@ export interface Footer {
           url?: string | null;
           label: string;
           /**
-           * Button size.
+           * Link size.
            */
-          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
-          /**
-           * Icon before the label.
-           */
-          iconBefore?:
-            | (
-                | ''
-                | 'arrow-right'
-                | 'arrow-up'
-                | 'arrow-down'
-                | 'arrow-up-right'
-                | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
-                | 'plus'
-                | 'close'
-              )
-            | null;
-          /**
-           * Icon after the label.
-           */
-          iconAfter?:
-            | (
-                | ''
-                | 'arrow-right'
-                | 'arrow-up'
-                | 'arrow-down'
-                | 'arrow-up-right'
-                | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
-                | 'plus'
-                | 'close'
-              )
-            | null;
+          size?: ('default' | 'sm' | 'lg' | 'mini') | null;
         };
         id?: string | null;
       }[]
     | null;
+  /**
+   * e.g. © 2025 Organisation name
+   */
+  copyrightText?: string | null;
+  /**
+   * Optional short line below copyright (e.g. tagline).
+   */
+  subline?: string | null;
+  logos?: {
+    /**
+     * Small label above the logos (e.g. "Partner", "Gefördert durch").
+     */
+    overline?: string | null;
+    images?:
+      | {
+          image: string | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2920,7 +3079,8 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
-  navItems?:
+  address?: T;
+  legalLinks?:
     | T
     | {
         link?:
@@ -2932,10 +3092,21 @@ export interface FooterSelect<T extends boolean = true> {
               url?: T;
               label?: T;
               size?: T;
-              iconBefore?: T;
-              iconAfter?: T;
             };
         id?: T;
+      };
+  copyrightText?: T;
+  subline?: T;
+  logos?:
+    | T
+    | {
+        overline?: T;
+        images?:
+          | T
+          | {
+              image?: T;
+              id?: T;
+            };
       };
   updatedAt?: T;
   createdAt?: T;

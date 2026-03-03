@@ -49,9 +49,7 @@ const bodySizeClasses = {
   large: 'font-body text-body-lg',
 } as const
 
-const createJsxConverters: (
-  bodySize: 'default' | 'large',
-) => JSXConvertersFunction<NodeTypes> =
+const createJsxConverters: (bodySize: 'default' | 'large') => JSXConvertersFunction<NodeTypes> =
   (bodySize) =>
   ({ defaultConverters }) => ({
     ...defaultConverters,
@@ -98,6 +96,18 @@ const createJsxConverters: (
       }
       return <p className={className}>{children}</p>
     },
+    overlineParagraph: ({ node, nodesToJSX }) => {
+      const children = nodesToJSX({ nodes: node.children })
+      const className = 'text-sm font-mono uppercase tracking-wide text-muted-foreground'
+      if (!children?.length) {
+        return (
+          <p className={className}>
+            <br />
+          </p>
+        )
+      }
+      return <p className={className}>{children}</p>
+    },
     blocks: {
       banner: ({ node }) => <BannerBlock className="col-start-2 mb-4" {...node.fields} />,
       mediaBlock: ({ node }) => (
@@ -105,7 +115,7 @@ const createJsxConverters: (
           className="col-start-1 col-span-3"
           imgClassName="m-0"
           {...node.fields}
-          captionClassName="mx-auto max-w-[48rem]"
+          captionClassName="max-w-[48rem]"
           enableGutter={false}
           disableInnerContainer={true}
         />
@@ -129,7 +139,7 @@ export default function RichText(props: Props) {
     <ConvertRichText
       converters={converters}
       className={cn(
-        'payload-richtext mx-auto space-y-4',
+        'payload-richtext space-y-4',
         {
           container: enableGutter,
           'max-w-none': !enableGutter,

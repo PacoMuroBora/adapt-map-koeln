@@ -7,6 +7,7 @@ import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { HeroBlockComponent } from '@/blocks/HeroBlock/Component'
+import { HeatmapBlockComponent } from '@/blocks/HeatmapBlock/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 
 const blockComponents = {
@@ -14,6 +15,7 @@ const blockComponents = {
   content: ContentBlock,
   cta: CallToActionBlock,
   formBlock: FormBlock,
+  heatmap: HeatmapBlockComponent,
   hero: HeroBlockComponent,
   mediaBlock: MediaBlock,
 }
