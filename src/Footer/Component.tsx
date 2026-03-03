@@ -38,9 +38,9 @@ export async function Footer() {
   const logos = footerData?.logos
 
   return (
-    <footer className="mt-auto bg-am-purple text-black px-4 md:px-8 lg:px-16 pt-4 md:pt-8 lg:pt-16 pb-6 min-h-[420px] flex flex-col justify-between">
+    <footer className="mt-auto bg-am-purple text-black px-4 md:px-8 lg:px-16 pt-10 lg:pt-16 pb-6 min-h-[420px] flex flex-col justify-between gap-32">
       {/* Address and adaptmap logo */}
-      <div className="flex flex-col md:flex-row md:justify-between">
+      <div className="flex flex-col md:flex-row md:justify-between gap-16">
         <div className="flex flex-col gap-8">
           <Link className="flex items-center" href="/">
             <Logo height={40} />
@@ -56,16 +56,16 @@ export async function Footer() {
 
         {/* Logos */}
         {logos && Array.isArray(logos.images) && logos.images.length > 0 && (
-          <div className="flex flex-col gap-3 w-1/3">
+          <div className="flex flex-col gap-3 md:w-1/3">
             {logos.overline && (
               <p className="text-sm font-mono uppercase tracking-wide text-muted-foreground/70">
                 {logos.overline}
               </p>
             )}
-            <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
               {logos.images.map(({ image }, i) =>
                 image && typeof image === 'object' ? (
-                  <div key={i} className="flex items-center h-16">
+                  <div key={i} className="flex h-16">
                     <Media
                       resource={image}
                       className="max-h-16 w-auto object-contain [&_img]:max-h-16 [&_img]:w-auto [&_img]:object-contain"
@@ -80,7 +80,7 @@ export async function Footer() {
 
       <div className="flex flex-col gap-4">
         {/* Legal links */}
-        <nav className="flex flex-col md:flex-row gap-4 pb-4">
+        <nav className="flex flex-wrap flex-row gap-4 pb-4">
           {legalLinks.map(({ link: linkData }, i) => {
             const href = linkData ? getLinkHref(linkData) : null
             const label = linkData?.label
