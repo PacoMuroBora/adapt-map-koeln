@@ -81,7 +81,7 @@ export default function SectionCoverView({
   return (
     <div className="relative flex min-h-[calc(100vh-3.5rem)] h-full w-full flex-col overflow-hidden px-4 pt-4 pb-28">
       {/* Background grid */}
-      <div className="fixed -left-2 -top-2 z-0 h-[110vh] w-[110vw] background-grid" />
+      <div className="fixed -left-2 -top-2 z-0 h-[110vh] w-[110vw] background-grid-dark" />
 
       {/* Section figure, default shape 01 */}
       {sectionFigure === 'shape02' ? (

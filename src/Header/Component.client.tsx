@@ -17,7 +17,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const isQuestionnaire = pathname?.startsWith('/questionnaire')
 
   return (
-    <header className="relative z-20 h-14">
+    <header className="fixed inset-0 z-20 h-14">
       <div className="container py-4 flex justify-between">
         <Link href="/">
           <Logo className={isQuestionnaire ? 'text-white' : 'text-black'} height={24} />

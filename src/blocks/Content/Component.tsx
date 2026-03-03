@@ -19,8 +19,8 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
   console.log(columns?.map((col) => col.link))
 
   return (
-    <div className="container my-16">
-      <div className="grid grid-cols-4 lg:grid-cols-12 gap-y-8 gap-x-16">
+    <div className="container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24">
+      <div className="grid grid-cols-4 lg:grid-cols-12 gap-y-2 gap-x-16">
         {columns &&
           columns.length > 0 &&
           columns.map((col, index) => {

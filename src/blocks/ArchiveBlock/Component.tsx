@@ -1,4 +1,5 @@
-import type { Post, ArchiveBlock as ArchiveBlockProps } from '@/payload-types'
+import type { DefaultTypedEditorState } from '@payloadcms/richtext-lexical'
+import type { Category, Post } from '@/payload-types'
 
 import { getPayloadClient } from '@/lib/payload'
 import React from 'react'
@@ -6,11 +7,16 @@ import RichText from '@/components/RichText'
 
 import { CollectionArchive } from '@/components/CollectionArchive'
 
-export const ArchiveBlock: React.FC<
-  ArchiveBlockProps & {
-    id?: string
-  }
-> = async (props) => {
+type ArchiveBlockProps = {
+  id?: string
+  categories?: (string | Category)[] | null
+  introContent?: DefaultTypedEditorState | null
+  limit?: number | null
+  populateBy?: 'collection' | 'selection' | null
+  selectedDocs?: { value: string | Post }[] | null
+}
+
+export const ArchiveBlock: React.FC<ArchiveBlockProps> = async (props) => {
   const { id, categories, introContent, limit: limitFromProps, populateBy, selectedDocs } = props
 
   const limit = limitFromProps || 3
@@ -20,7 +26,7 @@ export const ArchiveBlock: React.FC<
   if (populateBy === 'collection') {
     const payload = await getPayloadClient()
 
-    const flattenedCategories = categories?.map((category) => {
+    const flattenedCategories = categories?.map((category: string | Category) => {
       if (typeof category === 'object') return category.id
       else return category
     })
@@ -43,16 +49,18 @@ export const ArchiveBlock: React.FC<
     posts = fetchedPosts.docs
   } else {
     if (selectedDocs?.length) {
-      const filteredSelectedPosts = selectedDocs.map((post) => {
-        if (typeof post.value === 'object') return post.value
-      }) as Post[]
+      const filteredSelectedPosts = selectedDocs
+        .map((post: { value: string | Post }) => {
+          if (typeof post.value === 'object') return post.value
+        })
+        .filter((p): p is Post => p != null)
 
       posts = filteredSelectedPosts
     }
   }
 
   return (
-    <div className="my-16" id={`block-${id}`}>
+    <div id={`block-${id}`}>
       {introContent && (
         <div className="container mb-16">
           <RichText className="ms-0 max-w-[48rem]" data={introContent} enableGutter={false} />

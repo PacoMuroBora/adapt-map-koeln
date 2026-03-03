@@ -38,12 +38,13 @@ export default function QuestionnaireStartView({
     router.push(`/questionnaire/${questionnaireName}/1`)
   }
 
-  const showInstruction = useInstructionScreen && (instructionTitle != null || instructionItems.length > 0)
+  const showInstruction =
+    useInstructionScreen && (instructionTitle != null || instructionItems.length > 0)
 
   return (
     <div className="flex w-full h-full flex-col gap-8 px-4 pt-4 pb-28 overflow-hidden">
       {/* background grid */}
-      <div className="fixed inset-0 z-0 h-screen w-screen background-grid" />
+      <div className="fixed inset-0 z-0 h-screen w-screen background-grid-dark" />
 
       <div className="flex flex-1 flex-col justify-center items-center w-full z-10">
         {showInstruction ? (
@@ -80,7 +81,9 @@ export default function QuestionnaireStartView({
         ) : (
           <div className="flex flex-col items-center w-full max-w-sm sm:max-w-md md:max-w-lg">
             {overline && (
-              <p className="text-body-sm font-mono uppercase tracking-wide text-white">{overline}</p>
+              <p className="text-body-sm font-mono uppercase tracking-wide text-white">
+                {overline}
+              </p>
             )}
             {title && (
               <h1 className="mt-2 text-deco font-headings font-semibold uppercase text-white">

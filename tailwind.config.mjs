@@ -1,5 +1,4 @@
 import tailwindcssAnimate from 'tailwindcss-animate'
-import typography from '@tailwindcss/typography'
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -9,7 +8,7 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  plugins: [tailwindcssAnimate, typography],
+  plugins: [tailwindcssAnimate],
   prefix: '',
   safelist: [
     'lg:col-span-4',
@@ -166,8 +165,9 @@ const config = {
           'clamp(1.5rem, calc(1.5rem + (28 - 24) * (100vw - 320px) / 1120), 1.75rem)',
           { lineHeight: '120%', letterSpacing: '-0.00893em', fontWeight: 600 },
         ],
+        // deco: 56px at 320vw → 120px at 1440vw; uses px so size is independent of root font-size
         deco: [
-          'clamp(3rem, calc(3rem + (64 - 42) * (100vw - 320px) / 1120), 5rem)',
+          'clamp(56px, calc(56px + (120 - 56) * (100vw - 320px) / 1120), 120px)',
           { lineHeight: '105%', fontWeight: 600 },
         ],
         // Design system body: fixed sizes, lineHeight as %

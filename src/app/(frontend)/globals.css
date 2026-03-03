@@ -127,7 +127,7 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground min-h-[100vh] flex flex-col hyphens-auto;
+    @apply bg-background text-foreground min-h-[100vh] flex flex-col break-normal;
     font-family: var(--font-body);
     /* Only hyphenate words longer than 7 letters (min 8 chars, min 2 before/after hyphen) */
     hyphenate-limit-chars: 8 2 2;
@@ -138,38 +138,7 @@ body {
   }
 }
 
-@layer utilities {
-  /* Style selected select items - when they contain a visible check indicator */
-  [data-radix-select-item]:has(span:has(svg[class*="lucide-check"])) {
-    @apply bg-primary/20 border-b-2 border-dashed border-primary;
-  }
-
-  /* Raster background: horizontal & vertical dotted lines, 80px spacing */
-  .bg-raster-dotted {
-    --raster-size: 80px;
-    --raster-dot: 1px;
-    --raster-gap: 80px;
-    --raster-color: white;
-    background-image:
-      repeating-linear-gradient(
-        180deg,
-        var(--raster-color) 0,
-        var(--raster-color) var(--raster-dot),
-        transparent var(--raster-dot),
-        transparent var(--raster-gap)
-      ),
-      repeating-linear-gradient(
-        90deg,
-        var(--raster-color) 0,
-        var(--raster-color) var(--raster-dot),
-        transparent var(--raster-dot),
-        transparent var(--raster-gap)
-      );
-    background-size: var(--raster-size) var(--raster-size);
-  }
-}
-
-.background-grid {
+.background-grid-dark {
   --s: 80px;  /* control the size of the grid */
   --n: 6;      /* control the granularity */
   --t: 1px;    /* the thickness */
@@ -183,5 +152,21 @@ body {
     conic-gradient(from 180deg at var(--t) var(--g),var(--c))
      0 calc((var(--s)/var(--n) - var(--g) + var(--t))/2)/
      var(--s) calc(var(--s)/var(--n));
+
 }
+
+.background-grid-primary {
+  --s: 80px;  /* control the size of the grid */
+  --n: 6;      /* control the granularity */
+  --t: 1px;    /* the thickness */
+  --g: 6px;   /* the gap between dashes */
   
+  --c:#F8FDD2 25%,#DAFA38 0;
+  background: 
+    conic-gradient(at var(--g) var(--t),var(--c))
+     calc((var(--s)/var(--n) - var(--g) + var(--t))/2) 0/
+     calc(var(--s)/var(--n)) var(--s),
+    conic-gradient(from 180deg at var(--t) var(--g),var(--c))
+     0 calc((var(--s)/var(--n) - var(--g) + var(--t))/2)/
+     var(--s) calc(var(--s)/var(--n));
+}

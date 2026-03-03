@@ -7,6 +7,8 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 
+import { DecoHeadingFeature } from '@/features/richtext/DecoHeadingFeature/server'
+import { LargeBodyFeature } from '@/features/richtext/LargeBodyFeature/server'
 import { link } from '@/fields/link'
 
 const columnFields: Field[] = [
@@ -39,8 +41,10 @@ const columnFields: Field[] = [
     editor: lexicalEditor({
       features: ({ rootFeatures }) => {
         return [
+          DecoHeadingFeature(),
+          LargeBodyFeature(),
           ...rootFeatures,
-          HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
+          HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] }),
           FixedToolbarFeature(),
           InlineToolbarFeature(),
         ]
