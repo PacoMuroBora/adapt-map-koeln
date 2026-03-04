@@ -57,7 +57,7 @@ export function HeaderMobileNav({
         <SheetHeader className="flex flex-row items-center justify-between space-y-0 border-0 pb-0 text-left">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <Link href="/" onClick={() => onOpenChange(false)} className="mt-0.5 flex items-center">
-            <Logo className="text-am-white" height={24} />
+            <Logo className="text-am-white" height={20} />
           </Link>
           <SheetClose
             aria-label="Menü schließen"

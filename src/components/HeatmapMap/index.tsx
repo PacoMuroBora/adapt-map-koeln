@@ -262,15 +262,12 @@ export function HeatmapMap({
       const t = getTileAtPoint(x, y, gridData.features, map, tileSizeMeters)
       setHoveredTile(t)
       setTooltipPos(t ? { x: x + 12, y: y + 12 } : null)
-      
+
       // Update layer animation
       if (layerRef.current) {
-        layerRef.current.setHoveredTile(
-          t?.properties.tileX ?? null,
-          t?.properties.tileY ?? null,
-        )
+        layerRef.current.setHoveredTile(t?.properties.tileX ?? null, t?.properties.tileY ?? null)
       }
-      
+
       if (hideTimerRef.current) {
         clearTimeout(hideTimerRef.current)
         hideTimerRef.current = null
@@ -428,8 +425,10 @@ export function HeatmapMap({
         </div>
       )}
 
-      <div className="absolute bottom-2 left-2 rounded-lg border border-border/50 bg-white p-2 shadow-lg sm:bottom-4 sm:left-4 sm:p-3">
-        <h3 className="mb-1.5 text-xs font-bold text-gray-900 sm:mb-2 sm:text-sm">Legende</h3>
+      <div className="absolute bottom-2 left-2 rounded-lg bg-white p-2 shadow-lg sm:bottom-4 sm:left-4 sm:p-3">
+        <h3 className="mb-1.5 text-xs font-mono tracking-wide uppercase text-muted-foreground sm:mb-2 sm:text-sm">
+          Legende
+        </h3>
         <div className="mb-2 h-3 w-full overflow-hidden rounded border border-gray-300 sm:mb-2.5 sm:h-4">
           <div
             className="h-full w-full"
