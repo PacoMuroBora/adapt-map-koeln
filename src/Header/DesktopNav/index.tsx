@@ -17,13 +17,22 @@ export interface HeaderDesktopNavProps {
   inverted?: boolean
   /** Optional CTA button from header config (max 1). */
   buttonLink?: DesktopButtonLink | null
+  /** When true, header is in scrolled state (button uses default appearance). */
+  scrolled?: boolean
 }
 
 /**
  * Desktop navigation: horizontal nav links and optional CTA button.
  */
-export function HeaderDesktopNav({ data, inverted, buttonLink }: HeaderDesktopNavProps) {
+export function HeaderDesktopNav({
+  data,
+  inverted,
+  buttonLink,
+  scrolled = false,
+}: HeaderDesktopNavProps) {
   const navItems = data?.navItems ?? []
+  const buttonAppearance = scrolled ? 'default' : 'white'
+  const buttonSize = scrolled ? 'default' : 'lg'
 
   return (
     <nav className="flex items-center gap-8">
@@ -41,7 +50,14 @@ export function HeaderDesktopNav({ data, inverted, buttonLink }: HeaderDesktopNa
           </LinkButton>
         )
       })}
-      <CMSLink {...buttonLink} size="default" />
+      {buttonLink && (
+        <CMSLink
+          {...buttonLink}
+          size={buttonSize}
+          appearance={buttonAppearance}
+          className="duration-500 transition-all ease-in-out"
+        />
+      )}
     </nav>
   )
 }
