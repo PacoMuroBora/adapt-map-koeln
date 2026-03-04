@@ -725,7 +725,7 @@ export default function QuestionClient({
             >
               <Card
                 variant={(colorSection ?? 'purple') as CardProps['variant']}
-                className="flex min-h-0 h-[70vh] flex-col overflow-hidden"
+                className="flex min-h-0 h-[70vh] max-h-[640px] flex-col overflow-hidden"
               >
                 <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
                   <div className="flex min-h-0 flex-1 flex-col overflow-auto">
@@ -765,18 +765,18 @@ export default function QuestionClient({
                             )}
                           >
                             <QuestionCaseInput
-                            question={q}
-                            answer={getAnswer(q.key)}
-                            setAnswer={(v) => setAnswer(q.key, v)}
-                            context={questionInputContext}
-                            color={
-                              (colorSection ?? 'purple') as
-                                | 'purple'
-                                | 'orange'
-                                | 'green'
-                                | 'pink'
-                                | 'turquoise'
-                            }
+                              question={q}
+                              answer={getAnswer(q.key)}
+                              setAnswer={(v) => setAnswer(q.key, v)}
+                              context={questionInputContext}
+                              color={
+                                (colorSection ?? 'purple') as
+                                  | 'purple'
+                                  | 'orange'
+                                  | 'green'
+                                  | 'pink'
+                                  | 'turquoise'
+                              }
                             />
                           </div>
                         </div>
