@@ -27,7 +27,8 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const pathname = usePathname()
   const isQuestionnaire = pathname?.startsWith('/questionnaire')
   const [scrolled, setScrolled] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  /** Mobile-first default so mobile reload doesn't flash desktop height before hydration */
+  const [isMobile, setIsMobile] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const logoHeight = useMotionValue(LOGO_HEIGHT_DEFAULT)
   const [logoHeightSnapshot, setLogoHeightSnapshot] = useState(LOGO_HEIGHT_DEFAULT)
@@ -65,7 +66,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   }`
 
   const headerContent = (
-    <div className={`h-full flex items-center justify-between w-full ${isMobile ? 'px-4' : ''}`}>
+    <div className="flex h-full w-full items-center justify-between px-4 md:px-0">
       {/* Logo */}
       <Link href="/">
         <span className="inline-block origin-left mt-1">
@@ -75,21 +76,23 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
           />
         </span>
       </Link>
-      {/*  Mobile or Desktop Navigation */}
-      {isMobile ? (
+      {/* Mobile nav: visible only below md (768px) so no flash on reload */}
+      <div className="flex md:hidden">
         <HeaderMobileNav
           data={data}
           open={mobileMenuOpen}
           onOpenChange={setMobileMenuOpen}
           triggerClassName={triggerClassName}
         />
-      ) : (
+      </div>
+      {/* Desktop nav: visible only at md and above */}
+      <div className="hidden md:flex">
         <HeaderDesktopNav
           data={data}
           inverted={!scrolled && isQuestionnaire}
           buttonLink={buttonLink}
         />
-      )}
+      </div>
     </div>
   )
 

@@ -139,33 +139,23 @@ body {
 }
 
 .background-grid-dark {
-  --s: 80px;  /* control the size of the grid */
-  --n: 6;      /* control the granularity */
-  --t: 1px;    /* the thickness */
-  --g: 6px;   /* the gap between dashes */
-  
-  --c:#333335 25%,#1E1E20 0;
-  background: 
-    conic-gradient(at var(--g) var(--t),var(--c))
-     calc((var(--s)/var(--n) - var(--g) + var(--t))/2) 0/
-     calc(var(--s)/var(--n)) var(--s),
-    conic-gradient(from 180deg at var(--t) var(--g),var(--c))
-     0 calc((var(--s)/var(--n) - var(--g) + var(--t))/2)/
-     var(--s) calc(var(--s)/var(--n));
+  --bg: #1E1E20;
+  /* line color: edit %23333335 in the SVG below (# → %23) */
+
+  background-color: var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cline x1='0' y1='0' x2='0' y2='80' stroke='%23333335' stroke-width='1' stroke-dasharray='6 7.33'/%3E%3Cline x1='0' y1='0' x2='80' y2='0' stroke='%23333335' stroke-width='1' stroke-dasharray='6 7.33'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  background-position: center;
+  background-repeat: repeat;
 }
 
 .background-grid-primary {
-  --s: 80px;  /* control the size of the grid */
-  --n: 6;      /* control the granularity */
-  --t: 1px;    /* the thickness */
-  --g: 6px;   /* the gap between dashes */
-  
-  --c:#F8FDD2 25%,#DAFA38 0;
-  background: 
-    conic-gradient(at var(--g) var(--t),var(--c))
-     calc((var(--s)/var(--n) - var(--g) + var(--t))/2) 0/
-     calc(var(--s)/var(--n)) var(--s),
-    conic-gradient(from 180deg at var(--t) var(--g),var(--c))
-     0 calc((var(--s)/var(--n) - var(--g) + var(--t))/2)/
-     var(--s) calc(var(--s)/var(--n));
+  --bg: #DAFA38;
+  /* line color: edit %23F8FDD2 in the SVG below (# → %23) */
+
+  background-color: var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cline x1='0' y1='0' x2='0' y2='80' stroke='%23F8FDD2' stroke-width='1.75' stroke-dasharray='6 7.33'/%3E%3Cline x1='0' y1='0' x2='80' y2='0' stroke='%23F8FDD2' stroke-width='1.75' stroke-dasharray='6 7.33'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  background-position: center;
+  background-repeat: repeat;
 }
