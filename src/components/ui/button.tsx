@@ -59,7 +59,7 @@ const buttonVariants = cva(
         default:
           'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover disabled:bg-gray-300 disabled:text-gray-500',
         white:
-          'bg-white text-white-foreground hover:bg-primary active:bg-primary disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-white text-white-foreground hover:bg-white/40 border border-white active:bg-primary disabled:bg-gray-300 disabled:text-gray-500',
         black:
           'bg-black text-black-foreground border border-black hover:bg-white hover:text-black active:bg-black disabled:bg-gray-300 disabled:text-gray-500',
         outline:
@@ -96,8 +96,7 @@ export type ButtonVariant =
 export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny'
 export type ButtonShape = 'default' | 'round'
 
-export interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
+export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
   variant?: ButtonVariant
   size?: ButtonSize
   shape?: ButtonShape
@@ -156,9 +155,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const content = (
       <>
         {iconBeforeSlot}
-        <span
-          className={cn('flex items-center justify-center', isLarge && 'px-2')}
-        >
+        <span className={cn('flex items-center justify-center', isLarge && 'px-2')}>
           {children}
         </span>
         {iconAfterSlot}

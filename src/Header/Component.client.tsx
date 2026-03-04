@@ -1,5 +1,6 @@
 'use client'
 
+import { X } from 'lucide-react'
 import Link from 'next/link'
 import { animate, motion, useMotionValue, useMotionValueEvent } from 'motion/react'
 import { usePathname } from 'next/navigation'
@@ -7,6 +8,7 @@ import React, { useEffect, useState } from 'react'
 
 import type { Header } from '@/payload-types'
 
+import { useQuestionnaireClose } from '@/app/(frontend)/questionnaire/QuestionnaireLayoutClient'
 import { Logo } from '@/components/Logo/Logo'
 import { HeaderDesktopNav } from './DesktopNav'
 import { HeaderMobileNav } from './MobileNav'
@@ -26,6 +28,7 @@ interface HeaderClientProps {
 export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const pathname = usePathname()
   const isQuestionnaire = pathname?.startsWith('/questionnaire')
+  const questionnaireClose = useQuestionnaireClose()
   const [scrolled, setScrolled] = useState(false)
   /** Mobile-first default so mobile reload doesn't flash desktop height before hydration */
   const [isMobile, setIsMobile] = useState(true)
@@ -65,34 +68,58 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
       : 'text-am-dark focus-visible:ring-am-dark'
   }`
 
+  const logoClassName = scrolled || !isQuestionnaire ? 'text-black' : 'text-white'
+  const closeClassName =
+    'flex size-6 items-center justify-center rounded text-am-dark transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-am-dark focus:ring-offset-2'
+
+  const questionnaireCloseButton =
+    questionnaireClose?.onAbort != null ? (
+      <button
+        type="button"
+        onClick={questionnaireClose.onAbort}
+        aria-label="Fragebogen schließen"
+        className={scrolled ? closeClassName : `${closeClassName} text-white focus:ring-white`}
+      >
+        <X className="size-6" aria-hidden />
+      </button>
+    ) : (
+      <Link
+        href="/"
+        aria-label="Fragebogen schließen"
+        className={scrolled ? closeClassName : `${closeClassName} text-white focus:ring-white`}
+      >
+        <X className="size-6" aria-hidden />
+      </Link>
+    )
+
   const headerContent = (
     <div className="flex h-full w-full items-center justify-between px-4 md:px-0">
-      {/* Logo */}
-      <Link href="/">
+      <Link href="/" aria-label="Startseite">
         <span className="inline-block origin-left mt-1">
-          <Logo
-            className={scrolled || !isQuestionnaire ? 'text-black' : 'text-white'}
-            height={logoHeightSnapshot}
-          />
+          <Logo className={logoClassName} height={logoHeightSnapshot} />
         </span>
       </Link>
-      {/* Mobile nav: visible only below md (768px) so no flash on reload */}
-      <div className="flex md:hidden">
-        <HeaderMobileNav
-          data={data}
-          open={mobileMenuOpen}
-          onOpenChange={setMobileMenuOpen}
-          triggerClassName={triggerClassName}
-        />
-      </div>
-      {/* Desktop nav: visible only at md and above */}
-      <div className="hidden md:flex">
-        <HeaderDesktopNav
-          data={data}
-          inverted={!scrolled && isQuestionnaire}
-          buttonLink={buttonLink}
-        />
-      </div>
+      {isQuestionnaire ? (
+        questionnaireCloseButton
+      ) : (
+        <>
+          <div className="flex md:hidden">
+            <HeaderMobileNav
+              data={data}
+              open={mobileMenuOpen}
+              onOpenChange={setMobileMenuOpen}
+              triggerClassName={triggerClassName}
+            />
+          </div>
+          <div className="hidden md:flex">
+            <HeaderDesktopNav
+              data={data}
+              inverted={!scrolled && isQuestionnaire}
+              buttonLink={buttonLink}
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 

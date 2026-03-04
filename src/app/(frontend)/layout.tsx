@@ -4,6 +4,7 @@ import { cn } from '@/utilities/ui'
 import React from 'react'
 
 import { Header } from '@/Header/Component'
+import { QuestionnaireCloseProvider } from '@/app/(frontend)/questionnaire/QuestionnaireLayoutClient'
 import { Providers } from '@/providers'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { getCachedGlobal } from '@/utilities/getGlobals'
@@ -33,8 +34,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <Providers>
-          <Header />
-          {children}
+          <QuestionnaireCloseProvider>
+            <Header />
+            {children}
+          </QuestionnaireCloseProvider>
           <CookieBanner cookieBanner={siteSettings?.cookieBanner} />
         </Providers>
       </body>
