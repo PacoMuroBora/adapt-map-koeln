@@ -30,7 +30,6 @@ export const Header: GlobalConfig = {
       },
     },
     linkGroup({
-      appearances: ['default', 'white', 'black', 'outline', 'destructive', 'ghost', 'ghost-muted'],
       iconBefore: [
         'arrow-right',
         'arrow-up',

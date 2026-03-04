@@ -116,6 +116,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
               data={data}
               inverted={!scrolled && isQuestionnaire}
               buttonLink={buttonLink}
+              scrolled={scrolled}
             />
           </div>
         </>
@@ -127,7 +128,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     <div className="fixed inset-x-0 top-0 z-20 p-2 md:p-4">
       {/* Nav Container */}
       <motion.header
-        className="w-full rounded-full py-3 md:px-4 md:py-0"
+        className="w-full rounded-full py-3 md:pl-4 md:pr-1 md:py-0"
         initial={false}
         animate={{
           height: isMobile
