@@ -2749,14 +2749,6 @@ export interface Header {
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered (Button variant).
-           */
-          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
-          /**
-           * Button size.
-           */
-          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
-          /**
            * Icon before the label.
            */
           iconBefore?:
@@ -3085,8 +3077,6 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
-              appearance?: T;
-              size?: T;
               iconBefore?: T;
               iconAfter?: T;
             };

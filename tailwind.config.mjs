@@ -198,6 +198,9 @@ const config = {
           '50%': { transform: 'scaleY(1)' },
         },
       },
+      transitionTimingFunction: {
+        reveal: 'var(--ease-reveal)',
+      },
     },
   },
 }

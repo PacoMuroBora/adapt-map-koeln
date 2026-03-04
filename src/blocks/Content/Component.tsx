@@ -5,7 +5,10 @@ import RichText from '@/components/RichText'
 import type { ContentBlock as ContentBlockProps } from '@/payload-types'
 
 import { CMSLink } from '../../components/Link'
+import { RevealHeadline } from '@/components/RevealHeadline'
+import { RevealIn } from '@/components/RevealIn'
 import { Shape01 } from '@/components/CustomShapes/shape01'
+import { REVEAL_STAGGER } from '@/lib/animations'
 
 const headlineSizeClasses: Record<NonNullable<ContentBlockProps['headlineSize']>, string> = {
   h1: 'text-h1 uppercase',
@@ -53,11 +56,21 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
           {(overline || headline) && (
             <div className="mb-12 md:mb-20 space-y-2 max-w-[66%] md:max-w-full">
               {overline && (
-                <p className="text-sm font-mono uppercase tracking-wide text-muted-foreground">
-                  {overline}
-                </p>
+                <RevealIn delay={0 * REVEAL_STAGGER}>
+                  <p className="text-sm font-mono uppercase tracking-wide text-muted-foreground">
+                    {overline}
+                  </p>
+                </RevealIn>
               )}
-              {headline && React.createElement(tag, { className: sizeClass }, headline)}
+              {headline && (
+                <RevealHeadline
+                  as={tag}
+                  className={sizeClass}
+                  delay={(overline ? 1 : 0) * REVEAL_STAGGER}
+                >
+                  {headline}
+                </RevealHeadline>
+              )}
             </div>
           )}
           <div className="grid grid-cols-4 lg:grid-cols-12 gap-y-4 md:gap-y-16 gap-x-16">
@@ -65,7 +78,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
               columns.length > 0 &&
               columns.map((col, index) => {
                 const { enableLink, link, richText, size } = col
-
+                const staggerDelay = (2 + index) * REVEAL_STAGGER
                 return (
                   <div
                     className={cn(
@@ -74,23 +87,25 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
                         'md:col-span-2': size !== 'full',
                       },
                     )}
-                    key={index}
                   >
-                    {richText && <RichText data={richText} enableGutter={false} />}
-
-                    {enableLink && <CMSLink {...link} />}
+                    <RevealIn key={index} delay={staggerDelay}>
+                      {richText && <RichText data={richText} enableGutter={false} />}
+                      {enableLink && <CMSLink {...link} />}
+                    </RevealIn>
                   </div>
                 )
               })}
           </div>
           {Array.isArray(buttons) && buttons.length > 0 && (
-            <ul className="mt-8 md:mt-12 flex flex-wrap gap-4">
-              {buttons.map(({ link: buttonLink }, i) => (
-                <li key={i}>
-                  <CMSLink {...buttonLink} />
-                </li>
-              ))}
-            </ul>
+            <RevealIn delay={(2 + (columns?.length ?? 0)) * REVEAL_STAGGER}>
+              <ul className="mt-8 md:mt-12 flex flex-wrap gap-4">
+                {buttons.map(({ link: buttonLink }, i) => (
+                  <li key={i}>
+                    <CMSLink {...buttonLink} />
+                  </li>
+                ))}
+              </ul>
+            </RevealIn>
           )}
         </div>
       </div>
