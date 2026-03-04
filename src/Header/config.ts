@@ -30,6 +30,8 @@ export const Header: GlobalConfig = {
       },
     },
     linkGroup({
+      appearances: false,
+      sizes: false,
       iconBefore: [
         'arrow-right',
         'arrow-up',

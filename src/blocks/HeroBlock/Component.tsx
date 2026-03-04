@@ -3,8 +3,10 @@ import React from 'react'
 import type { HeroBlock as HeroBlockProps } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
-
+import { RevealHeadline } from '@/components/RevealHeadline'
+import { RevealIn } from '@/components/RevealIn'
 import { Shape03 } from '@/components/CustomShapes/shape03'
+import { REVEAL_STAGGER } from '@/lib/animations'
 
 const headlineSizeClasses: Record<NonNullable<HeroBlockProps['headlineSize']>, string> = {
   h1: 'text-h1 uppercase',
@@ -26,6 +28,7 @@ export const HeroBlockComponent: React.FC<HeroBlockProps> = ({
   const size = headlineSize ?? 'h2'
   const tag = headlineTag ?? 'h1'
   const sizeClass = headlineSizeClasses[size]
+  let staggerIndex = 0
 
   return (
     <div className="relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-primary background-grid-primary">
@@ -34,20 +37,32 @@ export const HeroBlockComponent: React.FC<HeroBlockProps> = ({
       </div>
       <div className="max-w-[48rem] space-y-2">
         {overline && (
-          <p className="text-muted-foreground text-sm font-mono uppercase tracking-wide">
-            {overline}
-          </p>
+          <RevealIn delay={staggerIndex++ * REVEAL_STAGGER}>
+            <p className="text-muted-foreground text-sm font-mono uppercase tracking-wide">
+              {overline}
+            </p>
+          </RevealIn>
         )}
-        {headline && React.createElement(tag, { className: sizeClass }, headline)}
-        {paragraph && <p className="text-lg text-muted-foreground">{paragraph}</p>}
+        {headline && (
+          <RevealHeadline as={tag} className={sizeClass} delay={staggerIndex++ * REVEAL_STAGGER}>
+            {headline}
+          </RevealHeadline>
+        )}
+        {paragraph && (
+          <RevealIn delay={staggerIndex++ * REVEAL_STAGGER}>
+            <p className="text-lg text-muted-foreground">{paragraph}</p>
+          </RevealIn>
+        )}
         {Array.isArray(buttons) && buttons.length > 0 && (
-          <ul className="flex flex-wrap gap-4 pt-12">
-            {buttons.map(({ link }, i) => (
-              <li key={i}>
-                <CMSLink {...link} />
-              </li>
-            ))}
-          </ul>
+          <RevealIn delay={staggerIndex++ * REVEAL_STAGGER}>
+            <ul className="flex flex-wrap gap-4 pt-12">
+              {buttons.map(({ link }, i) => (
+                <li key={i}>
+                  <CMSLink {...link} />
+                </li>
+              ))}
+            </ul>
+          </RevealIn>
         )}
       </div>
     </div>
