@@ -60,7 +60,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
               {headline && React.createElement(tag, { className: sizeClass }, headline)}
             </div>
           )}
-          <div className="grid grid-cols-4 lg:grid-cols-12 gap-y-16 gap-x-16">
+          <div className="grid grid-cols-4 lg:grid-cols-12 gap-y-4 md:gap-y-16 gap-x-16">
             {columns &&
               columns.length > 0 &&
               columns.map((col, index) => {
@@ -68,9 +68,12 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
 
                 return (
                   <div
-                    className={cn(`col-span-4 lg:col-span-${colsSpanClasses[size!]}`, {
-                      'md:col-span-2': size !== 'full',
-                    })}
+                    className={cn(
+                      `max-w-[800px] col-span-4 lg:col-span-${colsSpanClasses[size!]}`,
+                      {
+                        'md:col-span-2': size !== 'full',
+                      },
+                    )}
                     key={index}
                   >
                     {richText && <RichText data={richText} enableGutter={false} />}

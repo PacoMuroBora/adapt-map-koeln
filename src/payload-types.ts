@@ -2721,6 +2721,37 @@ export interface Header {
               } | null);
           url?: string | null;
           label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional CTA button (e.g. "Fragebogen starten"). Shown only in mobile nav.
+   */
+  button?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered (Button variant).
+           */
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
           /**
            * Button size.
            */
@@ -2729,37 +2760,13 @@ export interface Header {
            * Icon before the label.
            */
           iconBefore?:
-            | (
-                | ''
-                | 'arrow-right'
-                | 'arrow-up'
-                | 'arrow-down'
-                | 'arrow-up-right'
-                | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
-                | 'plus'
-                | 'close'
-              )
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
             | null;
           /**
            * Icon after the label.
            */
           iconAfter?:
-            | (
-                | ''
-                | 'arrow-right'
-                | 'arrow-up'
-                | 'arrow-down'
-                | 'arrow-up-right'
-                | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
-                | 'plus'
-                | 'close'
-              )
+            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
             | null;
         };
         id?: string | null;
@@ -3064,6 +3071,21 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+            };
+        id?: T;
+      };
+  button?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
               size?: T;
               iconBefore?: T;
               iconAfter?: T;

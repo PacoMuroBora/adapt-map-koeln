@@ -8,16 +8,16 @@ import React, { useEffect, useState } from 'react'
 import type { Header } from '@/payload-types'
 
 import { Logo } from '@/components/Logo/Logo'
-import { HeaderNav } from './Nav'
-
-const SCROLL_THRESHOLD = 24
-const LOGO_HEIGHT_DEFAULT = 24
-const LOGO_HEIGHT_SCROLLED = 20
-const tweenTransition = {
-  type: 'tween' as const,
-  duration: 0.25,
-  ease: [0.25, 0.1, 0.25, 1] as const,
-}
+import { HeaderDesktopNav } from './DesktopNav'
+import { HeaderMobileNav } from './MobileNav'
+import {
+  HEADER_HEIGHT,
+  LOGO_HEIGHT_DEFAULT,
+  LOGO_HEIGHT_SCROLLED,
+  MOBILE_BREAKPOINT,
+  SCROLL_THRESHOLD,
+  tweenTransition,
+} from './constants'
 
 interface HeaderClientProps {
   data: Header
@@ -27,48 +27,95 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const pathname = usePathname()
   const isQuestionnaire = pathname?.startsWith('/questionnaire')
   const [scrolled, setScrolled] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const logoHeight = useMotionValue(LOGO_HEIGHT_DEFAULT)
   const [logoHeightSnapshot, setLogoHeightSnapshot] = useState(LOGO_HEIGHT_DEFAULT)
+  const buttonLink = data?.button?.[0]?.link
 
   useMotionValueEvent(logoHeight, 'change', setLogoHeightSnapshot)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD)
-    onScroll() // initial check
+    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile) setMobileMenuOpen(false)
+  }, [isMobile])
 
   useEffect(() => {
     const target = scrolled ? LOGO_HEIGHT_SCROLLED : LOGO_HEIGHT_DEFAULT
     animate(logoHeight, target, tweenTransition)
   }, [scrolled, logoHeight])
 
+  const triggerClassName = `shrink-0 size-6 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded ${
+    !scrolled && isQuestionnaire
+      ? 'text-white focus-visible:ring-white'
+      : 'text-am-dark focus-visible:ring-am-dark'
+  }`
+
+  const headerContent = (
+    <div className={`h-full flex items-center justify-between w-full ${isMobile ? 'px-4' : ''}`}>
+      {/* Logo */}
+      <Link href="/">
+        <span className="inline-block origin-left mt-1">
+          <Logo
+            className={scrolled || !isQuestionnaire ? 'text-black' : 'text-white'}
+            height={logoHeightSnapshot}
+          />
+        </span>
+      </Link>
+      {/*  Mobile or Desktop Navigation */}
+      {isMobile ? (
+        <HeaderMobileNav
+          data={data}
+          open={mobileMenuOpen}
+          onOpenChange={setMobileMenuOpen}
+          triggerClassName={triggerClassName}
+        />
+      ) : (
+        <HeaderDesktopNav
+          data={data}
+          inverted={!scrolled && isQuestionnaire}
+          buttonLink={buttonLink}
+        />
+      )}
+    </div>
+  )
+
   return (
-    <div className="fixed inset-x-0 top-0 z-20 p-4">
+    <div className="fixed inset-x-0 top-0 z-20 p-2 md:p-4">
+      {/* Nav Container */}
       <motion.header
-        className="w-full rounded-full px-4 backdrop-blur-md"
+        className="w-full rounded-full py-3 md:px-4 md:py-0"
         initial={false}
         animate={{
-          height: scrolled ? 48 : 56,
-          backgroundColor: scrolled ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0)',
+          height: isMobile
+            ? scrolled
+              ? HEADER_HEIGHT.mobile.scrolled
+              : HEADER_HEIGHT.mobile.default
+            : scrolled
+              ? HEADER_HEIGHT.desktop.scrolled
+              : HEADER_HEIGHT.desktop.default,
+          backgroundColor: scrolled ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0)',
+          backdropFilter: scrolled ? 'blur(16px)' : 'blur(0px)',
           borderColor: scrolled ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0)',
           borderWidth: scrolled ? 1 : 0,
           boxShadow: scrolled ? '0 2px 12px rgba(0, 0, 0, 0.1)' : '0 0 0 rgba(0, 0, 0, 0)',
         }}
         transition={tweenTransition}
       >
-        <div className="h-full flex items-center justify-between">
-          <Link href="/">
-            <span className="inline-block origin-left mt-px">
-              <Logo
-                className={scrolled || !isQuestionnaire ? 'text-black' : 'text-white'}
-                height={logoHeightSnapshot}
-              />
-            </span>
-          </Link>
-          <HeaderNav data={data} inverted={!scrolled && isQuestionnaire} />
-        </div>
+        {headerContent}
       </motion.header>
     </div>
   )
