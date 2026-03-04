@@ -704,7 +704,7 @@ export default function QuestionClient({
 
   return (
     <>
-      <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 py-8 pb-28 md:px-4 md:py-16 md:pb-28">
+      <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 pt-24 pb-28 md:px-4 md:pt-16 md:pb-28">
         <AnimatePresence
           mode="wait"
           onExitComplete={() => {

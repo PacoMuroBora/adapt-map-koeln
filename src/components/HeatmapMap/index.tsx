@@ -8,6 +8,7 @@ import type { MapRef } from 'react-map-gl/maplibre'
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
+import { Button } from '@/components/ui/button'
 import type { Location } from '@/providers/Submission/types'
 import { GridTileLayer } from './GridTileLayer'
 import { TileTooltip } from './TileTooltip'
@@ -57,6 +58,8 @@ type HeatmapMapProps = {
   dataUrl?: string
   /** Draw magenta lines on tile limits (same as colored square). Overridden by ?debugTileBounds=1 in URL. */
   debugTileBounds?: boolean
+  /** When true, the interaction guard overlay is disabled and the map starts fully interactive. */
+  interactionGuardDisabled?: boolean
 }
 
 const COLOR_STOPS = [
@@ -101,6 +104,7 @@ export function HeatmapMap({
   className,
   dataUrl = '/api/heatmap-grid',
   debugTileBounds: debugTileBoundsProp,
+  interactionGuardDisabled = false,
 }: HeatmapMapProps) {
   const [debugFromUrl, setDebugFromUrl] = useState(false)
   const [debugRects, setDebugRects] = useState<
@@ -127,6 +131,7 @@ export function HeatmapMap({
   const mapRef = useRef<MapRef>(null)
   const layerRef = useRef<GridTileLayer | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isInteractive, setIsInteractive] = useState<boolean>(interactionGuardDisabled)
 
   // Fetch tile size and map center from settings
   useEffect(() => {
@@ -256,6 +261,7 @@ export function HeatmapMap({
 
   const pickAndShow = useCallback(
     (evt: MapLayerMouseEvent, fromClick: boolean) => {
+      if (!isInteractive) return
       const map = mapRef.current?.getMap() as MapLibreMap | undefined
       if (!map || !gridData?.features.length) return
       const { x, y } = evt.point
@@ -283,7 +289,7 @@ export function HeatmapMap({
         }, 2500)
       }
     },
-    [gridData, tileSizeMeters],
+    [gridData, tileSizeMeters, isInteractive],
   )
 
   const onMouseMove = useCallback(
@@ -326,6 +332,7 @@ export function HeatmapMap({
   )
 
   const onMouseLeave = useCallback(() => {
+    if (!isInteractive) return
     setHoveredTile(null)
     setTooltipPos(null)
     if (layerRef.current) {
@@ -335,7 +342,7 @@ export function HeatmapMap({
       clearTimeout(hideTimerRef.current)
       hideTimerRef.current = null
     }
-  }, [])
+  }, [isInteractive])
 
   const onClick = useCallback(
     (evt: MapLayerMouseEvent) => {
@@ -381,6 +388,12 @@ export function HeatmapMap({
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
         onClick={onClick}
+        scrollZoom={isInteractive}
+        dragPan={isInteractive}
+        dragRotate={isInteractive}
+        doubleClickZoom={isInteractive}
+        touchZoomRotate={isInteractive}
+        keyboard={isInteractive}
         mapStyle={
           process.env.NEXT_PUBLIC_MAPTILER_API_KEY
             ? `https://api.maptiler.com/maps/basic-v2/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}&lang=de`
@@ -389,6 +402,39 @@ export function HeatmapMap({
         style={{ width: '100%', height: '100%' }}
         reuseMaps={true}
       />
+      {!isInteractive && !interactionGuardDisabled && (
+        <div
+          className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Karte aktivieren, um Interaktionen zu erlauben"
+        >
+          <div
+            className="mx-4 max-w-sm rounded-2xl bg-am-purple/95 p-4 text-white shadow-lg sm:p-6"
+            onClick={(evt) => evt.stopPropagation()}
+          >
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-white/80 sm:text-sm">
+              Interaktive Karte
+            </h2>
+            <p className="mt-2 text-xs text-white/80 sm:text-sm">
+              Um versehentliches Zoomen beim Scrollen zu vermeiden, ist die Karte zunächst gesperrt.
+              Aktiviere sie, um hinein- und herauszuzoomen oder sie zu verschieben.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button
+                type="button"
+                size="lg"
+                shape="round"
+                variant="default"
+                iconAfter="locate"
+                onClick={() => setIsInteractive(true)}
+              >
+                Karte aktivieren
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {hoveredTile && tooltipPos && (
         <TileTooltip
           totalCount={hoveredTile.properties.totalCount}
