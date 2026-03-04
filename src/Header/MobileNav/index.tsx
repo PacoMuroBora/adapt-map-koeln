@@ -89,7 +89,9 @@ export function HeaderMobileNav({
           </nav>
           {buttonLink && (
             <SheetClose asChild>
-              <CMSLink {...buttonLink} />
+              <div className="inline-block">
+                <CMSLink {...buttonLink} size="lg" />
+              </div>
             </SheetClose>
           )}
         </div>

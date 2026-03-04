@@ -31,7 +31,6 @@ export const Header: GlobalConfig = {
     },
     linkGroup({
       appearances: ['default', 'white', 'black', 'outline', 'destructive', 'ghost', 'ghost-muted'],
-      sizes: ['default', 'sm', 'lg', 'icon', 'mini', 'tiny'],
       iconBefore: [
         'arrow-right',
         'arrow-up',

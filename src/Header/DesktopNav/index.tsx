@@ -41,6 +41,7 @@ export function HeaderDesktopNav({ data, inverted, buttonLink }: HeaderDesktopNa
           </LinkButton>
         )
       })}
+      <CMSLink {...buttonLink} size="default" />
     </nav>
   )
 }
