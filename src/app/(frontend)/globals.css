@@ -149,6 +149,16 @@ body {
   .payload-richtext li {
     @apply ml-1;
   }
+
+  /* Rich text uploads: image and picture fully follow wrapper width */
+  .payload-richtext-upload {
+    @apply block max-w-full;
+  }
+
+  .payload-richtext-upload picture,
+  .payload-richtext-upload img {
+    @apply w-full max-w-full h-auto block;
+  }
 }
 
 .background-grid-dark {
