@@ -61,9 +61,9 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
       <NextImage
         alt={alt || ''}
         className={cn(imgClassName)}
-        fill
-        // height={!fill ? height : undefined}
-        // width={!fill ? width : undefined}
+        fill={fill}
+        height={!fill ? height : undefined}
+        width={!fill ? width : undefined}
         placeholder="blur"
         blurDataURL={placeholderBlur}
         priority={priority}
