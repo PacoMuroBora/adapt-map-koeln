@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
 import { getN8nWebhookUrl } from '@/utilities/getN8nWebhookUrl'
+import type { KnowledgeBaseItem, Submission } from '@/payload-types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,12 +18,12 @@ export async function POST(req: NextRequest) {
     // 1. This is a system operation (generating AI recommendations)
     // 2. Users can only access submissions they know the ID of
     // 3. We're not exposing sensitive data, just using it to generate recommendations
-    const submission = await payload.findByID({
+    const submission = (await payload.findByID({
       collection: 'submissions',
       id: submissionId,
       depth: 0,
       overrideAccess: true, // Allow reading for AI recommendation generation
-    })
+    })) as Submission
 
     if (!submission) {
       return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
@@ -90,13 +91,36 @@ export async function POST(req: NextRequest) {
     }
 
     const referencedKbIds = Array.isArray((aiResult as any).referencedKbIds)
-      ? ((aiResult as any).referencedKbIds as unknown[]).filter((id): id is string => typeof id === 'string' && id.length > 0)
+      ? ((aiResult as any).referencedKbIds as unknown[]).filter(
+          (id): id is string => typeof id === 'string' && id.length > 0,
+        )
       : []
 
+    const nowISO = new Date().toISOString()
+
+    // Resolve and validate referenced KB items
+    const resolvedKbItems: KnowledgeBaseItem[] = []
+    for (const kbId of referencedKbIds) {
+      try {
+        const kb = (await payload.findByID({
+          collection: 'knowledge-base-items',
+          id: kbId,
+          depth: 0,
+          overrideAccess: true,
+        })) as KnowledgeBaseItem
+        if (kb) {
+          resolvedKbItems.push(kb)
+        }
+      } catch {
+        // Ignore invalid IDs
+      }
+    }
+
+    const validKbIds = resolvedKbItems.map((kb) => String(kb.id))
+
     // Update the submission with AI results
-    // ⚠️ CRITICAL: Use overrideAccess: false and pass req for transaction safety
-    // Since this is a system operation updating AI fields, we use overrideAccess: true
-    // but only for updating AI fields (not user data)
+    // ⚠️ CRITICAL: Use overrideAccess: true here because this is a trusted system-side operation
+    // that only updates AI-managed fields.
     await payload.update({
       collection: 'submissions',
       id: submissionId,
@@ -105,18 +129,42 @@ export async function POST(req: NextRequest) {
           ai_summary_de: (aiResult as any).summary,
           ai_recommendations_de: (aiResult as any).recommendations,
           // Payload field is an array of objects: [{ kb_id }]
-          ai_referenced_kb_ids: referencedKbIds.map((kb_id) => ({ kb_id })),
+          ai_referenced_kb_ids: validKbIds.map((kb_id) => ({ kb_id })),
           ai_model_metadata: (aiResult as any).modelMetadata || {},
-          ai_generated_at: new Date().toISOString(),
+          ai_generated_at: nowISO,
         },
       },
       overrideAccess: true, // System operation - updating AI-generated fields
     })
 
+    // Persist recommendation usage events for analytics
+    for (const kb of resolvedKbItems) {
+      try {
+        await payload.create({
+          collection: 'knowledge-base-recommendation-events',
+          data: {
+            kbItem: kb.id,
+            submission: submission.id,
+            source: 'ai-recommendation',
+            recommendedAt: nowISO,
+            theme: kb.theme,
+            solution_type: kb.solution_type,
+            postal_code: submission.location?.postal_code,
+            categories: Array.isArray(kb.categories)
+              ? kb.categories.map((value) => ({ value }))
+              : undefined,
+          },
+          overrideAccess: true,
+        })
+      } catch (eventError) {
+        console.error('Failed to create KB recommendation event', eventError)
+      }
+    }
+
     return NextResponse.json({
       ai_summary_de: (aiResult as any).summary,
       ai_recommendations_de: (aiResult as any).recommendations,
-      ai_generated_at: new Date().toISOString(),
+      ai_generated_at: nowISO,
     })
   } catch (error: any) {
     console.error('AI recommendation error:', error)
