@@ -59,6 +59,7 @@ export async function GET(request: Request) {
       heatIntensity: doc.heatIntensity,
       postalCode: doc.location.postal_code,
       city: doc.location.city,
+      street: doc.location.street,
       questionnaireVersion: doc.questionnaireVersion,
       desiredChanges: Array.isArray(doc.desiredChanges)
         ? doc.desiredChanges.map((d) => d.icon)

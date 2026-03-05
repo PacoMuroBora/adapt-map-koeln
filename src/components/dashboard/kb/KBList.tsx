@@ -208,7 +208,7 @@ export function KBList() {
                         className={cn(
                           'rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em]',
                           item.status === 'published'
-                            ? 'bg-am-green/20 text-am-green-alt'
+                            ? 'bg-am-green-alt text-am-darker'
                             : item.status === 'archived'
                               ? 'bg-secondary/20 text-foreground-alt'
                               : 'bg-am-orange/20 text-am-orange-alt',
@@ -231,7 +231,7 @@ export function KBList() {
       </CardContent>
 
       <Sheet open={openId != null} onOpenChange={(open) => !open && setOpenId(null)}>
-        <SheetContent side="right" className="flex w-full max-w-xl flex-col bg-card text-foreground">
+        <SheetContent side="right" className="flex w-full max-w-4xl flex-col bg-card text-foreground">
           <SheetHeader>
             <SheetTitle className="text-base uppercase tracking-[0.18em]">
               Knowledge-Base-Eintrag

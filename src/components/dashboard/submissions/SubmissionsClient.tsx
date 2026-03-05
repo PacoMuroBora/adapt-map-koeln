@@ -25,7 +25,7 @@ export function SubmissionsClient() {
 
   return (
     <DashboardShell>
-      <div className="grid h-full grid-rows-[2fr_1fr] gap-8">
+      <div className="grid h-full grid-rows-[2fr_1fr] gap-10 py-6">
         {/* Top row: list (2/3 height) */}
         <div className="min-h-0">
           <SubmissionsList onSelect={(item) => setSelected(item)} />

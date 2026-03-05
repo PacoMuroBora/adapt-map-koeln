@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { dashboardFetch } from '@/lib/dashboard-api'
+import { Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 type RangeKey = '7d' | '30d' | '180d' | '365d'
 
@@ -45,7 +46,6 @@ export function SubmissionsAnalytics() {
         setData(res)
       } catch (err: any) {
         setError(err?.message || 'Fehler beim Laden der Analytics')
-        setData(null)
       } finally {
         setLoading(false)
       }
@@ -64,46 +64,47 @@ export function SubmissionsAnalytics() {
         ? data?.byHeatFrequency ?? []
         : data?.byDesiredChange ?? []
 
+  const distributionYAxisLabel =
+    tab === 'postal' ? 'PLZ' : tab === 'heat' ? 'Hitzekategorie' : 'Wunsch-Typ'
+
   return (
     <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2">
       {/* Line chart card (time series) */}
       <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-          <div>
+        <CardHeader className="pb-4 space-y-1">
+          <div className="flex items-center justify-between gap-4">
             <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
               Aktivität nach Zeit
             </CardTitle>
-            <p className="text-sm text-foreground-alt">
-              {data ? `${data.totalDocs} Submissions im ausgewählten Zeitraum` : 'Lade…'}
-            </p>
+            <div className="flex gap-2 rounded-full bg-am-white/70 p-1">
+              {(Object.keys(RANGE_LABEL) as RangeKey[]).map((key) => (
+                <Button
+                  key={key}
+                  variant={key === range ? 'default' : 'ghost-muted'}
+                  size="tiny"
+                  shape="round"
+                  className="px-2 text-[10px]"
+                  onClick={() => setRange(key)}
+                >
+                  {RANGE_LABEL[key]}
+                </Button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2 bg-am-white/70 rounded-full px-2 py-1">
-            {(Object.keys(RANGE_LABEL) as RangeKey[]).map((key) => (
-              <Button
-                key={key}
-                variant={key === range ? 'default' : 'ghost-muted'}
-                size="tiny"
-                shape="round"
-                className="px-2 text-[10px]"
-                onClick={() => setRange(key)}
-              >
-                {RANGE_LABEL[key]}
-              </Button>
-            ))}
-          </div>
+          <p className="text-sm text-foreground-alt">
+            {data ? `${data.totalDocs} Submissions im ausgewählten Zeitraum` : 'Lade…'}
+          </p>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col justify-between pb-5">
-          {loading && (
-            <div className="flex flex-1 flex-col justify-end gap-3">
-              <Skeleton className="h-32 w-full rounded-2xl bg-am-darker/60" />
-            </div>
-          )}
-          {error && !loading && (
+          {/* While reloading with existing data, keep showing the old chart.
+              Only show the empty placeholder when we have never loaded data yet. */}
+          {loading && !data && <div className="flex-1" />}
+          {error && !loading && !data && (
             <div className="flex flex-1 items-center justify-center text-xs text-destructive">
               {error}
             </div>
           )}
-          {!loading && !error && data && (
+          {data && !error && (
             <div className="flex flex-1 flex-col justify-between">
               <div className="flex items-baseline justify-between text-sm">
                 <div className="space-y-1">
@@ -122,22 +123,50 @@ export function SubmissionsAnalytics() {
                   <p className="text-3xl font-semibold text-am-purple-alt">{aiRate}%</p>
                 </div>
               </div>
-              <div className="mt-5 h-32 rounded-2xl bg-gradient-to-t from-am-purple/10 to-am-purple/30 p-3">
-                {/* Lightweight faux line chart using CSS heights */}
-                <div className="flex h-full items-end gap-1">
-                  {data.timeSeries.map((point) => {
-                    const maxCount = Math.max(...data.timeSeries.map((p) => p.count), 1)
-                    const h = (point.count / maxCount) * 100
-                    return (
-                      <div
-                        key={point.date}
-                        className="flex-1 rounded-full bg-am-purple-alt/40"
-                        style={{ height: `${Math.max(h, 8)}%` }}
-                        title={`${point.date}: ${point.count} Submissions`}
+
+              <div className="mt-4 h-36 rounded-2xl bg-gradient-to-t from-am-purple/10 to-am-purple/30 pl-3 pr-3 pt-2 pb-1">
+                {data.timeSeries.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={data.timeSeries}
+                      // Minimal but readable padding around plot area
+                      margin={{ top: 0, right: 8, bottom: 0, left: 0 }}
+                    >
+                      {/* Hide X axis; show only simple numeric Y ticks */}
+                      <XAxis dataKey="date" hide />
+                      <YAxis
+                        tick={{ fontSize: 10 }}
+                        axisLine={false}
+                        tickLine={false}
+                        allowDecimals={false}
+                        width={32}
                       />
-                    )
-                  })}
-                </div>
+                      <Tooltip
+                        formatter={(value: any) => [`${value} Submissions`, 'Anzahl']}
+                        labelFormatter={(label: any) =>
+                          new Date(label).toLocaleDateString('de-DE')
+                        }
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        stroke="hsl(var(--am-purple-alt))"
+                        strokeWidth={2}
+                        dot={{
+                          r: 3,
+                          strokeWidth: 1,
+                          stroke: 'hsl(var(--am-purple-alt))',
+                          fill: 'white',
+                        }}
+                        activeDot={{ r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-foreground-alt">
+                    Keine Daten im Zeitraum
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -146,83 +175,93 @@ export function SubmissionsAnalytics() {
 
       {/* Horizontal bars card */}
       <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-          <div>
-            <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
-              Verteilung
-            </CardTitle>
-            <p className="text-sm text-foreground-alt">
-              Top Segmente im gewählten Zeitraum
-            </p>
+        <CardHeader className="pb-4 space-y-1">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
+                Verteilung
+              </CardTitle>
+            </div>
+            <div className="inline-flex gap-1 rounded-full bg-am-white/70 p-1">
+              <Button
+                size="tiny"
+                shape="round"
+                variant={tab === 'postal' ? 'default' : 'ghost-muted'}
+                className="px-2 text-[10px]"
+                onClick={() => setTab('postal')}
+              >
+                PLZ
+              </Button>
+              <Button
+                size="tiny"
+                shape="round"
+                variant={tab === 'heat' ? 'default' : 'ghost-muted'}
+                className="px-2 text-[10px]"
+                onClick={() => setTab('heat')}
+              >
+                Hitze
+              </Button>
+              <Button
+                size="tiny"
+                shape="round"
+                variant={tab === 'desired' ? 'default' : 'ghost-muted'}
+                className="px-2 text-[10px]"
+                onClick={() => setTab('desired')}
+              >
+                Wünsche
+              </Button>
+            </div>
           </div>
-          <div className="inline-flex gap-1 rounded-full bg-am-white/70 p-1">
-            <Button
-              size="tiny"
-              shape="round"
-              variant={tab === 'postal' ? 'default' : 'ghost-muted'}
-              className="px-2 text-[10px]"
-              onClick={() => setTab('postal')}
-            >
-              PLZ
-            </Button>
-            <Button
-              size="tiny"
-              shape="round"
-              variant={tab === 'heat' ? 'default' : 'ghost-muted'}
-              className="px-2 text-[10px]"
-              onClick={() => setTab('heat')}
-            >
-              Hitze
-            </Button>
-            <Button
-              size="tiny"
-              shape="round"
-              variant={tab === 'desired' ? 'default' : 'ghost-muted'}
-              className="px-2 text-[10px]"
-              onClick={() => setTab('desired')}
-            >
-              Wünsche
-            </Button>
-          </div>
+          <p className="text-sm text-foreground-alt">
+            Top Segmente im gewählten Zeitraum
+          </p>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col gap-3 pb-5">
-          {loading && (
-            <div className="flex flex-1 flex-col gap-2">
-              <Skeleton className="h-6 w-full rounded-full bg-am-darker/60" />
-              <Skeleton className="h-6 w-full rounded-full bg-am-darker/60" />
-              <Skeleton className="h-6 w-3/4 rounded-full bg-am-darker/60" />
-            </div>
-          )}
-          {error && !loading && (
+          {/* Same behavior as time-series card: keep showing existing data while reloading. */}
+          {loading && !data && <div className="flex-1" />}
+          {error && !loading && !data && (
             <div className="flex flex-1 items-center justify-center text-xs text-destructive">
               {error}
             </div>
           )}
-          {!loading && !error && (
+          {data && !error && (
             <div className="flex flex-1 flex-col gap-3">
-              {bars.map((row) => {
-                const max = Math.max(...bars.map((b) => b.value), 1)
-                const width = (row.value / max) * 100
-                return (
-                  <div key={row.label} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm text-foreground-alt">
-                      <span className="truncate">
-                        {tab === 'desired' ? row.label.replace('_', ' ') : row.label}
-                      </span>
-                      <span>{row.value}</span>
-                    </div>
-                    <div className="h-5 overflow-hidden rounded-full bg-secondary/60">
-                      <div
-                        className="flex h-full items-center rounded-full bg-am-purple-alt/80 px-3 text-xs text-am-dark"
-                        style={{ width: `${Math.max(width, 8)}%` }}
-                      >
-                        {row.value} Submissions
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-              {bars.length === 0 && (
+              {bars.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={bars}
+                    layout="vertical"
+                    // No axis labels → remove extra bottom space
+                    margin={{ top: 0, right: 8, bottom: 0, left: 0 }}
+                  >
+                    {/* Hide numeric axis; keep only bars and tooltips */}
+                    <XAxis type="number" hide />
+                    <YAxis
+                      type="category"
+                      dataKey="label"
+                      tick={{ fontSize: 10 }}
+                      width={70}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(label: string) =>
+                        tab === 'desired' ? label.replace('_', ' ') : label
+                      }
+                    />
+                    <Tooltip
+                      formatter={(value: any) => [`${value} Submissions`, 'Anzahl']}
+                      labelFormatter={(label: any) =>
+                        tab === 'desired' ? String(label).replace('_', ' ') : label
+                      }
+                    />
+                    <Bar
+                      dataKey="value"
+                      fill="hsl(var(--am-purple-alt))"
+                      radius={999}
+                      barSize={24}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
                 <p className="mt-4 text-xs text-foreground-alt">
                   Keine Daten für den aktuellen Zeitraum.
                 </p>

@@ -44,12 +44,6 @@ export function SidebarNav() {
     <aside className="flex h-screen w-72 flex-col border-r border-border bg-secondary text-foreground">
       <div className="flex items-center gap-3 px-5 pb-5 pt-6">
         <Logo className="text-am-darker" height={22} />
-        <div className="flex flex-col">
-          <span className="font-headings text-sm font-semibold uppercase tracking-[0.18em] text-am-darker">
-            AdaptMap
-          </span>
-          <span className="text-xs text-foreground-alt">Editor Dashboard</span>
-        </div>
       </div>
 
       <nav className="mt-2 flex-1 space-y-1 px-3">
