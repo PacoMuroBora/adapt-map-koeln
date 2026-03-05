@@ -14,6 +14,8 @@ type QuestionnaireStartViewProps = {
   totalSteps: number
   /** When true, show instruction screen (instructionTitle + list + CTA Fragebogen starten). */
   useInstructionScreen?: boolean
+  /** When set, used instead of router.push for starting the questionnaire (single-route mode). */
+  onStart?: () => void
 }
 
 export default function QuestionnaireStartView({
@@ -24,6 +26,7 @@ export default function QuestionnaireStartView({
   title,
   totalSteps: _totalSteps,
   useInstructionScreen = false,
+  onStart: onStartProp,
 }: QuestionnaireStartViewProps) {
   const router = useRouter()
   const {
@@ -34,9 +37,7 @@ export default function QuestionnaireStartView({
     setShowAbortDialog,
   } = useQuestionnaireNavigation(questionnaireName, { mode: 'start' })
 
-  const onNext = () => {
-    router.push(`/questionnaire/${questionnaireName}/1`)
-  }
+  const onNext = onStartProp ?? (() => router.push(`/questionnaire/${questionnaireName}/1`))
 
   const showInstruction =
     useInstructionScreen && (instructionTitle != null || instructionItems.length > 0)

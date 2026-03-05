@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Question } from '../../questions'
+import type { LocalNavigationConfig } from '../../useQuestionnaireNavigation'
 import { Card, type CardProps } from '@/components/ui/card'
 import { QuestionCaseInput, type QuestionCaseInputContext } from './QuestionCaseInput'
 import {
@@ -56,6 +57,14 @@ type QuestionClientProps = {
   currentSectionIndex?: number
   /** When set, this step shows the conditional question that matches the parent step answer; question list is resolved on client. */
   conditionalStepConfig?: ConditionalStepConfig
+  /** Single-route mode: required when used from QuestionnaireRuntimeClient. */
+  localNavigation: {
+    setCurrentIndex: (step: number) => void
+    currentStep: number
+    totalSteps: number
+    allStepQuestionTypes: Question['type'][][]
+    goToFeedback: () => void
+  }
 }
 
 export default function QuestionClient({
@@ -73,6 +82,7 @@ export default function QuestionClient({
   sectionsProgress,
   currentSectionIndex,
   conditionalStepConfig,
+  localNavigation,
 }: QuestionClientProps) {
   const router = useRouter()
   const {
@@ -122,30 +132,32 @@ export default function QuestionClient({
   const setQuestionnaireError = useQuestionnaireProgress()?.setQuestionnaireError ?? (() => {})
   const [isExiting, setIsExiting] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const pendingPathRef = useRef<string | null>(null)
   const [isGpsLoading, setIsGpsLoading] = useState(false)
   const isLastStepWithConsent =
     stepNumber === totalSteps && effectiveQuestions.some((q) => q.type === 'consent')
+
+  // In single-route mode the component does not remount between steps.
+  // Ensure exit state is cleared whenever the visible step changes.
+  useEffect(() => {
+    setIsExiting(false)
+  }, [stepNumber])
 
   // When conditional step has no matching condition, skip to next step
   useEffect(() => {
     if (!conditionalStepConfig) return
     if ((resolvedConditionalQuestions?.length ?? 0) > 0) return
-    const nextPath =
-      stepNumber < totalSteps
-        ? `/questionnaire/${questionnaireName}/${stepNumber + 1}`
-        : '/feedback'
-    router.replace(nextPath)
+    if (stepNumber < localNavigation.totalSteps) {
+      localNavigation.setCurrentIndex(stepNumber + 1)
+    } else {
+      localNavigation.goToFeedback()
+    }
   }, [
     conditionalStepConfig,
     resolvedConditionalQuestions?.length,
     stepNumber,
-    totalSteps,
-    questionnaireName,
-    router,
+    localNavigation,
   ])
   const resultsRoute = '/results'
-  const feedbackRoute = '/feedback'
 
   const onStepClickSection = useCallback(
     (step: number) => {
@@ -153,10 +165,10 @@ export default function QuestionClient({
         sectionStepsTotal != null && sectionStepNumber != null
           ? stepNumber - sectionStepNumber + step
           : step
-      pendingPathRef.current = `/questionnaire/${questionnaireName}/${targetFlat}`
       setIsExiting(true)
+      setTimeout(() => localNavigation.setCurrentIndex(targetFlat), 220)
     },
-    [questionnaireName, stepNumber, sectionStepNumber, sectionStepsTotal],
+    [stepNumber, sectionStepNumber, sectionStepsTotal, localNavigation],
   )
 
   const isSkippableStep =
@@ -389,11 +401,12 @@ export default function QuestionClient({
       )
     )
       return
+    const steps = allStepQuestionTypes ?? []
     let targetStep = stepNumber + 1
-    if (allStepQuestionTypes && allStepQuestionTypes.length >= totalSteps) {
+    if (steps.length >= totalSteps) {
       while (
         targetStep <= totalSteps &&
-        (allStepQuestionTypes[targetStep - 1] ?? []).every((t) =>
+        (steps[targetStep - 1] ?? []).every((t) =>
           STEPS_TO_SKIP_WHEN_GPS.includes(t as (typeof STEPS_TO_SKIP_WHEN_GPS)[number]),
         )
       ) {
@@ -401,18 +414,17 @@ export default function QuestionClient({
       }
     }
     if (targetStep <= totalSteps) {
-      router.replace(`/questionnaire/${questionnaireName}/${targetStep}`)
+      localNavigation.setCurrentIndex(targetStep)
     } else {
-      router.replace('/feedback')
+      localNavigation.goToFeedback()
     }
   }, [
-    questionnaireName,
     stepNumber,
     totalSteps,
     effectiveQuestions,
     state.location?.postal_code,
-    router,
     allStepQuestionTypes,
+    localNavigation,
   ])
 
   // Initialize slider default for any slider question in step
@@ -458,6 +470,37 @@ export default function QuestionClient({
     return true
   }
 
+  const wrappedSetCurrentIndex = useCallback(
+    (step: number) => {
+      setIsExiting(true)
+      setTimeout(() => localNavigation.setCurrentIndex(step), 220)
+    },
+    [localNavigation],
+  )
+
+  const navConfig: LocalNavigationConfig = {
+    mode: 'local',
+    currentStep: localNavigation.currentStep,
+    setCurrentIndex: wrappedSetCurrentIndex,
+    totalSteps: localNavigation.totalSteps,
+    questionTypes: effectiveQuestionTypes,
+    allStepQuestionTypes: localNavigation.allStepQuestionTypes,
+    questions: effectiveQuestions,
+    stepAnswers,
+    state,
+    updateAnswer,
+    updateCurrentStep,
+    validateAnswer,
+    goToFeedback: () => {
+      if (isLastStepWithConsent) {
+        const merged = { ...state.answers, ...stepAnswers }
+        submitFromLastStep(merged)
+      } else {
+        localNavigation.goToFeedback()
+      }
+    },
+  }
+
   const {
     handleNext,
     handlePrevious,
@@ -465,44 +508,7 @@ export default function QuestionClient({
     handleConfirmAbort,
     showAbortDialog,
     setShowAbortDialog,
-  } = useQuestionnaireNavigation(questionnaireName, {
-    mode: 'step',
-    stepNumber,
-    totalSteps,
-    questionTypes: effectiveQuestionTypes,
-    allStepQuestionTypes,
-    questions: effectiveQuestions,
-    stepAnswers,
-    state,
-    updateAnswer,
-    updateCurrentStep,
-    validateAnswer,
-    onBeforeNextNavigate: (path) => {
-      if (path === feedbackRoute && isLastStepWithConsent) {
-        const merged = { ...state.answers, ...stepAnswers }
-        submitFromLastStep(merged)
-        return
-      }
-      pendingPathRef.current = path
-      setIsExiting(true)
-      setTimeout(() => {
-        if (pendingPathRef.current) {
-          router.push(pendingPathRef.current)
-          pendingPathRef.current = null
-        }
-      }, 220)
-    },
-    onBeforePrevNavigate: (path) => {
-      pendingPathRef.current = path
-      setIsExiting(true)
-      setTimeout(() => {
-        if (pendingPathRef.current) {
-          router.push(pendingPathRef.current)
-          pendingPathRef.current = null
-        }
-      }, 220)
-    },
-  })
+  } = useQuestionnaireNavigation(questionnaireName, navConfig)
 
   const handleGPSLocation = async () => {
     setIsGpsLoading(true)
@@ -674,10 +680,10 @@ export default function QuestionClient({
     }
     updateLocation({ lat: 0, lng: 0, postal_code: null, city: null })
     updateCurrentStep('questionnaire')
-    if (stepNumber < totalSteps) {
-      router.push(`/questionnaire/${questionnaireName}/${stepNumber + 1}`)
+    if (stepNumber < localNavigation.totalSteps) {
+      localNavigation.setCurrentIndex(stepNumber + 1)
     } else {
-      router.push('/feedback')
+      localNavigation.goToFeedback()
     }
   }
 
@@ -699,21 +705,17 @@ export default function QuestionClient({
   }
 
   if (conditionalStepConfig && effectiveQuestions.length === 0) {
-    return null
+    return (
+      <div className="flex min-h-0 h-full max-h-full flex-col items-center justify-center text-muted-foreground text-sm">
+        Weiterleitung…
+      </div>
+    )
   }
 
   return (
     <>
       <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 pt-24 pb-28 md:px-4 md:pt-16 md:pb-28">
-        <AnimatePresence
-          mode="wait"
-          onExitComplete={() => {
-            if (pendingPathRef.current) {
-              router.push(pendingPathRef.current)
-              pendingPathRef.current = null
-            }
-          }}
-        >
+        <AnimatePresence mode="wait">
           {!isExiting && !isSkippableStep ? (
             <motion.div
               key={stepNumber}
@@ -817,8 +819,8 @@ export default function QuestionClient({
                 sectionStepsTotal != null && sectionStepNumber != null
                   ? stepNumber - sectionStepNumber + step
                   : step
-              pendingPathRef.current = `/questionnaire/${questionnaireName}/${targetFlat}`
               setIsExiting(true)
+              setTimeout(() => localNavigation.setCurrentIndex(targetFlat), 220)
             }}
           />
         </div>
