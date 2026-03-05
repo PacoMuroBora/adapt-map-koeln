@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
 import { getPayloadClient } from '@/lib/payload'
 
 type RouteParams = {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 const ALLOWED_SLUGS = new Set(['site-settings', 'ui-copy'] as const)
@@ -17,9 +17,9 @@ function assertAllowed(slug: string): asserts slug is 'site-settings' | 'ui-copy
   }
 }
 
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const slug = params.slug
+    const { slug } = await params
     assertAllowed(slug)
 
     const payload = await getPayloadClient()
@@ -54,9 +54,9 @@ export async function GET(request: Request, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const slug = params.slug
+    const { slug } = await params
     assertAllowed(slug)
 
     const body = await request.json()

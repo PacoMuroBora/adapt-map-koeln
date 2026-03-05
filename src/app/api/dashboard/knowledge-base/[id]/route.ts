@@ -1,17 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
 import { getPayloadClient } from '@/lib/payload'
 import type { KnowledgeBaseItem } from '@/payload-types'
 
 type RouteParams = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params
+
     const payload = await getPayloadClient()
 
     const authResult = await payload.auth({
@@ -31,7 +33,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const doc = (await payload.findByID({
       collection: 'knowledge-base-items',
-      id: params.id,
+      id,
       depth: 0,
       overrideAccess: true,
     })) as KnowledgeBaseItem
@@ -45,8 +47,10 @@ export async function GET(request: Request, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params
+
     const body = await request.json()
 
     const payload = await getPayloadClient()
@@ -68,7 +72,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
     const updated = await payload.update({
       collection: 'knowledge-base-items',
-      id: params.id,
+      id,
       data: body,
       overrideAccess: true,
     })
