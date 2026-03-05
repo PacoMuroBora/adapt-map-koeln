@@ -9,6 +9,7 @@ import {
   JSXConvertersFunction,
   LinkJSXConverter,
   RichText as ConvertRichText,
+  UploadJSXConverter,
 } from '@payloadcms/richtext-lexical/react'
 
 import { CodeBlock, CodeBlockProps } from '@/blocks/Code/Component'
@@ -49,11 +50,39 @@ const bodySizeClasses = {
   large: 'font-body text-body-lg',
 } as const
 
+/** CSS classes for RichText inline image sizes */
+const richTextImageSizeClasses: Record<string, string> = {
+  small: 'max-w-xs',
+  medium: 'max-w-md',
+  large: 'max-w-2xl',
+  full: 'w-full max-w-full',
+}
+
 const createJsxConverters: (bodySize: 'default' | 'large') => JSXConvertersFunction<NodeTypes> =
   (bodySize) =>
   ({ defaultConverters }) => ({
     ...defaultConverters,
     ...LinkJSXConverter({ internalDocToHref }),
+    upload: (args) => {
+      const DefaultUpload =
+        defaultConverters.upload ?? (UploadJSXConverter as { upload: (a: typeof args) => React.ReactNode }).upload
+      const result = typeof DefaultUpload === 'function' ? DefaultUpload(args) : null
+      if (!result) return null
+      const node = args.node as Record<string, unknown>
+      const collectionKey = Object.keys(node).find(
+        (k) => k !== 'type' && typeof node[k] === 'object',
+      )
+      const fields = collectionKey
+        ? (node[collectionKey] as { fields?: { size?: string } } | undefined)?.fields
+        : undefined
+      const size = (fields?.size ?? 'medium') as keyof typeof richTextImageSizeClasses
+      const sizeClass = richTextImageSizeClasses[size] ?? richTextImageSizeClasses.medium
+      return (
+        <span className={cn('payload-richtext-upload my-4 block', sizeClass)}>
+          {result}
+        </span>
+      )
+    },
     heading: ({ node, nodesToJSX }) => {
       const children = nodesToJSX({ nodes: node.children })
       const Tag = node.tag as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
