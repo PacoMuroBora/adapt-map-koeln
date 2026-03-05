@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
+import { getCachedSubmissionsList } from '@/lib/dashboard-cache'
 import { getPayloadClient } from '@/lib/payload'
 import type { Submission } from '@/payload-types'
 
-type ListQuery = {
-  limit?: number
-  page?: number
-}
-
-function parseListQuery(searchParams: URLSearchParams): ListQuery {
+function parseListQuery(searchParams: URLSearchParams): { limit: number; page: number } {
   const limit = Number(searchParams.get('limit') ?? '20')
   const page = Number(searchParams.get('page') ?? '1')
 
@@ -41,15 +37,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const result = await payload.find({
-      collection: 'submissions',
-      depth: 0,
-      limit,
-      page,
-      sort: '-createdAt',
-      // Admin/editor-only dashboard, so we intentionally bypass collection access control.
-      overrideAccess: true,
-    })
+    const result = await getCachedSubmissionsList(limit, page)
 
     const items = (result.docs as Submission[]).map((doc) => ({
       id: doc.id,

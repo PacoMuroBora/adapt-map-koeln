@@ -11,6 +11,7 @@ import { dashboardFetch } from '@/lib/dashboard-api'
 import { cn } from '@/utilities/ui'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { AnimatePresence, motion } from 'motion/react'
+import { ExternalLink } from 'lucide-react'
 
 type SubmissionListItem = {
   id: string
@@ -356,9 +357,24 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
 
                 {/* Ort */}
                 <div className="rounded-2xl bg-background p-4">
-                  <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
-                    Ort
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
+                      Ort
+                    </p>
+                    {detailJson.location?.lat != null &&
+                      detailJson.location?.lng != null && (
+                        <a
+                          href={`https://www.google.com/maps?q=${Number(detailJson.location.lat)},${Number(detailJson.location.lng)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground-alt hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                          title="In Google Maps öffnen"
+                          aria-label="In Google Maps öffnen"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                  </div>
                   <div className="mt-2 space-y-1 text-base">
                     <p className="font-medium">
                       {detailJson.location?.postal_code}{' '}

@@ -1,6 +1,8 @@
+import { revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
+import { DASHBOARD_CACHE_TAGS, getCachedKnowledgeBaseList } from '@/lib/dashboard-cache'
 import { getPayloadClient } from '@/lib/payload'
 import type { KnowledgeBaseItem } from '@/payload-types'
 
@@ -28,6 +30,8 @@ export async function POST(request: Request) {
       data: body,
       overrideAccess: true,
     })
+    revalidateTag(DASHBOARD_CACHE_TAGS.kbList)
+    revalidateTag(DASHBOARD_CACHE_TAGS.kbAnalytics)
     return NextResponse.json({ doc })
   } catch (error: any) {
     return NextResponse.json(
@@ -45,14 +49,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const search = (url.searchParams.get('q') ?? '').toLowerCase()
 
-    const result = await payload.find({
-      collection: 'knowledge-base-items',
-      depth: 0,
-      limit: 100,
-      sort: '-createdAt',
-      overrideAccess: true,
-    })
-
+    const result = await getCachedKnowledgeBaseList()
     const docs = result.docs as KnowledgeBaseItem[]
 
     const filtered = docs.filter((doc) => {

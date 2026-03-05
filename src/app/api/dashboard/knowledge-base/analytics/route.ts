@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
+import { getCachedKnowledgeBaseAnalytics } from '@/lib/dashboard-cache'
 import { getPayloadClient } from '@/lib/payload'
 
 type RangeKey = '7d' | '30d' | '180d' | '365d'
-
-const RANGE_TO_DAYS: Record<RangeKey, number> = {
-  '7d': 7,
-  '30d': 30,
-  '180d': 180,
-  '365d': 365,
-}
 
 function parseRange(param: string | null): RangeKey {
   if (param === '30d' || param === '180d' || param === '365d') return param
@@ -21,11 +15,6 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     const range = parseRange(url.searchParams.get('range'))
-    const days = RANGE_TO_DAYS[range]
-
-    const since = new Date()
-    since.setDate(since.getDate() - days)
-    const sinceISO = since.toISOString()
 
     const payload = await getPayloadClient()
 
@@ -44,19 +33,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const result = await payload.find({
-      collection: 'knowledge-base-recommendation-events',
-      depth: 0,
-      limit: 5000,
-      sort: 'recommendedAt',
-      where: {
-        recommendedAt: {
-          greater_than_equal: sinceISO,
-        },
-      },
-      overrideAccess: true,
-    })
-
+    const result = await getCachedKnowledgeBaseAnalytics(range)
     const docs = result.docs as any[]
 
     const byDay = new Map<string, { date: string; count: number }>()
