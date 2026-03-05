@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/sheet'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { ExternalLink } from 'lucide-react'
 import { categoryOptions } from '@/collections/KnowledgeBaseItems/categoryOptions'
 import { themeOptions } from '@/collections/KnowledgeBaseItems/themeOptions'
 import { AnimatePresence, motion } from 'motion/react'
@@ -36,6 +37,7 @@ type KBListItem = {
   solution_type?: string | null
   status: string
   location?: string | null
+  link?: string | null
   categories?: string[] | null
   lastSynced: string | null
 }
@@ -136,6 +138,7 @@ export function KBList() {
     description: '',
     problems_solved: '',
     link: '',
+    solution_type: '',
     theme: '',
     categories: [] as string[],
     location: '',
@@ -175,6 +178,7 @@ export function KBList() {
         description: detail.description,
         problems_solved: detail.problems_solved,
         link: detail.link,
+        solution_type: detail.solution_type && String(detail.solution_type).trim() ? detail.solution_type : undefined,
         theme: detail.theme && String(detail.theme).trim() ? detail.theme : undefined,
         categories: Array.isArray(detail.categories) ? detail.categories : undefined,
         location: isTip ? 'universal' : detail.location ?? undefined,
@@ -359,18 +363,20 @@ export function KBList() {
         )}
         {!loading && !error && (
           <div className="h-full overflow-y-auto px-6 py-2">
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {filtered.map((item) => (
                 <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => openDrawer(item)}
+                  <div
                     className={cn(
-                      'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-left text-base transition-colors',
+                      'flex items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-base transition-colors',
                       'hover:bg-secondary/30',
                     )}
                   >
-                    <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => openDrawer(item)}
+                      className="min-w-0 flex-1 text-left"
+                    >
                       <div className="flex items-center gap-2">
                         <span className="truncate text-lg font-medium leading-tight text-foreground">
                           {item.displayTitle || 'Ohne Titel'}
@@ -381,32 +387,46 @@ export function KBList() {
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-3 text-base text-foreground-alt">
-                        {item.solution_type && <span>{item.solution_type}</span>}
-                        {item.location && <span>{item.location}</span>}
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-foreground-alt">
+                        {item.location != null && item.location !== '' && (
+                          <span>{item.location}</span>
+                        )}
+                        {item.solution_type != null && item.solution_type !== '' && (
+                          <span>{item.solution_type}</span>
+                        )}
                         {item.lastSynced && (
                           <span>
-                            Vektor-Sync:{' '}
-                            {new Date(item.lastSynced).toLocaleDateString('de-DE')}
+                            AI-sync : {new Date(item.lastSynced).toLocaleDateString('de-DE')}
                           </span>
                         )}
                       </div>
-                    </div>
-                    <div className="flex flex-col items-end text-base text-foreground-alt">
-                      <span
-                        className={cn(
-                          'rounded-full px-2 py-0.5 text-sm uppercase tracking-label',
-                          item.status === 'published'
-                            ? 'bg-am-green/40 text-am-darker'
-                            : item.status === 'archived'
+                    </button>
+                    <div className="flex flex-shrink-0 items-center gap-2 text-foreground-alt">
+                      {item.link && (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground-alt hover:text-foreground"
+                          aria-label="Link öffnen"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                      {item.status !== 'published' && (
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-sm uppercase tracking-label',
+                            item.status === 'archived'
                               ? 'bg-secondary/20 text-foreground-alt'
                               : 'bg-am-orange/20 text-am-orange-alt',
-                        )}
-                      >
-                        {item.status}
-                      </span>
+                          )}
+                        >
+                          {item.status}
+                        </span>
+                      )}
                     </div>
-                  </button>
+                  </div>
                 </li>
               ))}
               {filtered.length === 0 && (
@@ -486,6 +506,15 @@ export function KBList() {
                       className="h-9 rounded-lg bg-am-white text-base"
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground-alt">Solution type</Label>
+                  <Input
+                    value={detail.solution_type ?? ''}
+                    onChange={(e) => handleFieldChange('solution_type', e.target.value)}
+                    placeholder="z. B. startup"
+                    className="h-9 max-w-xs rounded-lg bg-am-white text-base"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground-alt">Thema</Label>

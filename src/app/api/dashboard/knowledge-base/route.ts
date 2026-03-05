@@ -75,6 +75,7 @@ export async function GET(request: Request) {
       solution_type: doc.solution_type,
       status: doc.status,
       location: doc.location,
+      link: doc.link ?? null,
       categories: doc.categories ?? [],
       lastSynced: doc.embeddingMetadata?.last_synced ?? null,
       createdAt: (doc as any).createdAt ?? null,

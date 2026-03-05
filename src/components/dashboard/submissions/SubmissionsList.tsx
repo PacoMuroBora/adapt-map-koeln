@@ -228,7 +228,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
         )}
         {!loading && !error && (
           <div className="h-full overflow-y-auto px-6 py-2">
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {filtered.map((item) => {
                 const created = new Date(item.createdAt)
                 const hasAi = Boolean(item.aiGeneratedAt)
