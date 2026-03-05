@@ -3,6 +3,10 @@ import type { CollectionConfig } from 'payload'
 import { adminOnly } from '../../access/adminOnly'
 import { anyone } from '../../access/anyone'
 import {
+  revalidateDashboardCacheAfterChange,
+  revalidateDashboardCacheAfterDelete,
+} from './hooks/revalidateDashboardCache'
+import {
   revalidateHeatmapAfterChange,
   revalidateHeatmapAfterDelete,
 } from './hooks/revalidateHeatmap'
@@ -337,8 +341,8 @@ export const Submissions: CollectionConfig = {
     },
   ],
   hooks: {
-    afterChange: [revalidateHeatmapAfterChange],
-    afterDelete: [revalidateHeatmapAfterDelete],
+    afterChange: [revalidateHeatmapAfterChange, revalidateDashboardCacheAfterChange],
+    afterDelete: [revalidateHeatmapAfterDelete, revalidateDashboardCacheAfterDelete],
   },
   timestamps: true,
 }

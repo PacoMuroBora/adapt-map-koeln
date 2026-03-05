@@ -60,8 +60,9 @@ export function AddressSearchInput({
   const [isLoading, setIsLoading] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const [houseNumberMode, setHouseNumberMode] = useState<string | null>(null)
-  const debouncedQuery = useDebounce(query, 150)
+  const debouncedQuery = useDebounce(query, 1000)
   const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const justSelectedRef = useRef(false)
   const houseNumbersCacheRef = useRef<Map<string, AddressSuggestion[]>>(new Map())
 
@@ -270,6 +271,7 @@ export function AddressSearchInput({
     setShowSuggestions(false)
     setHouseNumberMode(null)
     onError?.(null)
+    inputRef.current?.blur()
   }
 
   return (
@@ -282,8 +284,10 @@ export function AddressSearchInput({
       >
         <div className="relative">
           <input
+            ref={inputRef}
             type="text"
-            autoComplete="off"
+            name="street-search-query"
+            autoComplete="nope"
             value={query}
             onChange={(e) => {
               const v = e.target.value

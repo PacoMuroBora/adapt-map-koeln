@@ -245,11 +245,6 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                           <span className="truncate text-lg font-medium text-foreground leading-tight">
                             {item.city || 'Ohne Ort'}
                           </span>
-                          {hasAi && (
-                            <span className="rounded-full bg-am-green/30 px-2 py-0.5 text-sm font-semibold uppercase tracking-label text-am-darker">
-                              KI-Empfehlung
-                            </span>
-                          )}
                           {item.street && (
                             <span className="truncate text-base text-foreground-alt leading-tight">
                               {item.street}
@@ -275,9 +270,16 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end text-base text-foreground-alt">
-                        <span>{created.toLocaleDateString('de-DE')}</span>
-                        <span className="text-base">
+                      <div className="flex flex-col items-end gap-0 text-foreground-alt">
+                        <div className="flex flex-row flex-nowrap items-center gap-2">
+                          {hasAi && (
+                            <span className="shrink-0 rounded-full bg-am-green/30 px-2 py-0.5 text-sm font-semibold uppercase tracking-label text-am-darker">
+                              KI-Empfehlung
+                            </span>
+                          )}
+                          <span className="text-base">{created.toLocaleDateString('de-DE')}</span>
+                        </div>
+                        <span className="text-sm tabular-nums">
                           {created.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
