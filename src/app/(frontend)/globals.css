@@ -137,6 +137,14 @@ body {
     font-family: var(--font-headings);
   }
 
+  /* Richtext paragraphs: use Tailwind body sizes so normal = text-body (17px), large = text-body-lg */
+  .payload-richtext p[data-richtext-body='default'] {
+    @apply font-body text-body;
+  }
+  .payload-richtext p[data-richtext-body='large'] {
+    @apply font-body text-body-lg;
+  }
+
   /* Basic list styling for rich text content */
   .payload-richtext ul {
     @apply list-disc pl-6 my-4 space-y-1;

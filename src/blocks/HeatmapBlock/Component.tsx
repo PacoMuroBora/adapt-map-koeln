@@ -3,7 +3,6 @@ import React from 'react'
 import type { HeatmapBlock as HeatmapBlockProps } from '@/payload-types'
 
 import RichText from '@/components/RichText'
-import { Card } from '@/components/ui/card'
 import { HeatmapMap } from '@/components/HeatmapMap'
 
 const headlineSizeClasses: Record<NonNullable<HeatmapBlockProps['headlineSize']>, string> = {
@@ -32,9 +31,9 @@ export const HeatmapBlockComponent: React.FC<HeatmapBlockProps> = ({
             {React.createElement(tag, { className: sizeClass }, headline)}
           </div>
         )}
-        <Card className="relative h-[600px] w-full overflow-hidden">
-          <HeatmapMap className="h-full w-full" />
-        </Card>
+        <div className="relative h-[600px] w-full overflow-hidden rounded-3xl bg-black/10">
+          <HeatmapMap />
+        </div>
         {richText && (
           <div className="mt-8 md:mt-12 max-w-[640px]">
             <RichText data={richText} enableGutter={false} />

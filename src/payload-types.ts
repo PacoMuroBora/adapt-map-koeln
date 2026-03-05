@@ -197,12 +197,30 @@ export interface HeroBlock {
   headlineSize?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
   headlineTag?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
   overline?: string | null;
-  paragraph?: string | null;
+  richText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   buttons?:
     | {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -778,6 +796,10 @@ export interface CallToActionBlock {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -862,6 +884,10 @@ export interface ContentBlock {
         link?: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -933,6 +959,10 @@ export interface ContentBlock {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -1912,7 +1942,7 @@ export interface HeroBlockSelect<T extends boolean = true> {
   headlineSize?: T;
   headlineTag?: T;
   overline?: T;
-  paragraph?: T;
+  richText?: T;
   buttons?:
     | T
     | {
@@ -1921,6 +1951,7 @@ export interface HeroBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -1948,6 +1979,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -1982,6 +2014,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -2000,6 +2033,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -2711,6 +2745,10 @@ export interface Header {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -2738,6 +2776,10 @@ export interface Header {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -2812,6 +2854,10 @@ export interface Footer {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -3073,6 +3119,7 @@ export interface HeaderSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -3087,6 +3134,7 @@ export interface HeaderSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -3115,6 +3163,7 @@ export interface FooterSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;

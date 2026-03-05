@@ -171,9 +171,9 @@ const config = {
           { lineHeight: '105%', fontWeight: 600 },
         ],
         // Design system body: fixed sizes, lineHeight as %
-        'body-lg': ['1.125rem', { lineHeight: '135%' }],
-        body: ['1rem', { lineHeight: '130%' }],
-        'body-sm': ['0.875rem', { lineHeight: '115%' }],
+        'body-lg': ['1.1875rem', { lineHeight: '140%' }],
+        body: ['1.0625rem', { lineHeight: '140%' }],
+        'body-sm': ['0.875rem', { lineHeight: '120%' }],
       },
       spacing: {
         // Design System Spacing

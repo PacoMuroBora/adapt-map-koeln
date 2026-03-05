@@ -7,6 +7,7 @@ import type { Page, Post, Questionnaire } from '@/payload-types'
 type CMSLinkType = {
   appearance?: ButtonProps['variant'] | null
   className?: string
+  disabled?: boolean | null
   iconAfter?: LinkIconOption | '' | null
   iconBefore?: LinkIconOption | '' | null
   label?: string | null
@@ -25,6 +26,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     type,
     appearance = 'default',
     className,
+    disabled,
     iconAfter,
     iconBefore,
     label,
@@ -42,18 +44,23 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     'slug' in refValue &&
     refValue.slug
   const isQuestionnaireRef = type === 'reference' && reference?.relationTo === 'questionnaires'
-  const href = hasSlug
-    ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
-    : isQuestionnaireRef
-      ? `/questionnaire/${(refValue as { name?: string }).name ?? 'current'}`
-      : url
+  const href =
+    disabled !== true
+      ? hasSlug
+        ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
+        : isQuestionnaireRef
+          ? `/questionnaire/${(refValue as { name?: string }).name ?? 'current'}`
+          : url
+      : undefined
 
-  if (!href) return null
+  if (!href && !disabled) return null
+  if (disabled && !label) return null
 
   return (
     <Button
       className={className}
-      href={href}
+      disabled={disabled ?? false}
+      href={href ?? undefined}
       iconAfter={iconAfter != null && iconAfter !== '' ? iconAfter : undefined}
       iconBefore={iconBefore != null && iconBefore !== '' ? iconBefore : undefined}
       newTab={newTab ?? false}

@@ -131,6 +131,21 @@ export const link: LinkType = ({
           },
         ],
       },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'disabled',
+            type: 'checkbox',
+            defaultValue: false,
+            admin: {
+              width: '50%',
+              description: 'When enabled, the button is shown but not clickable.',
+            },
+            label: 'Disabled',
+          },
+        ],
+      },
     ],
   }
 

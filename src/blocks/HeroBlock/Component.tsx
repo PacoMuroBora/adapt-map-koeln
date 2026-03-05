@@ -3,6 +3,7 @@ import React from 'react'
 import type { HeroBlock as HeroBlockProps } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
+import RichText from '@/components/RichText'
 
 import { Shape03 } from '@/components/CustomShapes/shape03'
 
@@ -20,7 +21,7 @@ export const HeroBlockComponent: React.FC<HeroBlockProps> = ({
   headlineSize = 'h2',
   headlineTag = 'h1',
   overline,
-  paragraph,
+  richText,
   buttons,
 }) => {
   const size = headlineSize ?? 'h2'
@@ -39,7 +40,13 @@ export const HeroBlockComponent: React.FC<HeroBlockProps> = ({
           </p>
         )}
         {headline && React.createElement(tag, { className: sizeClass }, headline)}
-        {paragraph && <p className="text-lg text-muted-foreground">{paragraph}</p>}
+        {richText && (
+          <RichText
+            className="text-lg text-muted-foreground"
+            data={richText}
+            enableGutter={false}
+          />
+        )}
         {Array.isArray(buttons) && buttons.length > 0 && (
           <ul className="flex flex-wrap gap-4 pt-12">
             {buttons.map(({ link }, i) => (

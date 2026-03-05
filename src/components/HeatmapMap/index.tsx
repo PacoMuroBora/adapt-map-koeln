@@ -145,6 +145,23 @@ export function HeatmapMap({
     latitude: DEFAULT_CENTER.latitude,
     zoom: DEFAULT_CENTER.zoom,
   })
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (interactionGuardDisabled) return
+    const el = containerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          setIsInteractive(false)
+        }
+      },
+      { threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [interactionGuardDisabled, isLoading, error])
 
   // Fetch tile size and map center from settings
   useEffect(() => {
@@ -373,7 +390,7 @@ export function HeatmapMap({
     return (
       <div className={`flex h-full items-center justify-center ${className ?? ''}`}>
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-black border-t-transparent" />
           <p className="text-muted-foreground">Heatmap wird geladen...</p>
         </div>
       </div>
@@ -413,7 +430,7 @@ export function HeatmapMap({
     (distanceToHome > 15000 || (distanceToHome > 5000 && zoomDiff > 1.5))
 
   return (
-    <div className={`relative h-full w-full ${className ?? ''}`}>
+    <div ref={containerRef} className={`relative h-full w-full ${className ?? ''}`}>
       <Map
         ref={mapRef}
         {...viewState}
@@ -438,26 +455,24 @@ export function HeatmapMap({
       />
       {!isInteractive && !interactionGuardDisabled && (
         <div
-          className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="absolute inset-0 z-20 flex items-end justify-start bg-black/40"
           role="dialog"
           aria-modal="true"
           aria-label="Karte aktivieren, um Interaktionen zu erlauben"
         >
           <div
-            className="mx-4 max-w-sm rounded-2xl bg-am-purple/95 p-4 text-white shadow-lg sm:p-6"
+            className="m-4 max-w-sm rounded-2xl bg-am-white p-4 shadow-lg sm:p-6"
             onClick={(evt) => evt.stopPropagation()}
           >
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-white/80 sm:text-sm">
-              Interaktive Karte
-            </h2>
-            <p className="mt-2 text-xs text-white/80 sm:text-sm">
+            <h2 className="text-body font-mono uppercase tracking-wide">Interaktive Karte</h2>
+            <p className="mt-2 text-sm">
               Um versehentliches Zoomen beim Scrollen zu vermeiden, ist die Karte zunächst gesperrt.
               Aktiviere sie, um hinein- und herauszuzoomen oder sie zu verschieben.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Button
                 type="button"
-                size="lg"
+                size="default"
                 shape="round"
                 variant="default"
                 iconAfter="locate"

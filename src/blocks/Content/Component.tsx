@@ -38,20 +38,20 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
   const tag = headlineTag ?? 'h2'
 
   return (
-    <div className={cn('w-full my-12', { 'p-4 md:p-8 lg:p-16': cardLayout })}>
+    <div className={cn('w-full my-20', { 'p-4 md:p-8 lg:p-16': cardLayout })}>
       <div
         className={cn('w-full', {
           'relative bg-am-purple rounded-2xl overflow-hidden': cardLayout,
         })}
       >
         {cardLayout && (
-          <div className="absolute -right-4 top-2 md:-top-8 z-10 w-[min(35vw,35vmin)] max-w-[calc(100%-2rem)]">
+          <div className="absolute -right-4 top-2 z-0 md:-top-8 w-[min(35vw,35vmin)] max-w-[calc(100%-2rem)]">
             <Shape01 color="#9F94FF" className="h-auto w-full" />
           </div>
         )}
-        <div className="container p-8 md:p-16">
+        <div className="container relative z-10 p-8 md:p-16">
           {(overline || headline) && (
-            <div className="mb-12 md:mb-20 space-y-2 max-w-[66%] md:max-w-full">
+            <div className="mb-12 space-y-2 max-w-[66%] md:max-w-full">
               {overline && (
                 <p className="text-sm font-mono uppercase tracking-wide text-muted-foreground">
                   {overline}
@@ -69,7 +69,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
                 return (
                   <div
                     className={cn(
-                      `max-w-[800px] col-span-4 lg:col-span-${colsSpanClasses[size!]}`,
+                      `max-w-[640px] col-span-4 lg:col-span-${colsSpanClasses[size!]}`,
                       {
                         'md:col-span-2': size !== 'full',
                       },
