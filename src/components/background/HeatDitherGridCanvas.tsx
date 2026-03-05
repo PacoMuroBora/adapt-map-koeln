@@ -48,6 +48,7 @@ const fragmentShader = /* glsl */ `
   const int MAX_TRAIL = 64;
   uniform vec3 uTrailPoints[MAX_TRAIL]; // xy = pos (0..1), z = age (0..1)
   uniform int uTrailCount;
+  uniform float uTrailStrength;
 
   // Simple hash-based noise
   float hash(vec2 p) {
@@ -128,6 +129,23 @@ const fragmentShader = /* glsl */ `
     // Per-cell scalar value (no neighbour-based dithering)
     float value = getCellValue(cellUV);
 
+    // Trail paint: faded circles darken the field so squares/lines respond along the path
+    float trailInfluence = 0.0;
+    for (int i = 0; i < MAX_TRAIL; i++) {
+      if (i >= uTrailCount) break;
+      vec3 tp = uTrailPoints[i];
+      vec2 p = tp.xy;
+      float age = clamp(tp.z, 0.0, 1.0);
+      float d = distance(cellUV, p);
+      float r = uPointerRadius * 1.25 * (1.0 - age * 0.5);
+      if (r > 0.001) {
+        float falloff = (1.0 - age) * smoothstep(r, 0.0, d);
+        trailInfluence += falloff;
+      }
+    }
+    trailInfluence = clamp(trailInfluence, 0.0, 1.0);
+    value = clamp(value - uTrailStrength * trailInfluence, 0.0, 1.0);
+
     // Grid cell logic in screen space (per-fragment, but based on precomputed cell center)
     vec2 local = gl_FragCoord.xy - cellCenter;
     float maxAbs = max(abs(local.x), abs(local.y));
@@ -195,32 +213,11 @@ const fragmentShader = /* glsl */ `
     // Single solid square color; scalar value only affects size / seam activation
     vec3 color = uColorLight;
 
-    // Mouse trail overlay: fade-out circles stamped along recent pointer positions
-    float trail = 0.0;
-    for (int i = 0; i < MAX_TRAIL; i++) {
-      if (i >= uTrailCount) break;
-      vec3 tp = uTrailPoints[i];
-      vec2 p = tp.xy;
-      float age = clamp(tp.z, 0.0, 1.0);
-      float d = distance(uv, p);
-      float r = mix(uPointerRadius * 1.5, uPointerRadius * 0.4, age);
-      if (r > 0.0) {
-        float alpha = smoothstep(r, 0.0, d) * (1.0 - age);
-        trail += alpha;
-      }
-    }
-    trail = clamp(trail, 0.0, 1.0);
-
-    // Blend trail as a bright accent on top of the grid
-    vec3 trailColor = vec3(1.0);
-    color = mix(color, trailColor, trail * 0.9);
-
-    // Seam lines are composited as the top-most layer
+    // Seam lines are composited on top
     color = mix(color, uColorDark, seamMask);
 
-    // Alpha: visible where we have a square, seam, or trail; background stays transparent
-    float baseAlpha = clamp(insideSquare + seamMask, 0.0, 1.0);
-    float alpha = clamp(baseAlpha + trail * 0.9, 0.0, 1.0);
+    // Alpha: visible where we have a square or seam; background stays transparent
+    float alpha = clamp(insideSquare + seamMask, 0.0, 1.0);
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -247,16 +244,17 @@ function interactionModeToIndex(mode: BackgroundControls['interactionMode']): nu
   }
 }
 
-const FullscreenQuad: React.FC<QuadProps & { pointer: { x: number; y: number }; scroll: number }> = ({
-  controls,
-  pointer,
-  scroll,
-}) => {
+const FullscreenQuad: React.FC<
+  QuadProps & {
+    pointerRef: React.MutableRefObject<{ x: number; y: number }>
+    scrollRef: React.MutableRefObject<number>
+  }
+> = ({ controls, pointerRef, scrollRef }) => {
   const materialRef = useRef<THREE.ShaderMaterial | null>(null)
   const { size, viewport } = useThree()
 
   const trailRef = useRef<{ x: number; y: number; age: number }[]>([])
-  const lastPointerRef = useRef<{ x: number; y: number }>({ x: pointer.x, y: pointer.y })
+  const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
 
   const MAX_TRAIL = 64
 
@@ -290,6 +288,7 @@ const FullscreenQuad: React.FC<QuadProps & { pointer: { x: number; y: number }; 
         value: Array.from({ length: MAX_TRAIL }, () => new THREE.Vector3(0.5, 0.5, 1)),
       },
       uTrailCount: { value: 0 },
+      uTrailStrength: { value: controls.trailStrength },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -323,12 +322,15 @@ const FullscreenQuad: React.FC<QuadProps & { pointer: { x: number; y: number }; 
     uniformsRef.uPointerRadius.value = controls.interactionPointerRadius
     uniformsRef.uPointerStrength.value = controls.interactionPointerStrength
     uniformsRef.uScrollStrength.value = controls.interactionScrollStrength
+    uniformsRef.uTrailStrength.value = controls.trailStrength
     uniformsRef.uInteractionMode.value = interactionModeToIndex(controls.interactionMode)
   }, [controls])
 
   useFrame((_state, delta) => {
     if (!materialRef.current) return
 
+    const pointer = pointerRef.current
+    const scroll = scrollRef.current
     const uniformsRef = materialRef.current.uniforms
     uniformsRef.uTime.value += delta
     uniformsRef.uPointer.value.set(pointer.x, pointer.y)
@@ -355,8 +357,8 @@ const FullscreenQuad: React.FC<QuadProps & { pointer: { x: number; y: number }; 
       lastPointerRef.current = { x: curr.x, y: curr.y }
     }
 
-    // Age and trim
-    const fadeSeconds = 1.6
+    // Age and trim (fade time from Leva)
+    const fadeSeconds = controls.trailFadeSeconds
     for (let i = 0; i < trail.length; i++) {
       trail[i].age += delta / fadeSeconds
     }
@@ -403,6 +405,7 @@ interface HeatDitherGridCanvasProps {
 export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({ controls }) => {
   const pointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
   const scrollRef = useRef(0)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   // Track scroll position once for the whole route
   useEffect(() => {
@@ -423,27 +426,43 @@ export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({ cont
     return () => window.removeEventListener('scroll', updateScroll)
   }, [])
 
+  const handlePointerMove = (e: { clientX: number; clientY: number }) => {
+    const el = containerRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
+    if (width <= 0 || height <= 0) return
+    const x = (e.clientX - rect.left) / width
+    const y = 1 - (e.clientY - rect.top) / height
+    pointerRef.current = {
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+    }
+  }
+
   return (
-    <Canvas
-      orthographic
-      camera={{ position: [0, 0, 1], zoom: 1 }}
-      dpr={[1, 2]}
-      className="bg-transparent"
-      gl={{ alpha: true, antialias: true }}
-      onCreated={({ gl }) => {
-        gl.setClearColor(0x000000, 0)
-      }}
-      onPointerMove={(event) => {
-        const e = event as any
-        if (!e.uv) return
-        pointerRef.current = { x: e.uv.x, y: e.uv.y }
-      }}
-      onPointerLeave={() => {
-        pointerRef.current = { x: 0.5, y: 0.5 }
-      }}
-    >
-      <FullscreenQuad controls={controls} pointer={pointerRef.current} scroll={scrollRef.current} />
-    </Canvas>
+    <div ref={containerRef} className="absolute inset-0 w-full h-full">
+      <Canvas
+        orthographic
+        camera={{ position: [0, 0, 1], zoom: 1 }}
+        dpr={[1, 2]}
+        className="bg-transparent w-full h-full"
+        gl={{ alpha: true, antialias: true }}
+        onCreated={({ gl }) => {
+          gl.setClearColor(0x000000, 0)
+        }}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={() => {
+          pointerRef.current = { x: 0.5, y: 0.5 }
+        }}
+      >
+        <FullscreenQuad
+          controls={controls}
+          pointerRef={pointerRef}
+          scrollRef={scrollRef}
+        />
+      </Canvas>
+    </div>
   )
 }
-

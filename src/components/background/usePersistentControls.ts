@@ -24,29 +24,33 @@ export interface BackgroundControls {
   interactionPointerRadius: number
   interactionPointerStrength: number
   interactionScrollStrength: number
+  trailStrength: number
+  trailFadeSeconds: number
 }
 
 const STORAGE_KEY = 'background-playground:v1'
 
 const defaultState: BackgroundControls = {
-  gridCellSize: 32,
-  gridGap: 4,
-  gridBorderWidth: 1.5,
-  lineThreshold: 0.9,
-  lineSnap: true,
+  gridCellSize: 17,
+  gridGap: 6,
+  gridBorderWidth: 1,
+  lineThreshold: 0.97,
+  lineSnap: false,
 
-  fieldNoiseScale: 0.9,
-  fieldSpeed: 0.12,
-  fieldContrast: 1.35,
-  fieldBrightness: 0.4,
+  fieldNoiseScale: 1.45,
+  fieldSpeed: 0.76,
+  fieldContrast: 1.6,
+  fieldBrightness: 0,
 
-  squareColor: '#e5e7eb',
-  lineColor: '#111827',
+  squareColor: '#bdfcdb',
+  lineColor: '#0aefe6',
 
   interactionMode: 'mouse+scroll',
-  interactionPointerRadius: 0.25,
-  interactionPointerStrength: 0.8,
-  interactionScrollStrength: 0.7,
+  interactionPointerRadius: 0.05,
+  interactionPointerStrength: 1.76,
+  interactionScrollStrength: 0.94,
+  trailStrength: 0.4,
+  trailFadeSeconds: 0.9,
 }
 
 export interface PersistentControlsResult {
@@ -131,6 +135,20 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
             max: 2,
             step: 0.01,
           },
+          trailStrength: {
+            value: defaultState.trailStrength,
+            min: 0,
+            max: 1,
+            step: 0.05,
+            label: 'Trail paint strength',
+          },
+          trailFadeSeconds: {
+            value: defaultState.trailFadeSeconds,
+            min: 0.5,
+            max: 4,
+            step: 0.1,
+            label: 'Trail fade (s)',
+          },
         },
         { collapsed: false },
       ),
@@ -157,6 +175,8 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
           squareColor: parsed.squareColor ?? parsed.colorLight,
           lineColor: parsed.lineColor ?? parsed.colorDark,
           lineThreshold: parsed.lineThreshold ?? parsed.gridDarkBorderThreshold,
+          trailStrength: parsed.trailStrength ?? defaultState.trailStrength,
+          trailFadeSeconds: parsed.trailFadeSeconds ?? defaultState.trailFadeSeconds,
         }
         setValues(migrated as any)
       }

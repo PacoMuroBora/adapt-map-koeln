@@ -27,7 +27,7 @@ export const BackgroundPlayground: React.FC = () => {
   }
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-transparent text-white">
+    <main className="relative h-screen w-screen overflow-hidden bg-[#DAFA38] text-white">
       <div className="absolute inset-0">
         <HeatDitherGridCanvas controls={values} />
       </div>
