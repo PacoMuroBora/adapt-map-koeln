@@ -136,6 +136,19 @@ body {
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-headings);
   }
+
+  /* Basic list styling for rich text content */
+  .payload-richtext ul {
+    @apply list-disc pl-6 my-4 space-y-1;
+  }
+
+  .payload-richtext ol {
+    @apply list-decimal pl-6 my-4 space-y-1;
+  }
+
+  .payload-richtext li {
+    @apply ml-1;
+  }
 }
 
 .background-grid-dark {

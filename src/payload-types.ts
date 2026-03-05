@@ -1039,6 +1039,10 @@ export interface HeatmapBlock {
  */
 export interface MediaBlock {
   media: string | Media;
+  /**
+   * Display width of the image in the content.
+   */
+  size: 'small' | 'medium' | 'large' | 'full';
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaBlock';
@@ -2027,6 +2031,7 @@ export interface HeatmapBlockSelect<T extends boolean = true> {
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
+  size?: T;
   id?: T;
   blockName?: T;
 }
