@@ -39,7 +39,7 @@ const buttonIconMap: Record<
 }
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:opacity-50 disabled:cursor-not-allowed',
   {
     defaultVariants: {
       size: 'default',
@@ -57,23 +57,19 @@ const buttonVariants = cva(
       },
       variant: {
         default:
-          'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover',
         white:
-          'bg-white text-white-foreground hover:bg-white/40 border border-white active:bg-primary disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-white text-white-foreground hover:bg-white/40 border border-white active:bg-primary',
         black:
-          'bg-black text-black-foreground border border-black hover:bg-white hover:text-black active:bg-black disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-black text-black-foreground border border-black hover:bg-white hover:text-black active:bg-black',
         outline:
-          'border border-black text-black hover:bg-black hover:text-white active:bg-black/20 active:text-black disabled:border disabled:bg-gray-100 disabled:text-gray-400',
+          'border border-black text-black hover:bg-black hover:text-white active:bg-black/20 active:text-black',
         'outline-white':
-          'border border-white/30 bg-white/5 text-white hover:bg-white hover:text-black active:bg-white/40 disabled:border disabled:bg-gray-100 disabled:text-gray-400',
-        destructive:
-          'bg-[#ff8429] text-black hover:bg-[#e6731f] active:bg-[#d4661a] disabled:bg-orange-200 disabled:text-orange-400',
-        ghost:
-          'bg-transparent text-foreground hover:bg-muted/50 active:bg-muted/70 disabled:text-gray-400',
-        'ghost-muted':
-          'bg-transparent text-muted-foreground hover:bg-muted/30 active:bg-muted/50 disabled:text-gray-400',
-        muted:
-          'bg-muted text-muted-foreground/50 hover:bg-muted/30 active:bg-muted/50 disabled:opacity-20 disabled:text-gray-300',
+          'border border-white/30 bg-white/5 text-white hover:bg-white hover:text-black active:bg-white/40',
+        destructive: 'bg-[#ff8429] text-black hover:bg-[#e6731f] active:bg-[#d4661a]',
+        ghost: 'bg-transparent text-foreground hover:bg-muted/50 active:bg-muted/70',
+        'ghost-muted': 'bg-transparent text-muted-foreground hover:bg-muted/30 active:bg-muted/50',
+        muted: 'bg-muted text-muted-foreground/50 hover:bg-muted/30 active:bg-muted/50',
       },
       shape: {
         default: 'rounded-lg',

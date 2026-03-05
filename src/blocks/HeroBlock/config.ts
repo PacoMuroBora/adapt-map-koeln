@@ -1,5 +1,15 @@
 import type { Block } from 'payload'
 
+import {
+  FixedToolbarFeature,
+  HeadingFeature,
+  InlineToolbarFeature,
+  lexicalEditor,
+} from '@payloadcms/richtext-lexical'
+
+import { DecoHeadingFeature } from '@/features/richtext/DecoHeadingFeature/server'
+import { LargeBodyFeature } from '@/features/richtext/LargeBodyFeature/server'
+import { OverlineFeature } from '@/features/richtext/OverlineFeature/server'
 import { linkGroup } from '@/fields/linkGroup'
 
 const headingLevels = [
@@ -48,8 +58,20 @@ export const HeroBlock: Block = {
       type: 'text',
     },
     {
-      name: 'paragraph',
-      type: 'textarea',
+      name: 'richText',
+      type: 'richText',
+      label: 'Rich text',
+      editor: lexicalEditor({
+        features: ({ rootFeatures }) => [
+          DecoHeadingFeature(),
+          LargeBodyFeature(),
+          OverlineFeature(),
+          ...rootFeatures,
+          HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] }),
+          FixedToolbarFeature(),
+          InlineToolbarFeature(),
+        ],
+      }),
     },
     linkGroup({
       overrides: {

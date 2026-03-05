@@ -1,24 +1,79 @@
 /* Custom Lexical editor block preview styles in Payload admin */
 
-/* Normal and large text: sans-serif (editor theme uses var(--font-body) which may be serif) */
-.LexicalEditorTheme__paragraph {
+/* Normal, large, and list text: sans-serif (editor theme uses var(--font-body) which may be serif) */
+.LexicalEditorTheme__paragraph,
+.LexicalEditorTheme__ul,
+.LexicalEditorTheme__ol,
+.LexicalEditorTheme__listItem,
+.LexicalEditorTheme__nestedListItem {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
-/* Headline Deco: larger than H1 (28px), same font as other headlines (Lexical uses var(--font-body) for h1–h6) */
+/* Large text: 12.5% larger than whatever the editor inherits, so it always appears bigger than normal */
+[data-lexical-block-type='largeParagraph'] {
+  font-size: 18px !important;
+  line-height: 135% !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/*
+ * Headings: px values so they are immune to the admin root font-size.
+ * Hierarchy (largest → smallest): deco > h1 > h2 > h3 > h4 > h5 > h6 > large text > normal text
+ */
 [data-lexical-block-type='decoHeading'] {
-  font-size: 40px !important;
+  font-size: 64px !important;
   font-weight: 700 !important;
-  line-height: 1.125 !important;
-  letter-spacing: 0;
+  line-height: 1.05 !important;
+  letter-spacing: -0.01em;
   font-family: var(--font-body) !important;
   color: var(--theme-text);
   margin-block: 0.4em 0.35em;
 }
 
-/* Large text: slightly larger than normal (16px → 18px), sans-serif */
-[data-lexical-block-type='largeParagraph'] {
-  font-size: 1.125rem !important;
-  line-height: 1.35 !important;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+.LexicalEditorTheme__h1 {
+  font-size: 40px !important;
+  font-weight: 600 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.016em;
+  margin-block: 0.5em 0.3em;
+}
+
+.LexicalEditorTheme__h2 {
+  font-size: 36px !important;
+  font-weight: 600 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.019em;
+  margin-block: 0.5em 0.3em;
+}
+
+.LexicalEditorTheme__h3 {
+  font-size: 32px !important;
+  font-weight: 600 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.011em;
+  margin-block: 0.5em 0.3em;
+}
+
+.LexicalEditorTheme__h4 {
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.012em;
+  margin-block: 0.5em 0.3em;
+}
+
+.LexicalEditorTheme__h5 {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.007em;
+  margin-block: 0.5em 0.3em;
+}
+
+.LexicalEditorTheme__h6 {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.009em;
+  margin-block: 0.5em 0.3em;
 }

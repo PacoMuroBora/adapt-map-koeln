@@ -132,24 +132,32 @@ const createJsxConverters: (bodySize: 'default' | 'large') => JSXConvertersFunct
       const className = bodySizeClasses[bodySize]
       if (!children?.length) {
         return (
-          <p className={className}>
+          <p className={className} data-richtext-body="default">
             <br />
           </p>
         )
       }
-      return <p className={className}>{children}</p>
+      return (
+        <p className={className} data-richtext-body="default">
+          {children}
+        </p>
+      )
     },
     largeParagraph: ({ node, nodesToJSX }) => {
       const children = nodesToJSX({ nodes: node.children })
       const className = 'font-body text-body-lg'
       if (!children?.length) {
         return (
-          <p className={className}>
+          <p className={className} data-richtext-body="large">
             <br />
           </p>
         )
       }
-      return <p className={className}>{children}</p>
+      return (
+        <p className={className} data-richtext-body="large">
+          {children}
+        </p>
+      )
     },
     overlineParagraph: ({ node, nodesToJSX }) => {
       const children = nodesToJSX({ nodes: node.children })
