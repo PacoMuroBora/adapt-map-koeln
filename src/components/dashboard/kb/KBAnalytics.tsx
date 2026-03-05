@@ -60,18 +60,18 @@ export function KBAnalytics() {
         : data?.byCategory ?? []
 
   return (
-    <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2">
-      <Card className="flex h-full flex-col rounded-3xl border border-border bg-am-dark text-am-white">
+    <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2">
+      <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
           <div>
-            <CardTitle className="text-sm font-semibold tracking-[0.14em] uppercase">
+            <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
               Empfehlungen über Zeit
             </CardTitle>
-            <p className="text-xs text-foreground-alt">
+            <p className="text-sm text-foreground-alt">
               {data ? `${data.totalEvents} Recommendation-Events` : 'Lade…'}
             </p>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-2 rounded-full bg-am-white/70 px-2 py-1">
             {(Object.keys(RANGE_LABEL) as RangeKey[]).map((key) => (
               <Button
                 key={key}
@@ -86,7 +86,7 @@ export function KBAnalytics() {
             ))}
           </div>
         </CardHeader>
-        <CardContent className="flex flex-1 flex-col justify-between pb-4">
+        <CardContent className="flex flex-1 flex-col justify-between pb-5">
           {loading && (
             <div className="flex flex-1 flex-col justify-end gap-3">
               <Skeleton className="h-32 w-full rounded-2xl bg-am-darker/60" />
@@ -99,15 +99,15 @@ export function KBAnalytics() {
           )}
           {!loading && !error && data && (
             <div className="flex flex-1 flex-col justify-between">
-              <div className="flex items-baseline justify-between text-xs">
+              <div className="flex items-baseline justify-between text-sm">
                 <div className="space-y-1">
                   <p className="text-foreground-alt">Empfehlungen insgesamt</p>
-                  <p className="text-2xl font-semibold text-am-purple-alt">
+                  <p className="text-3xl font-semibold text-am-purple-alt">
                     {data.totalEvents}
                   </p>
                 </div>
               </div>
-              <div className="mt-4 h-32 rounded-2xl bg-gradient-to-t from-am-turq/10 to-am-turq/30 p-3">
+              <div className="mt-5 h-32 rounded-2xl bg-gradient-to-t from-am-turq/10 to-am-turq/30 p-3">
                 <div className="flex h-full items-end gap-1">
                   {data.timeSeries.map((point) => {
                     const maxCount = Math.max(...data.timeSeries.map((p) => p.count), 1)
@@ -128,17 +128,17 @@ export function KBAnalytics() {
         </CardContent>
       </Card>
 
-      <Card className="flex h-full flex-col rounded-3xl border border-border bg-am-dark text-am-white">
+      <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
           <div>
-            <CardTitle className="text-sm font-semibold tracking-[0.14em] uppercase">
+            <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
               Häufig empfohlene Inhalte
             </CardTitle>
-            <p className="text-xs text-foreground-alt">
+            <p className="text-sm text-foreground-alt">
               Top-Empfehlungen nach KB-Item, Thema oder Kategorie
             </p>
           </div>
-          <div className="inline-flex gap-1 rounded-full bg-am-darker/80 p-1">
+          <div className="inline-flex gap-1 rounded-full bg-am-white/70 p-1">
             <Button
               size="tiny"
               shape="round"
@@ -168,9 +168,9 @@ export function KBAnalytics() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-1 flex-col gap-3 pb-4">
+        <CardContent className="flex flex-1 flex-col gap-3 pb-5">
           {loading && (
-            <div className="flex flex-1 flex-col gap-2">
+            <div className="flex flex-1 flex-col gap-3">
               <Skeleton className="h-6 w-full rounded-full bg-am-darker/60" />
               <Skeleton className="h-6 w-full rounded-full bg-am-darker/60" />
               <Skeleton className="h-6 w-3/4 rounded-full bg-am-darker/60" />
@@ -187,14 +187,14 @@ export function KBAnalytics() {
                 const max = Math.max(...bars.map((b) => b.value), 1)
                 const width = (row.value / max) * 100
                 return (
-                  <div key={row.label} className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px] text-foreground-alt">
+                  <div key={row.label} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-sm text-foreground-alt">
                       <span className="truncate">{row.label}</span>
                       <span>{row.value}</span>
                     </div>
-                    <div className="h-5 overflow-hidden rounded-full bg-am-darker/80">
+                    <div className="h-5 overflow-hidden rounded-full bg-secondary/60">
                       <div
-                        className="flex h-full items-center rounded-full bg-am-turq-alt/80 px-3 text-[10px] text-am-white"
+                        className="flex h-full items-center rounded-full bg-am-turq-alt/80 px-3 text-xs text-am-white"
                         style={{ width: `${Math.max(width, 8)}%` }}
                       >
                         {row.value} Empfehlungen

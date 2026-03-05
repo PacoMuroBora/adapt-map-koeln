@@ -133,13 +133,13 @@ export function KBList() {
   }
 
   return (
-    <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 pb-4">
+    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div className="space-y-1">
-          <CardTitle className="text-base font-semibold tracking-[0.14em] uppercase">
+          <CardTitle className="text-lg font-semibold tracking-[0.16em] uppercase">
             Knowledge Base
           </CardTitle>
-          <p className="text-xs text-foreground-alt">
+          <p className="text-sm text-foreground-alt">
             {data ? `${data.totalDocs} Einträge` : 'Lade…'}
           </p>
         </div>
@@ -148,19 +148,19 @@ export function KBList() {
             placeholder="Suche nach Titel, Thema oder Ort…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-56 rounded-full bg-am-darker text-xs text-am-light placeholder:text-foreground-alt"
+            className="h-10 w-64 rounded-full bg-secondary text-sm text-foreground placeholder:text-foreground-alt"
           />
-          <Button variant="ghost-muted" size="mini" shape="round" className="text-xs">
+          <Button variant="ghost-muted" size="mini" shape="round" className="text-sm">
             Filter
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="h-[calc(100%-4.5rem)] overflow-hidden p-0">
+      <CardContent className="flex-1 min-h-0 overflow-hidden p-0">
         {loading && (
           <div className="flex h-full flex-col gap-3 p-4">
-            <Skeleton className="h-9 w-full bg-am-darker/60" />
-            <Skeleton className="h-9 w-full bg-am-darker/60" />
-            <Skeleton className="h-9 w-full bg-am-darker/60" />
+            <Skeleton className="h-10 w-full bg-secondary" />
+            <Skeleton className="h-10 w-full bg-secondary" />
+            <Skeleton className="h-10 w-full bg-secondary" />
           </div>
         )}
         {error && !loading && (
@@ -177,22 +177,22 @@ export function KBList() {
                     type="button"
                     onClick={() => openDrawer(item)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-3 rounded-2xl border border-transparent px-3 py-2 text-left text-xs transition-colors',
-                      'hover:border-am-purple-alt/70 hover:bg-am-darker',
+                      'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-left text-sm transition-colors',
+                      'hover:bg-secondary/60',
                     )}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate font-medium text-am-white">
+                        <span className="truncate font-medium text-foreground">
                           {item.displayTitle || 'Ohne Titel'}
                         </span>
                         {item.theme && (
-                          <span className="rounded-full bg-am-light/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-am-light">
+                          <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-[11px] uppercase tracking-[0.18em] text-foreground">
                             {item.theme}
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground-alt">
+                      <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-foreground-alt">
                         {item.solution_type && <span>{item.solution_type}</span>}
                         {item.location && <span>{item.location}</span>}
                         {item.lastSynced && (
@@ -203,14 +203,14 @@ export function KBList() {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end text-[11px] text-foreground-alt">
+                    <div className="flex flex-col items-end text-sm text-foreground-alt">
                       <span
                         className={cn(
                           'rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em]',
                           item.status === 'published'
                             ? 'bg-am-green/20 text-am-green-alt'
                             : item.status === 'archived'
-                              ? 'bg-am-light/10 text-foreground-alt'
+                              ? 'bg-secondary/20 text-foreground-alt'
                               : 'bg-am-orange/20 text-am-orange-alt',
                         )}
                       >
@@ -221,7 +221,7 @@ export function KBList() {
                 </li>
               ))}
               {filtered.length === 0 && (
-                <li className="flex h-32 items-center justify-center text-xs text-foreground-alt">
+                <li className="flex h-32 items-center justify-center text-sm text-foreground-alt">
                   Keine Knowledge-Base-Einträge für den aktuellen Filter.
                 </li>
               )}
@@ -231,13 +231,13 @@ export function KBList() {
       </CardContent>
 
       <Sheet open={openId != null} onOpenChange={(open) => !open && setOpenId(null)}>
-        <SheetContent side="right" className="flex w-full max-w-xl flex-col bg-am-dark text-am-white">
+        <SheetContent side="right" className="flex w-full max-w-xl flex-col bg-card text-foreground">
           <SheetHeader>
-            <SheetTitle className="text-sm uppercase tracking-[0.18em]">
+            <SheetTitle className="text-base uppercase tracking-[0.18em]">
               Knowledge-Base-Eintrag
             </SheetTitle>
           </SheetHeader>
-          <div className="mt-4 flex-1 overflow-y-auto space-y-4 pr-1 text-xs">
+          <div className="mt-4 flex-1 overflow-y-auto space-y-4 pr-1 text-sm">
             {detail ? (
               <>
                 <div className="space-y-2">
@@ -245,14 +245,14 @@ export function KBList() {
                   <Input
                     value={detail.displayTitle ?? ''}
                     onChange={(e) => handleFieldChange('displayTitle', e.target.value)}
-                    className="h-8 rounded-lg bg-am-darker text-xs"
+                    className="h-9 rounded-lg bg-am-white text-sm"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label className="text-foreground-alt">Status</Label>
                     <select
-                      className="h-8 w-full rounded-lg border border-border bg-am-darker px-2 text-xs text-am-light"
+                      className="h-9 w-full rounded-lg border border-border/70 bg-am-white px-2 text-sm text-foreground"
                       value={detail.status ?? 'draft'}
                       onChange={(e) => handleFieldChange('status', e.target.value)}
                     >
@@ -266,7 +266,7 @@ export function KBList() {
                     <Input
                       value={detail.link ?? ''}
                       onChange={(e) => handleFieldChange('link', e.target.value)}
-                      className="h-8 rounded-lg bg-am-darker text-xs"
+                      className="h-9 rounded-lg bg-am-white text-sm"
                     />
                   </div>
                 </div>
@@ -277,7 +277,7 @@ export function KBList() {
                     size="sm"
                     value={detail.description ?? ''}
                     onChange={(e) => handleFieldChange('description', e.target.value)}
-                    className="min-h-[80px] rounded-xl bg-am-darker text-xs"
+                    className="min-h-[90px] rounded-xl bg-am-white text-sm"
                   />
                 </div>
                 <div className="space-y-2">
@@ -287,7 +287,7 @@ export function KBList() {
                     size="sm"
                     value={detail.problems_solved ?? ''}
                     onChange={(e) => handleFieldChange('problems_solved', e.target.value)}
-                    className="min-h-[80px] rounded-xl bg-am-darker text-xs"
+                    className="min-h-[90px] rounded-xl bg-am-white text-sm"
                   />
                 </div>
                 {saveError && <p className="text-xs text-destructive">{saveError}</p>}

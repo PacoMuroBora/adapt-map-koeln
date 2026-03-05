@@ -18,11 +18,11 @@ export function UserPanel() {
   return (
     <div className="border-t border-border px-4 py-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-am-light/10 text-am-light">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/40 text-foreground">
           <UserCircle2 className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-am-white">
+          <p className="truncate text-sm font-medium text-foreground">
             {loading ? 'Lade…' : user?.name || user?.email || 'Unbekannt'}
           </p>
           {user?.roles && (

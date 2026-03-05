@@ -7,11 +7,11 @@ import { KBList } from './KBList'
 export function KBClient() {
   return (
     <DashboardShell>
-      <div className="flex h-full flex-col gap-4">
-        <div className="flex-1 min-h-0">
+      <div className="grid h-full grid-rows-[2fr_1fr] gap-8">
+        <div className="min-h-0">
           <KBList />
         </div>
-        <div className="h-64 min-h-[16rem]">
+        <div className="min-h-0">
           <KBAnalytics />
         </div>
       </div>

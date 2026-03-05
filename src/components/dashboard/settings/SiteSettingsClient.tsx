@@ -11,13 +11,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { dashboardFetch } from '@/lib/dashboard-api'
 import { cn } from '@/utilities/ui'
 
-type TabId = 'header-footer' | 'legal' | 'map' | 'ui-text' | 'seo'
+type TabId = 'legal' | 'map' | 'ui-text' | 'seo'
 
 type SiteSettingsGlobal = any
 type UICopyGlobal = any
 
 export function SiteSettingsClient() {
-  const [tab, setTab] = useState<TabId>('header-footer')
+  const [tab, setTab] = useState<TabId>('legal')
   const [siteSettings, setSiteSettings] = useState<SiteSettingsGlobal | null>(null)
   const [uiCopy, setUiCopy] = useState<UICopyGlobal | null>(null)
   const [loading, setLoading] = useState(true)
@@ -81,74 +81,27 @@ export function SiteSettingsClient() {
     }
   }
 
-  const renderHeaderFooter = () => (
-    <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <div>
-          <CardTitle className="text-sm font-semibold tracking-[0.14em] uppercase">
-            Header & Footer
-          </CardTitle>
-          <p className="text-xs text-foreground-alt">
-            Navigation und Footer-Struktur werden im Payload Admin gepflegt.
-          </p>
-        </div>
-      </CardHeader>
-      <CardContent className="flex h-full flex-col justify-between gap-4 p-6">
-        <div className="space-y-3 text-xs text-foreground-alt">
-          <p>
-            Nutze den Payload Admin, um Navigationspunkte, Call-to-Action-Buttons und Footer-Links
-            zu bearbeiten. Änderungen werden automatisch auch im Editor-Dashboard sichtbar.
-          </p>
-          <ul className="list-disc space-y-1 pl-5">
-            <li>Header: globale Navigation, CTA-Buttons</li>
-            <li>Footer: rechtliche Links, Logos und Adressblock</li>
-          </ul>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button
-            href="/admin/globals/header"
-            variant="outline-white"
-            size="mini"
-            shape="round"
-            className="text-xs"
-          >
-            Header im Admin öffnen
-          </Button>
-          <Button
-            href="/admin/globals/footer"
-            variant="outline-white"
-            size="mini"
-            shape="round"
-            className="text-xs"
-          >
-            Footer im Admin öffnen
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-
   const renderLegal = () => (
-    <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 pb-4">
+    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-sm font-semibold tracking-[0.14em] uppercase">
+          <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
             Legal & Cookie Banner
           </CardTitle>
-          <p className="text-xs text-foreground-alt">
+          <p className="text-sm text-foreground-alt">
             Cookie-Banner direkt hier anpassen, rechtliche Texte im Payload Admin bearbeiten.
           </p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 p-6 text-xs">
+      <CardContent className="space-y-6 p-6 text-sm">
         {siteSettings && (
           <>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p className="text-[11px] font-medium text-foreground-alt uppercase tracking-[0.18em]">
+                <p className="text-xs font-medium text-foreground-alt uppercase tracking-[0.18em]">
                   Cookie-Banner Titel
                 </p>
-                <Input
+                  <Input
                   value={siteSettings.cookieBanner?.title ?? ''}
                   onChange={(e) =>
                     patchSiteSettings((current) => ({
@@ -159,11 +112,11 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-[11px] font-medium text-foreground-alt uppercase tracking-[0.18em]">
+                <p className="text-xs font-medium text-foreground-alt uppercase tracking-[0.18em]">
                   Link-Text Datenschutzerklärung
                 </p>
                 <Input
@@ -177,12 +130,12 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <p className="text-[11px] font-medium text-foreground-alt uppercase tracking-[0.18em]">
+              <p className="text-xs font-medium text-foreground-alt uppercase tracking-[0.18em]">
                 Cookie-Banner Nachricht
               </p>
               <Textarea
@@ -198,12 +151,12 @@ export function SiteSettingsClient() {
                     },
                   }))
                 }
-                className="min-h-[80px] bg-am-darker text-xs"
+                className="min-h-[90px] bg-secondary text-sm"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p className="text-[11px] font-medium text-foreground-alt uppercase tracking-[0.18em]">
+                <p className="text-xs font-medium text-foreground-alt uppercase tracking-[0.18em]">
                   Button „Alle akzeptieren“
                 </p>
                 <Input
@@ -217,11 +170,11 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-[11px] font-medium text-foreground-alt uppercase tracking-[0.18em]">
+                <p className="text-xs font-medium text-foreground-alt uppercase tracking-[0.18em]">
                   Button „Nur notwendige“
                 </p>
                 <Input
@@ -235,14 +188,14 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
             </div>
           </>
         )}
-        <div className="mt-4 space-y-2 rounded-2xl border border-border/50 bg-am-darker/80 p-4 text-xs text-foreground-alt">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-am-light">
+        <div className="mt-4 space-y-2 rounded-2xl border border-border/50 bg-secondary/40 p-4 text-sm text-foreground-alt">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground">
             Rechtstexte (Impressum & Datenschutz)
           </p>
           <p>
@@ -257,7 +210,7 @@ export function SiteSettingsClient() {
               shape="round"
               className="text-xs"
             >
-              Legal-Texte im Admin öffnen
+                  Legal-Texte im Admin öffnen
             </Button>
           </div>
         </div>
@@ -266,22 +219,22 @@ export function SiteSettingsClient() {
   )
 
   const renderMap = () => (
-    <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 pb-4">
+    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-sm font-semibold tracking-[0.14em] uppercase">
+          <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
             Map-Einstellungen
           </CardTitle>
-          <p className="text-xs text-foreground-alt">
+          <p className="text-sm text-foreground-alt">
             Kartenzentrum, Kachelgröße und Opazität für die Heatmap.
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-xs md:grid-cols-2">
+      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-sm md:grid-cols-2">
         {siteSettings && (
           <>
             <div className="space-y-4">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground-alt">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
                 Kartenzentrum
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -299,7 +252,7 @@ export function SiteSettingsClient() {
                         },
                       }))
                     }
-                    className="h-8 rounded-lg bg-am-darker text-xs"
+                    className="h-9 rounded-lg bg-secondary text-sm"
                   />
                 </div>
                 <div className="space-y-1">
@@ -316,7 +269,7 @@ export function SiteSettingsClient() {
                         },
                       }))
                     }
-                    className="h-8 rounded-lg bg-am-darker text-xs"
+                    className="h-9 rounded-lg bg-secondary text-sm"
                   />
                 </div>
               </div>
@@ -334,12 +287,12 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
             </div>
             <div className="space-y-4">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground-alt">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
                 Heatmap
               </p>
               <div className="space-y-1">
@@ -353,7 +306,7 @@ export function SiteSettingsClient() {
                       heatmapTileSize: parseInt(e.target.value, 10),
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -368,7 +321,7 @@ export function SiteSettingsClient() {
                       heatmapTileOpacity: parseFloat(e.target.value),
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
             </div>
@@ -379,22 +332,22 @@ export function SiteSettingsClient() {
   )
 
   const renderUiText = () => (
-    <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 pb-4">
+    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-sm font-semibold tracking-[0.14em] uppercase">
+          <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
             UI Text
           </CardTitle>
-          <p className="text-xs text-foreground-alt">
+          <p className="text-sm text-foreground-alt">
             Texte für Landingpage, Consent-Screen und Fragebogensteuerung.
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-xs md:grid-cols-2">
+      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-sm md:grid-cols-2">
         {uiCopy && (
           <>
             <div className="space-y-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground-alt">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
                 Landingpage
               </p>
               <Input
@@ -408,7 +361,7 @@ export function SiteSettingsClient() {
                     },
                   }))
                 }
-                className="h-8 rounded-lg bg-am-darker text-xs"
+                className="h-9 rounded-lg bg-secondary text-sm"
               />
               <Textarea
                 color="purple"
@@ -423,7 +376,7 @@ export function SiteSettingsClient() {
                     },
                   }))
                 }
-                className="min-h-[80px] bg-am-darker text-xs"
+                className="min-h-[90px] bg-secondary text-sm"
               />
               <Input
                 value={uiCopy.landingPage?.ctaButton ?? ''}
@@ -436,11 +389,11 @@ export function SiteSettingsClient() {
                     },
                   }))
                 }
-                className="h-8 rounded-lg bg-am-darker text-xs"
+                className="h-9 rounded-lg bg-secondary text-sm"
               />
             </div>
             <div className="space-y-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground-alt">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
                 Einwilligung & Fragebogen
               </p>
               <Input
@@ -454,7 +407,7 @@ export function SiteSettingsClient() {
                     },
                   }))
                 }
-                className="h-8 rounded-lg bg-am-darker text-xs"
+                className="h-9 rounded-lg bg-secondary text-sm"
               />
               <Textarea
                 color="purple"
@@ -469,7 +422,7 @@ export function SiteSettingsClient() {
                     },
                   }))
                 }
-                className="min-h-[80px] bg-am-darker text-xs"
+                className="min-h-[90px] bg-secondary text-sm"
               />
               <div className="grid grid-cols-3 gap-2">
                 <Input
@@ -483,7 +436,7 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
                 <Input
                   value={uiCopy.consent?.declineButton ?? ''}
@@ -496,7 +449,7 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
                 <Input
                   value={uiCopy.questionnaire?.nextButton ?? ''}
@@ -509,7 +462,7 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-8 rounded-lg bg-am-darker text-xs"
+                  className="h-9 rounded-lg bg-secondary text-sm"
                 />
               </div>
             </div>
@@ -520,22 +473,22 @@ export function SiteSettingsClient() {
   )
 
   const renderSeo = () => (
-    <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 pb-4">
+    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-sm font-semibold tracking-[0.14em] uppercase">
+          <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
             SEO Grundeinstellungen
           </CardTitle>
-          <p className="text-xs text-foreground-alt">
+          <p className="text-sm text-foreground-alt">
             Standard Meta-Tags für Seiten ohne eigene SEO-Konfiguration.
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-xs md:grid-cols-2">
+      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-sm md:grid-cols-2">
         {siteSettings && (
           <>
             <div className="space-y-3">
-              <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground-alt">
+              <span className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
                 Meta Title
               </span>
               <Input
@@ -546,9 +499,9 @@ export function SiteSettingsClient() {
                     metaTitle: e.target.value,
                   }))
                 }
-                className="h-8 rounded-lg bg-am-darker text-xs"
+                className="h-9 rounded-lg bg-secondary text-sm"
               />
-              <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground-alt">
+              <span className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
                 Meta Description
               </span>
               <Textarea
@@ -561,11 +514,11 @@ export function SiteSettingsClient() {
                     metaDescription: e.target.value,
                   }))
                 }
-                className="min-h-[80px] bg-am-darker text-xs"
+                className="min-h-[90px] bg-secondary text-sm"
               />
             </div>
             <div className="space-y-3">
-              <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground-alt">
+              <span className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
                 Twitter Handle & Keywords
               </span>
               <Input
@@ -576,7 +529,7 @@ export function SiteSettingsClient() {
                     twitterHandle: e.target.value,
                   }))
                 }
-                className="h-8 rounded-lg bg-am-darker text-xs"
+                className="h-9 rounded-lg bg-secondary text-sm"
               />
               <Textarea
                 color="purple"
@@ -588,13 +541,13 @@ export function SiteSettingsClient() {
                     keywords: e.target.value,
                   }))
                 }
-                className="min-h-[80px] bg-am-darker text-xs"
+                className="min-h-[90px] bg-secondary text-sm"
               />
-              <div className="mt-2 space-y-1 rounded-2xl border border-border/50 bg-am-darker/80 p-3">
-                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-am-light">
+              <div className="mt-2 space-y-1 rounded-2xl border border-border/50 bg-secondary/40 p-3">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground">
                   OG Bild
                 </p>
-                <p className="text-[11px] text-foreground-alt">
+                <p className="text-xs text-foreground-alt">
                   Das Standard-OG-Bild wird im Payload Admin gesetzt, damit Uploads & Bildgrößen
                   korrekt verwaltet werden.
                 </p>
@@ -618,16 +571,16 @@ export function SiteSettingsClient() {
   const renderActiveTab = () => {
     if (loading) {
       return (
-        <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
+        <Card className="h-full rounded-3xl bg-am-white text-foreground shadow-sm">
           <CardContent className="flex h-full items-center justify-center p-6">
-            <Skeleton className="h-32 w-full rounded-2xl bg-am-darker/60" />
+            <Skeleton className="h-32 w-full rounded-2xl bg-secondary/40" />
           </CardContent>
         </Card>
       )
     }
     if (error) {
       return (
-        <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
+        <Card className="h-full rounded-3xl bg-am-white text-foreground shadow-sm">
           <CardContent className="flex h-full items-center justify-center p-6 text-sm text-destructive">
             {error}
           </CardContent>
@@ -636,8 +589,6 @@ export function SiteSettingsClient() {
     }
 
     switch (tab) {
-      case 'header-footer':
-        return renderHeaderFooter()
       case 'legal':
         return renderLegal()
       case 'map':
@@ -653,31 +604,22 @@ export function SiteSettingsClient() {
 
   return (
     <DashboardShell>
-      <div className="flex h-full flex-col gap-4">
+      <div className="flex h-full flex-col gap-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="font-headings text-lg font-semibold tracking-[0.18em] uppercase">
+            <h1 className="font-headings text-xl font-semibold tracking-[0.18em] uppercase">
               Site Settings
             </h1>
-            <p className="text-xs text-foreground-alt">
+            <p className="text-sm text-foreground-alt">
               Globale Einstellungen für Karten, Texte, rechtliche Inhalte und SEO.
             </p>
           </div>
-          <div className="inline-flex gap-2 rounded-full bg-am-darker/80 p-1">
-            <Button
-              size="mini"
-              shape="round"
-              variant={tab === 'header-footer' ? 'default' : 'ghost-muted'}
-              className={cn('px-3 text-xs', tab === 'header-footer' && 'bg-am-green-alt text-am-dark')}
-              onClick={() => setTab('header-footer')}
-            >
-              Header & Footer
-            </Button>
+          <div className="inline-flex gap-2 rounded-full bg-secondary/40 p-1">
             <Button
               size="mini"
               shape="round"
               variant={tab === 'legal' ? 'default' : 'ghost-muted'}
-              className={cn('px-3 text-xs', tab === 'legal' && 'bg-am-green-alt text-am-dark')}
+              className={cn('px-3 text-sm', tab === 'legal' && 'bg-am-green-alt text-am-dark')}
               onClick={() => setTab('legal')}
             >
               Legal & Cookies
@@ -686,7 +628,7 @@ export function SiteSettingsClient() {
               size="mini"
               shape="round"
               variant={tab === 'map' ? 'default' : 'ghost-muted'}
-              className={cn('px-3 text-xs', tab === 'map' && 'bg-am-green-alt text-am-dark')}
+              className={cn('px-3 text-sm', tab === 'map' && 'bg-am-green-alt text-am-dark')}
               onClick={() => setTab('map')}
             >
               Map
@@ -695,7 +637,7 @@ export function SiteSettingsClient() {
               size="mini"
               shape="round"
               variant={tab === 'ui-text' ? 'default' : 'ghost-muted'}
-              className={cn('px-3 text-xs', tab === 'ui-text' && 'bg-am-green-alt text-am-dark')}
+              className={cn('px-3 text-sm', tab === 'ui-text' && 'bg-am-green-alt text-am-dark')}
               onClick={() => setTab('ui-text')}
             >
               UI Text
@@ -704,7 +646,7 @@ export function SiteSettingsClient() {
               size="mini"
               shape="round"
               variant={tab === 'seo' ? 'default' : 'ghost-muted'}
-              className={cn('px-3 text-xs', tab === 'seo' && 'bg-am-green-alt text-am-dark')}
+              className={cn('px-3 text-sm', tab === 'seo' && 'bg-am-green-alt text-am-dark')}
               onClick={() => setTab('seo')}
             >
               SEO

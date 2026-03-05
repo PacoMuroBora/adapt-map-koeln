@@ -87,13 +87,13 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
   }
 
   return (
-    <Card className="h-full rounded-3xl border border-border bg-am-dark text-am-white">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 pb-4">
+    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div className="space-y-1">
-          <CardTitle className="text-base font-semibold tracking-[0.14em] uppercase">
+          <CardTitle className="text-lg font-semibold tracking-[0.16em] uppercase">
             Submissions
           </CardTitle>
-          <p className="text-xs text-foreground-alt">
+          <p className="text-sm text-foreground-alt">
             {data ? `${data.totalDocs} Einträge gesamt` : 'Lade Übersicht…'}
           </p>
         </div>
@@ -102,22 +102,22 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
             placeholder="Suche nach ID, PLZ oder Stadt…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-56 rounded-full bg-am-darker text-xs text-am-light placeholder:text-foreground-alt"
+            className="h-10 w-64 rounded-full bg-secondary text-sm text-foreground placeholder:text-foreground-alt"
           />
-          <Button variant="ghost-muted" size="mini" shape="round" className="text-xs">
+          <Button variant="ghost-muted" size="mini" shape="round" className="text-sm">
             Filter
           </Button>
-          <Button variant="ghost-muted" size="mini" shape="round" className="text-xs">
+          <Button variant="ghost-muted" size="mini" shape="round" className="text-sm">
             Anzeige
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="h-[calc(100%-4.5rem)] overflow-hidden p-0">
+      <CardContent className="flex-1 min-h-0 overflow-hidden p-0">
         {loading && (
           <div className="flex h-full flex-col gap-3 p-4">
-            <Skeleton className="h-9 w-full bg-am-darker/60" />
-            <Skeleton className="h-9 w-full bg-am-darker/60" />
-            <Skeleton className="h-9 w-full bg-am-darker/60" />
+            <Skeleton className="h-10 w-full bg-secondary" />
+            <Skeleton className="h-10 w-full bg-secondary" />
+            <Skeleton className="h-10 w-full bg-secondary" />
           </div>
         )}
         {error && !loading && (
@@ -137,25 +137,25 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       type="button"
                       onClick={() => openDetail(item)}
                       className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-2xl border border-transparent px-3 py-2 text-left text-xs transition-colors',
-                        'hover:border-am-purple-alt/70 hover:bg-am-darker',
+                        'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-left text-sm transition-colors',
+                        'hover:bg-secondary/60',
                       )}
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="truncate font-medium text-am-white">
+                          <span className="truncate font-medium text-foreground">
                             #{item.id.slice(-6)}
                           </span>
-                          <span className="rounded-full bg-am-light/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-am-light">
+                          <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-[11px] uppercase tracking-[0.18em] text-foreground">
                             {item.postalCode}
                           </span>
                           {item.city && (
-                            <span className="truncate text-[11px] text-foreground-alt">
+                            <span className="truncate text-sm text-foreground-alt">
                               {item.city}
                             </span>
                           )}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground-alt">
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-foreground-alt">
                           <span>
                             Problemindex:{' '}
                             <span className="font-medium text-am-green-alt">
@@ -172,13 +172,13 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end text-[11px] text-foreground-alt">
+                      <div className="flex flex-col items-end text-sm text-foreground-alt">
                         <span>{created.toLocaleDateString('de-DE')}</span>
-                        <span className="text-[10px]">
+                        <span className="text-xs">
                           {created.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         {hasAi && (
-                          <span className="mt-1 rounded-full bg-am-green/20 px-2 py-0.5 text-[10px] text-am-green-alt">
+                          <span className="mt-1 rounded-full bg-am-green/30 px-2 py-0.5 text-xs text-am-darker">
                             KI-Empfehlung
                           </span>
                         )}
@@ -188,7 +188,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                 )
               })}
               {filtered.length === 0 && (
-                <li className="flex h-32 items-center justify-center text-xs text-foreground-alt">
+                <li className="flex h-32 items-center justify-center text-sm text-foreground-alt">
                   Keine Submissions für den aktuellen Filter.
                 </li>
               )}
@@ -198,15 +198,15 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
       </CardContent>
 
       <Sheet open={detailId != null} onOpenChange={(open) => !open && setDetailId(null)}>
-        <SheetContent side="right" className="w-full max-w-lg bg-am-dark text-am-white">
+        <SheetContent side="right" className="w-full max-w-lg bg-card text-foreground">
           <SheetHeader>
-            <SheetTitle className="text-sm uppercase tracking-[0.18em]">
+            <SheetTitle className="text-base uppercase tracking-[0.18em]">
               Submission&nbsp;#{detailId?.slice(-6)}
             </SheetTitle>
           </SheetHeader>
-          <div className="mt-4 max-h-[calc(100vh-7rem)] overflow-y-auto text-xs">
+          <div className="mt-4 max-h-[calc(100vh-7rem)] overflow-y-auto text-sm">
             {detailJson ? (
-              <pre className="whitespace-pre-wrap break-words rounded-xl bg-am-darker/80 p-4 text-[11px] leading-relaxed">
+              <pre className="whitespace-pre-wrap break-words rounded-xl bg-am-white p-4 text-[13px] leading-relaxed">
                 {JSON.stringify(detailJson, null, 2)}
               </pre>
             ) : (
