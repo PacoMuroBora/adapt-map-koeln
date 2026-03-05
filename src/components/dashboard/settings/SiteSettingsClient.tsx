@@ -82,23 +82,23 @@ export function SiteSettingsClient() {
   }
 
   const renderLegal = () => (
-    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+    <Card variant="white" className="bg-card text-foreground shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-2xl font-semibold tracking-title uppercase">
+          <CardTitle className="text-xl font-semibold tracking-title uppercase">
             Legal & Cookie Banner
           </CardTitle>
-          <p className="text-xl text-foreground-alt">
+          <p className="text-base text-foreground-alt">
             Cookie-Banner direkt hier anpassen, rechtliche Texte im Payload Admin bearbeiten.
           </p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 p-6 text-xl">
+      <CardContent className="space-y-6 p-6 text-base">
         {siteSettings && (
           <>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p className="text-xl font-medium text-foreground-alt uppercase tracking-label">
+                <p className="text-sm font-medium text-foreground-alt uppercase tracking-label">
                   Cookie-Banner Titel
                 </p>
                   <Input
@@ -112,11 +112,11 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-9 rounded-lg bg-secondary text-xl"
+                  className="h-9 rounded-lg bg-background text-base"
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-xl font-medium text-foreground-alt uppercase tracking-label">
+                <p className="text-sm font-medium text-foreground-alt uppercase tracking-label">
                   Link-Text Datenschutzerklärung
                 </p>
                 <Input
@@ -130,12 +130,12 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-9 rounded-lg bg-secondary text-xl"
+                  className="h-9 rounded-lg bg-background text-base"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <p className="text-xl font-medium text-foreground-alt uppercase tracking-label">
+              <p className="text-sm font-medium text-foreground-alt uppercase tracking-label">
                 Cookie-Banner Nachricht
               </p>
               <Textarea
@@ -151,12 +151,12 @@ export function SiteSettingsClient() {
                     },
                   }))
                 }
-                className="min-h-[90px] bg-secondary text-xl"
+                className="min-h-[90px] bg-background text-base"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p className="text-xl font-medium text-foreground-alt uppercase tracking-label">
+                <p className="text-sm font-medium text-foreground-alt uppercase tracking-label">
                   Button „Alle akzeptieren“
                 </p>
                 <Input
@@ -170,11 +170,11 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-9 rounded-lg bg-secondary text-xl"
+                  className="h-9 rounded-lg bg-background text-base"
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-xl font-medium text-foreground-alt uppercase tracking-label">
+                <p className="text-sm font-medium text-foreground-alt uppercase tracking-label">
                   Button „Nur notwendige“
                 </p>
                 <Input
@@ -188,58 +188,38 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-9 rounded-lg bg-secondary text-xl"
+                  className="h-9 rounded-lg bg-background text-base"
                 />
               </div>
             </div>
           </>
         )}
-        <div className="mt-4 space-y-2 rounded-2xl border border-border/50 bg-secondary/40 p-4 text-xl text-foreground-alt">
-          <p className="text-xl font-medium uppercase tracking-label text-foreground">
-            Rechtstexte (Impressum & Datenschutz)
-          </p>
-          <p>
-            Die Rich-Text-Inhalte für Impressum, Datenschutzerklärung und AGB bearbeiten Sie
-            weiterhin im Payload Admin mit dem vollständigen Lexical Editor.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button
-              href="/admin/globals/site-settings?tab=Legal%20%26%20Cookies"
-              variant="outline-white"
-              size="mini"
-              shape="round"
-              className="text-xl"
-            >
-                  Legal-Texte im Admin öffnen
-            </Button>
-          </div>
-        </div>
       </CardContent>
     </Card>
   )
 
   const renderMap = () => (
-    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+    <Card variant="white" className="bg-card text-foreground shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-2xl font-semibold tracking-title uppercase">
+          <CardTitle className="text-xl font-semibold tracking-title uppercase">
             Map-Einstellungen
           </CardTitle>
-          <p className="text-xl text-foreground-alt">
+          <p className="text-base text-foreground-alt">
             Kartenzentrum, Kachelgröße und Opazität für die Heatmap.
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-xl md:grid-cols-2">
+      <CardContent className="grid grid-cols-1 gap-6 p-6 text-base md:grid-cols-2">
         {siteSettings && (
           <>
             <div className="space-y-4">
-              <p className="text-xl font-medium uppercase tracking-label text-foreground-alt">
+              <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
                 Kartenzentrum
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <span className="text-xl text-foreground-alt">Breitengrad (lat)</span>
+                  <span className="text-sm text-foreground-alt">Breitengrad (lat)</span>
                   <Input
                     type="number"
                     value={siteSettings.mapCenter?.lat ?? ''}
@@ -252,11 +232,11 @@ export function SiteSettingsClient() {
                         },
                       }))
                     }
-                    className="h-9 rounded-lg bg-secondary text-xl"
+                    className="h-9 rounded-lg bg-background text-base"
                   />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xl text-foreground-alt">Längengrad (lng)</span>
+                  <span className="text-sm text-foreground-alt">Längengrad (lng)</span>
                   <Input
                     type="number"
                     value={siteSettings.mapCenter?.lng ?? ''}
@@ -269,12 +249,12 @@ export function SiteSettingsClient() {
                         },
                       }))
                     }
-                    className="h-9 rounded-lg bg-secondary text-xl"
+                    className="h-9 rounded-lg bg-background text-base"
                   />
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="text-xl text-foreground-alt">Zoom-Level</span>
+                <span className="text-sm text-foreground-alt">Zoom-Level</span>
                 <Input
                   type="number"
                   value={siteSettings.mapCenter?.zoom ?? ''}
@@ -287,16 +267,16 @@ export function SiteSettingsClient() {
                       },
                     }))
                   }
-                  className="h-9 rounded-lg bg-secondary text-xl"
+                  className="h-9 rounded-lg bg-background text-base"
                 />
               </div>
             </div>
             <div className="space-y-4">
-              <p className="text-xl font-medium uppercase tracking-label text-foreground-alt">
+              <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
                 Heatmap
               </p>
               <div className="space-y-1">
-                <span className="text-xl text-foreground-alt">Kachelgröße (m)</span>
+                <span className="text-sm text-foreground-alt">Kachelgröße (m)</span>
                 <Input
                   type="number"
                   value={siteSettings.heatmapTileSize ?? ''}
@@ -306,11 +286,11 @@ export function SiteSettingsClient() {
                       heatmapTileSize: parseInt(e.target.value, 10),
                     }))
                   }
-                  className="h-9 rounded-lg bg-secondary text-xl"
+                  className="h-9 rounded-lg bg-background text-base"
                 />
               </div>
               <div className="space-y-1">
-                <span className="text-xl text-foreground-alt">Opacity (0–1)</span>
+                <span className="text-sm text-foreground-alt">Opacity (0–1)</span>
                 <Input
                   type="number"
                   step="0.01"
@@ -321,7 +301,7 @@ export function SiteSettingsClient() {
                       heatmapTileOpacity: parseFloat(e.target.value),
                     }))
                   }
-                  className="h-9 rounded-lg bg-secondary text-xl"
+                  className="h-9 rounded-lg bg-background text-base"
                 />
               </div>
             </div>
@@ -332,138 +312,63 @@ export function SiteSettingsClient() {
   )
 
   const renderUiText = () => (
-    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+    <Card variant="white" className="bg-card text-foreground shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-2xl font-semibold tracking-title uppercase">
+          <CardTitle className="text-xl font-semibold tracking-title uppercase">
             UI Text
           </CardTitle>
-          <p className="text-xl text-foreground-alt">
-            Texte für Landingpage, Consent-Screen und Fragebogensteuerung.
+          <p className="text-base text-foreground-alt">
+            Button-Labels für die Fragebogen-Navigation (Weiter / Zurück).
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-xl md:grid-cols-2">
+      <CardContent className="grid grid-cols-1 gap-6 p-6 text-base md:grid-cols-2">
         {uiCopy && (
           <>
             <div className="space-y-3">
-              <p className="text-xl font-medium uppercase tracking-label text-foreground-alt">
-                Landingpage
+              <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
+                Fragebogen
               </p>
-              <Input
-                value={uiCopy.landingPage?.title ?? ''}
-                onChange={(e) =>
-                  patchUiCopy((current) => ({
-                    ...current,
-                    landingPage: {
-                      ...current.landingPage,
-                      title: e.target.value,
-                    },
-                  }))
-                }
-                className="h-9 rounded-lg bg-secondary text-xl"
-              />
-              <Textarea
-                color="purple"
-                size="sm"
-                value={uiCopy.landingPage?.description ?? ''}
-                onChange={(e) =>
-                  patchUiCopy((current) => ({
-                    ...current,
-                    landingPage: {
-                      ...current.landingPage,
-                      description: e.target.value,
-                    },
-                  }))
-                }
-                className="min-h-[90px] bg-secondary text-xl"
-              />
-              <Input
-                value={uiCopy.landingPage?.ctaButton ?? ''}
-                onChange={(e) =>
-                  patchUiCopy((current) => ({
-                    ...current,
-                    landingPage: {
-                      ...current.landingPage,
-                      ctaButton: e.target.value,
-                    },
-                  }))
-                }
-                className="h-9 rounded-lg bg-secondary text-xl"
-              />
-            </div>
-            <div className="space-y-3">
-              <p className="text-xl font-medium uppercase tracking-label text-foreground-alt">
-                Einwilligung & Fragebogen
-              </p>
-              <Input
-                value={uiCopy.consent?.title ?? ''}
-                onChange={(e) =>
-                  patchUiCopy((current) => ({
-                    ...current,
-                    consent: {
-                      ...current.consent,
-                      title: e.target.value,
-                    },
-                  }))
-                }
-                className="h-9 rounded-lg bg-secondary text-xl"
-              />
-              <Textarea
-                color="purple"
-                size="sm"
-                value={uiCopy.consent?.message ?? ''}
-                onChange={(e) =>
-                  patchUiCopy((current) => ({
-                    ...current,
-                    consent: {
-                      ...current.consent,
-                      message: e.target.value,
-                    },
-                  }))
-                }
-                className="min-h-[90px] bg-secondary text-xl"
-              />
-              <div className="grid grid-cols-3 gap-2">
-                <Input
-                  value={uiCopy.consent?.acceptButton ?? ''}
-                  onChange={(e) =>
-                    patchUiCopy((current) => ({
-                      ...current,
-                      consent: {
-                        ...current.consent,
-                        acceptButton: e.target.value,
-                      },
-                    }))
-                  }
-                  className="h-9 rounded-lg bg-secondary text-xl"
-                />
-                <Input
-                  value={uiCopy.consent?.declineButton ?? ''}
-                  onChange={(e) =>
-                    patchUiCopy((current) => ({
-                      ...current,
-                      consent: {
-                        ...current.consent,
-                        declineButton: e.target.value,
-                      },
-                    }))
-                  }
-                  className="h-9 rounded-lg bg-secondary text-xl"
-                />
-                <Input
-                  value={uiCopy.questionnaire?.nextButton ?? ''}
-                  onChange={(e) =>
-                    patchUiCopy((current) => ({
-                      ...current,
-                      questionnaire: {
-                        ...current.questionnaire,
-                        nextButton: e.target.value,
-                      },
-                    }))
-                  }
-                  className="h-9 rounded-lg bg-secondary text-xl"
-                />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-sm text-foreground-alt">
+                    Button „Weiter“
+                  </label>
+                  <Input
+                    value={uiCopy.questionnaire?.nextButton ?? ''}
+                    onChange={(e) =>
+                      patchUiCopy((current) => ({
+                        ...current,
+                        questionnaire: {
+                          ...current.questionnaire,
+                          nextButton: e.target.value,
+                        },
+                      }))
+                    }
+                    className="h-9 rounded-lg bg-background text-base"
+                    placeholder="Weiter"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm text-foreground-alt">
+                    Button „Zurück“
+                  </label>
+                  <Input
+                    value={uiCopy.questionnaire?.previousButton ?? ''}
+                    onChange={(e) =>
+                      patchUiCopy((current) => ({
+                        ...current,
+                        questionnaire: {
+                          ...current.questionnaire,
+                          previousButton: e.target.value,
+                        },
+                      }))
+                    }
+                    className="h-9 rounded-lg bg-background text-base"
+                    placeholder="Zurück"
+                  />
+                </div>
               </div>
             </div>
           </>
@@ -473,92 +378,116 @@ export function SiteSettingsClient() {
   )
 
   const renderSeo = () => (
-    <Card variant="white" className="h-full bg-card text-foreground shadow-sm">
+    <Card variant="white" className="bg-card text-foreground shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-2xl font-semibold tracking-title uppercase">
+          <CardTitle className="text-xl font-semibold tracking-title uppercase">
             SEO Grundeinstellungen
           </CardTitle>
-          <p className="text-xl text-foreground-alt">
+          <p className="text-base text-foreground-alt">
             Standard Meta-Tags für Seiten ohne eigene SEO-Konfiguration.
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid h-full grid-cols-1 gap-6 p-6 text-xl md:grid-cols-2">
+      <CardContent className="space-y-6 p-6 text-base">
         {siteSettings && (
           <>
-            <div className="space-y-3">
-              <span className="text-xl font-medium uppercase tracking-label text-foreground-alt">
-                Meta Title
-              </span>
-              <Input
-                value={siteSettings.metaTitle ?? ''}
-                onChange={(e) =>
-                  patchSiteSettings((current) => ({
-                    ...current,
-                    metaTitle: e.target.value,
-                  }))
-                }
-                className="h-9 rounded-lg bg-secondary text-xl"
-              />
-              <span className="text-xl font-medium uppercase tracking-label text-foreground-alt">
-                Meta Description
-              </span>
-              <Textarea
-                color="purple"
-                size="sm"
-                value={siteSettings.metaDescription ?? ''}
-                onChange={(e) =>
-                  patchSiteSettings((current) => ({
-                    ...current,
-                    metaDescription: e.target.value,
-                  }))
-                }
-                className="min-h-[90px] bg-secondary text-xl"
-              />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
+                    Meta Title
+                  </p>
+                  <Input
+                    value={siteSettings.metaTitle ?? ''}
+                    onChange={(e) =>
+                      patchSiteSettings((current) => ({
+                        ...current,
+                        metaTitle: e.target.value,
+                      }))
+                    }
+                    className="h-9 rounded-lg bg-background text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
+                    Meta Description
+                  </p>
+                  <Textarea
+                    color="purple"
+                    size="sm"
+                    value={siteSettings.metaDescription ?? ''}
+                    onChange={(e) =>
+                      patchSiteSettings((current) => ({
+                        ...current,
+                        metaDescription: e.target.value,
+                      }))
+                    }
+                    className="min-h-[90px] bg-background text-base"
+                  />
+                </div>
+              </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
+                    Twitter Handle
+                  </p>
+                  <Input
+                    value={siteSettings.twitterHandle ?? ''}
+                    onChange={(e) =>
+                      patchSiteSettings((current) => ({
+                        ...current,
+                        twitterHandle: e.target.value,
+                      }))
+                    }
+                    className="h-9 rounded-lg bg-background text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
+                    Keywords
+                  </p>
+                  <Textarea
+                    color="purple"
+                    size="sm"
+                    value={siteSettings.keywords ?? ''}
+                    onChange={(e) =>
+                      patchSiteSettings((current) => ({
+                        ...current,
+                        keywords: e.target.value,
+                      }))
+                    }
+                    className="min-h-[90px] bg-background text-base"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="space-y-3">
-              <span className="text-xl font-medium uppercase tracking-label text-foreground-alt">
-                Twitter Handle & Keywords
-              </span>
-              <Input
-                value={siteSettings.twitterHandle ?? ''}
-                onChange={(e) =>
-                  patchSiteSettings((current) => ({
-                    ...current,
-                    twitterHandle: e.target.value,
-                  }))
-                }
-                className="h-9 rounded-lg bg-secondary text-xl"
-              />
-              <Textarea
-                color="purple"
-                size="sm"
-                value={siteSettings.keywords ?? ''}
-                onChange={(e) =>
-                  patchSiteSettings((current) => ({
-                    ...current,
-                    keywords: e.target.value,
-                  }))
-                }
-                className="min-h-[90px] bg-secondary text-xl"
-              />
-              <div className="mt-2 space-y-1 rounded-2xl border border-border/50 bg-secondary/40 p-3">
-                <p className="text-xl font-medium uppercase tracking-label text-foreground">
-                  OG Bild
-                </p>
-                <p className="text-xl text-foreground-alt">
-                  Das Standard-OG-Bild wird im Payload Admin gesetzt, damit Uploads & Bildgrößen
-                  korrekt verwaltet werden.
-                </p>
+            <div className="rounded-2xl border border-border/30 bg-secondary/30 p-4">
+              <p className="text-sm font-medium uppercase tracking-label text-foreground-alt">
+                OG Bild & Seiten
+              </p>
+              <p className="mt-1 text-base text-foreground-alt">
+                Das Standard-OG-Bild wird im Payload Admin gesetzt. Pro-Seiten-SEO bearbeiten Sie
+                in der Pages-Collection.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   href="/admin/globals/site-settings?tab=SEO"
-                  variant="outline-white"
+                  variant="ghost-muted"
                   size="mini"
                   shape="round"
-                  className="mt-2 text-xl"
+                  className="text-base hover:bg-muted/50"
                 >
                   SEO im Admin öffnen
+                </Button>
+                <Button
+                  href="/admin/collections/pages"
+                  variant="ghost-muted"
+                  size="mini"
+                  shape="round"
+                  className="text-base hover:bg-muted/50"
+                >
+                  Pages im Admin bearbeiten
                 </Button>
               </div>
             </div>
@@ -581,7 +510,7 @@ export function SiteSettingsClient() {
     if (error) {
       return (
         <Card className="h-full rounded-3xl bg-am-white text-foreground shadow-sm">
-          <CardContent className="flex h-full items-center justify-center p-6 text-xl text-destructive">
+          <CardContent className="flex h-full items-center justify-center p-6 text-base text-destructive">
             {error}
           </CardContent>
         </Card>
@@ -605,58 +534,70 @@ export function SiteSettingsClient() {
   return (
     <DashboardShell>
       <div className="flex h-full flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-4">
           <div>
             <h1 className="font-headings text-2xl font-semibold tracking-label uppercase">
               Site Settings
             </h1>
-            <p className="text-xl text-foreground-alt">
+            <p className="text-base text-foreground-alt">
               Globale Einstellungen für Karten, Texte, rechtliche Inhalte und SEO.
             </p>
           </div>
-          <div className="inline-flex gap-2 rounded-full bg-secondary/40 p-1">
+          <div className="flex w-full items-center justify-between gap-4">
+            <div className="inline-flex gap-2 rounded-full bg-secondary/40 p-1">
+              <Button
+                size="mini"
+                shape="round"
+                variant={tab === 'legal' ? 'pill' : 'ghost-muted'}
+                className={cn('px-3 text-base', tab === 'legal' && 'bg-am-green-alt text-am-dark')}
+                onClick={() => setTab('legal')}
+              >
+                Legal & Cookies
+              </Button>
+              <Button
+                size="mini"
+                shape="round"
+                variant={tab === 'map' ? 'pill' : 'ghost-muted'}
+                className={cn('px-3 text-base', tab === 'map' && 'bg-am-green-alt text-am-dark')}
+                onClick={() => setTab('map')}
+              >
+                Map
+              </Button>
+              <Button
+                size="mini"
+                shape="round"
+                variant={tab === 'ui-text' ? 'pill' : 'ghost-muted'}
+                className={cn('px-3 text-base', tab === 'ui-text' && 'bg-am-green-alt text-am-dark')}
+                onClick={() => setTab('ui-text')}
+              >
+                UI Text
+              </Button>
+              <Button
+                size="mini"
+                shape="round"
+                variant={tab === 'seo' ? 'pill' : 'ghost-muted'}
+                className={cn('px-3 text-base', tab === 'seo' && 'bg-am-green-alt text-am-dark')}
+                onClick={() => setTab('seo')}
+              >
+                SEO
+              </Button>
+            </div>
             <Button
-              size="mini"
+              href="/admin/collections/pages"
+              variant="pill"
+              size="default"
               shape="round"
-              variant={tab === 'legal' ? 'pill' : 'ghost-muted'}
-              className={cn('px-3 text-xl', tab === 'legal' && 'bg-am-green-alt text-am-dark')}
-              onClick={() => setTab('legal')}
+              iconAfter="external-link"
+              className="shrink-0 px-4 py-1.5"
             >
-              Legal & Cookies
-            </Button>
-            <Button
-              size="mini"
-              shape="round"
-              variant={tab === 'map' ? 'pill' : 'ghost-muted'}
-              className={cn('px-3 text-xl', tab === 'map' && 'bg-am-green-alt text-am-dark')}
-              onClick={() => setTab('map')}
-            >
-              Map
-            </Button>
-            <Button
-              size="mini"
-              shape="round"
-              variant={tab === 'ui-text' ? 'pill' : 'ghost-muted'}
-              className={cn('px-3 text-xl', tab === 'ui-text' && 'bg-am-green-alt text-am-dark')}
-              onClick={() => setTab('ui-text')}
-            >
-              UI Text
-            </Button>
-            <Button
-              size="mini"
-              shape="round"
-              variant={tab === 'seo' ? 'pill' : 'ghost-muted'}
-              className={cn('px-3 text-xl', tab === 'seo' && 'bg-am-green-alt text-am-dark')}
-              onClick={() => setTab('seo')}
-            >
-              SEO
+              Pages im Admin bearbeiten
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 min-h-0">{renderActiveTab()}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto">{renderActiveTab()}</div>
 
-        <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xl">
+        <div className="flex items-center justify-between border-t border-border/40 pt-3 text-base">
           <div className="text-foreground-alt">
             {saveMessage && <span className="text-am-green-alt">{saveMessage}</span>}
             {error && <span className="text-destructive">{error}</span>}

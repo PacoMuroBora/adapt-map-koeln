@@ -143,7 +143,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
             placeholder="Suche nach ID, PLZ oder Stadt…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-10 w-96 rounded-full bg-secondary text-base text-foreground placeholder:text-foreground-alt"
+            className="h-10 w-96 rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt"
           />
           <Button
             variant={filterOpen ? 'pill' : 'ghost-muted'}
@@ -153,9 +153,6 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
             onClick={() => setFilterOpen((o) => !o)}
           >
             Filter
-          </Button>
-          <Button variant="ghost-muted" size="mini" shape="round" className="text-base">
-            Anzeige
           </Button>
         </div>
       </CardHeader>
@@ -193,7 +190,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                   placeholder="z. B. 50667 oder Köln"
                   value={filterLocation}
                   onChange={(e) => setFilterLocation(e.target.value)}
-                  className="h-9 w-48 rounded-lg bg-am-white text-base"
+                  className="h-9 w-48 rounded-lg bg-background text-base"
                 />
               </div>
               <div className="flex-1 min-w-4" aria-hidden />

@@ -231,7 +231,7 @@ export function KBList() {
             placeholder="Suche nach Titel, Thema oder Ort…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-10 w-96 rounded-full bg-secondary text-base text-foreground placeholder:text-foreground-alt"
+            className="h-10 w-96 rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt"
           />
           <Button
             variant={filterOpen ? 'pill' : 'ghost-muted'}
@@ -261,7 +261,7 @@ export function KBList() {
                   value={filterTheme || '__all__'}
                   onValueChange={(v) => setFilterTheme(v === '__all__' ? '' : v)}
                 >
-                  <SelectTrigger className="h-9 w-36 rounded-lg border-border/70 bg-am-white text-base">
+                  <SelectTrigger className="h-9 w-36 rounded-lg border-border/70 bg-background text-base">
                     <SelectValue placeholder="Alle" />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,7 +280,7 @@ export function KBList() {
                   placeholder="z. B. universal oder Stadt"
                   value={filterLocation}
                   onChange={(e) => setFilterLocation(e.target.value)}
-                  className="h-9 w-36 rounded-lg bg-am-white text-base"
+                  className="h-9 w-36 rounded-lg bg-background text-base"
                 />
               </div>
               <div className="space-y-1">
@@ -289,7 +289,7 @@ export function KBList() {
                   value={filterStatus || '__all__'}
                   onValueChange={(v) => setFilterStatus(v === '__all__' ? '' : v)}
                 >
-                  <SelectTrigger className="h-9 w-28 rounded-lg border-border/70 bg-am-white text-base">
+                  <SelectTrigger className="h-9 w-28 rounded-lg border-border/70 bg-background text-base">
                     <SelectValue placeholder="Alle" />
                   </SelectTrigger>
                   <SelectContent>
@@ -306,7 +306,7 @@ export function KBList() {
                   value={filterCategory || '__all__'}
                   onValueChange={(v) => setFilterCategory(v === '__all__' ? '' : v)}
                 >
-                  <SelectTrigger className="h-9 w-36 rounded-lg border-border/70 bg-am-white text-base">
+                  <SelectTrigger className="h-9 w-36 rounded-lg border-border/70 bg-background text-base">
                     <SelectValue placeholder="Alle" />
                   </SelectTrigger>
                   <SelectContent>
@@ -325,7 +325,7 @@ export function KBList() {
                   placeholder="z. B. startup"
                   value={filterSolutionType}
                   onChange={(e) => setFilterSolutionType(e.target.value)}
-                  className="h-9 w-36 rounded-lg bg-am-white text-base"
+                  className="h-9 w-36 rounded-lg bg-background text-base"
                 />
               </div>
               <div className="flex-1 min-w-4" aria-hidden />
@@ -454,7 +454,7 @@ export function KBList() {
                   <Input
                     value={detail.displayTitle ?? ''}
                     onChange={(e) => handleFieldChange('displayTitle', e.target.value)}
-                    className="h-9 rounded-lg bg-am-white text-base"
+                    className="h-9 rounded-lg bg-background text-base"
                   />
                 </div>
                 <div className="grid grid-cols-[auto,1fr] items-start gap-6">
@@ -481,7 +481,7 @@ export function KBList() {
                       }
                       onChange={(e) => handleFieldChange('location', e.target.value)}
                       disabled={detail.location === 'universal'}
-                      className="h-9 rounded-lg bg-am-white text-base disabled:opacity-70"
+                      className="h-9 rounded-lg bg-background text-base disabled:opacity-70"
                     />
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export function KBList() {
                   <div className="space-y-2">
                     <Label className="text-foreground-alt">Status</Label>
                     <select
-                      className="h-9 w-full rounded-lg border border-border/70 bg-am-white px-2 text-base text-foreground"
+                      className="h-9 w-full rounded-lg border border-border/70 bg-background px-2 text-base text-foreground"
                       value={detail.status ?? 'draft'}
                       onChange={(e) => handleFieldChange('status', e.target.value)}
                     >
@@ -503,7 +503,7 @@ export function KBList() {
                     <Input
                       value={detail.link ?? ''}
                       onChange={(e) => handleFieldChange('link', e.target.value)}
-                      className="h-9 rounded-lg bg-am-white text-base"
+                      className="h-9 rounded-lg bg-background text-base"
                     />
                   </div>
                 </div>
@@ -513,7 +513,7 @@ export function KBList() {
                     value={detail.solution_type ?? ''}
                     onChange={(e) => handleFieldChange('solution_type', e.target.value)}
                     placeholder="z. B. startup"
-                    className="h-9 max-w-xs rounded-lg bg-am-white text-base"
+                    className="h-9 max-w-xs rounded-lg bg-background text-base"
                   />
                 </div>
                 <div className="space-y-2">
@@ -522,7 +522,7 @@ export function KBList() {
                     value={detail.theme && String(detail.theme).trim() ? detail.theme : '__none__'}
                     onValueChange={(v) => handleFieldChange('theme', v === '__none__' ? '' : v)}
                   >
-                    <SelectTrigger className="h-9 rounded-lg border-border/70 bg-am-white text-base">
+                    <SelectTrigger className="h-9 rounded-lg border-border/70 bg-background text-base">
                       <SelectValue placeholder="Thema wählen" />
                     </SelectTrigger>
                     <SelectContent>
@@ -575,7 +575,7 @@ export function KBList() {
                     size="sm"
                     value={detail.description ?? ''}
                     onChange={(e) => handleFieldChange('description', e.target.value)}
-                    className="min-h-[90px] rounded-xl bg-am-white text-base"
+                    className="min-h-[90px] rounded-xl bg-background text-base"
                   />
                 </div>
                 <div className="space-y-2">
@@ -585,7 +585,7 @@ export function KBList() {
                     size="sm"
                     value={detail.problems_solved ?? ''}
                     onChange={(e) => handleFieldChange('problems_solved', e.target.value)}
-                    className="min-h-[90px] rounded-xl bg-am-white text-base"
+                    className="min-h-[90px] rounded-xl bg-background text-base"
                   />
                 </div>
                 {saveError && <p className="text-base text-destructive">{saveError}</p>}

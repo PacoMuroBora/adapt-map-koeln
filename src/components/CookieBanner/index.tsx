@@ -74,7 +74,7 @@ export function CookieBanner({ cookieBanner }: CookieBannerProps) {
                 {cookieBanner.acceptNecessaryText}
               </Button>
             </div>
-            <LinkButton href="/legal/privacy" size="sm" shape="round">
+            <LinkButton href="/privacy" size="sm" shape="round">
               {cookieBanner.privacyLinkText}
             </LinkButton>
           </div>

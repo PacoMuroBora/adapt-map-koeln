@@ -82,14 +82,14 @@ export default function ConsentPage() {
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>
               Weitere Informationen findest Du in unserer{' '}
-              <Link href="/legal/privacy" className="text-primary underline hover:no-underline">
+              <Link href="/privacy" className="text-primary underline hover:no-underline">
                 Datenschutzerklärung
               </Link>
               .
             </p>
             <p>
               Lies auch unsere{' '}
-              <Link href="/legal/terms" className="text-primary underline hover:no-underline">
+              <Link href="/terms" className="text-primary underline hover:no-underline">
                 Nutzungsbedingungen
               </Link>
               .
