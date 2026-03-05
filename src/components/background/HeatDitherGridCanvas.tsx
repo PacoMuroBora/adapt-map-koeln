@@ -22,6 +22,7 @@ const fragmentShader = /* glsl */ `
 
   uniform float uTime;
   uniform vec2 uResolution;
+  uniform vec2 uReferenceResolution;
   uniform vec2 uPointer;
   uniform float uScroll;
   uniform int uInteractionMode;
@@ -40,6 +41,8 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uColorLight;
   uniform vec3 uColorDark;
 
+
+  uniform float uParallaxOffset;    // vertical parallax: noise translated opposite to scroll (scroll down -> add sample y -> texture moves down)
 
   uniform float uPointerRadius;      // base radius (trail points)
   uniform float uPointerRadiusHead;  // head only (current cursor; can be 1.5x on hover)
@@ -71,10 +74,21 @@ const fragmentShader = /* glsl */ `
     return mix(mix(n00, n10, u.x), mix(n01, n11, u.x), u.y);
   }
 
+  // Map current viewport UV to a centered "reference canvas" UV.
+  // This makes smaller viewports look like a crop of the reference size.
+  vec2 toReferenceUV(vec2 uv) {
+    vec2 currentPx = uv * uResolution;
+    vec2 refOriginPx = 0.5 * (uReferenceResolution - uResolution);
+    vec2 refPx = currentPx + refOriginPx;
+    return refPx / uReferenceResolution;
+  }
+
   float getCellValue(vec2 sampleUV) {
-    float aspect = uResolution.x / uResolution.y;
+    float aspect = uReferenceResolution.x / uReferenceResolution.y;
     vec2 gridUV = sampleUV;
     gridUV.x *= aspect;
+    // Parallax: translate noise opposite to scroll (scroll down -> subtract so texture moves up)
+    gridUV.y -= uParallaxOffset;
 
     float t = uTime * uSpeed;
     vec2 flow = vec2(
@@ -89,7 +103,8 @@ const fragmentShader = /* glsl */ `
     float interaction = 0.0;
 
     if (uInteractionMode == 1 || uInteractionMode == 3) {
-      float d = distance(sampleUV, uPointer);
+      vec2 pointerUV = toReferenceUV(uPointer);
+      float d = distance(sampleUV, pointerUV);
       if (uPointerRadiusHead > 0.0) {
         float falloff = smoothstep(uPointerRadiusHead, 0.0, d);
         interaction += falloff * uPointerStrength;
@@ -117,15 +132,16 @@ const fragmentShader = /* glsl */ `
   }
 
   void main() {
-    vec2 uv = gl_FragCoord.xy / uResolution.xy;
+    vec2 refOriginPx = 0.5 * (uReferenceResolution - uResolution);
+    vec2 refFragCoord = gl_FragCoord.xy + refOriginPx;
 
     // Grid cell index and center in screen space
     float cell = uCellSize;
     float halfCell = cell * 0.5;
 
-    vec2 cellIndex = floor(gl_FragCoord.xy / cell);
+    vec2 cellIndex = floor(refFragCoord / cell);
     vec2 cellCenter = (cellIndex + 0.5) * cell;
-    vec2 cellUV = cellCenter / uResolution.xy;
+    vec2 cellUV = cellCenter / uReferenceResolution.xy;
 
     // Per-cell scalar value (no neighbour-based dithering)
     float value = getCellValue(cellUV);
@@ -135,7 +151,7 @@ const fragmentShader = /* glsl */ `
     for (int i = 0; i < MAX_TRAIL; i++) {
       if (i >= uTrailCount) break;
       vec3 tp = uTrailPoints[i];
-      vec2 p = tp.xy;
+      vec2 p = toReferenceUV(tp.xy);
       float age = clamp(tp.z, 0.0, 1.0);
       float d = distance(cellUV, p);
       float r = uPointerRadius * 1.25 * (1.0 - age * 0.5);
@@ -148,7 +164,7 @@ const fragmentShader = /* glsl */ `
     value = clamp(value - uTrailStrength * trailInfluence, 0.0, 1.0);
 
     // Grid cell logic in screen space (per-fragment, but based on precomputed cell center)
-    vec2 local = gl_FragCoord.xy - cellCenter;
+    vec2 local = refFragCoord - cellCenter;
     float maxAbs = max(abs(local.x), abs(local.y));
 
     // Darker -> bigger square; pure white => square with zero size
@@ -169,7 +185,7 @@ const fragmentShader = /* glsl */ `
     float lineT = lineActivationFromValue(value, lineStartDarkness);
     float lineFlag = step(lineStartDarkness, darkness);
     if (uBorderWidth > 0.0 && (uLineSnap == 1 ? lineFlag > 0.0 : lineT > 0.0)) {
-      vec2 cellStepUV = vec2(cell / uResolution.x, cell / uResolution.y);
+      vec2 cellStepUV = vec2(cell / uReferenceResolution.x, cell / uReferenceResolution.y);
 
       float valueL = getCellValue(clamp(cellUV - vec2(cellStepUV.x, 0.0), vec2(0.0), vec2(1.0)));
       float valueR = getCellValue(clamp(cellUV + vec2(cellStepUV.x, 0.0), vec2(0.0), vec2(1.0)));
@@ -252,10 +268,19 @@ const FullscreenQuad: React.FC<
     pointerTypeRef: React.MutableRefObject<string>
     pointerCursorRef: React.MutableRefObject<boolean>
     clickPulseRef: React.MutableRefObject<number>
+    parallaxOffsetY?: number
   }
-> = ({ controls, pointerRef, scrollRef, pointerTypeRef, pointerCursorRef, clickPulseRef }) => {
+> = ({
+  controls,
+  pointerRef,
+  scrollRef,
+  pointerTypeRef,
+  pointerCursorRef,
+  clickPulseRef,
+  parallaxOffsetY = 0,
+}) => {
   const materialRef = useRef<THREE.ShaderMaterial | null>(null)
-  const { size, viewport } = useThree()
+  const { size, viewport, gl } = useThree()
 
   const trailRef = useRef<{ x: number; y: number; age: number }[]>([])
   const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
@@ -263,13 +288,16 @@ const FullscreenQuad: React.FC<
 
   const MAX_TRAIL = 64
   const CURSOR_HOVER_EASE = 6
+  const initialDrawingSize = gl.getDrawingBufferSize(new THREE.Vector2())
 
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2(size.width, size.height) },
+      uResolution: { value: new THREE.Vector2(initialDrawingSize.x, initialDrawingSize.y) },
+      uReferenceResolution: { value: new THREE.Vector2(REFERENCE_WIDTH, REFERENCE_HEIGHT) },
       uPointer: { value: new THREE.Vector2(0.5, 0.5) },
       uScroll: { value: 0 },
+      uParallaxOffset: { value: 0 },
       uInteractionMode: { value: 0 },
 
       uCellSize: { value: controls.gridCellSize },
@@ -304,8 +332,9 @@ const FullscreenQuad: React.FC<
   // Keep resolution in sync with canvas size
   useEffect(() => {
     if (!materialRef.current) return
-    materialRef.current.uniforms.uResolution.value.set(size.width, size.height)
-  }, [size])
+    const drawSize = gl.getDrawingBufferSize(new THREE.Vector2())
+    materialRef.current.uniforms.uResolution.value.set(drawSize.x, drawSize.y)
+  }, [size, gl])
 
   // Push control values into uniforms when they change
   useEffect(() => {
@@ -341,10 +370,17 @@ const FullscreenQuad: React.FC<
     uniformsRef.uTime.value += delta
     uniformsRef.uPointer.value.set(pointer.x, pointer.y)
     uniformsRef.uScroll.value = scroll
+    uniformsRef.uParallaxOffset.value = parallaxOffsetY
 
     const isTouchOrPen =
       pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen'
-    const baseMult = isTouchOrPen ? TOUCH_PEN_RADIUS_MULT : 1
+    const touchMult =
+      isTouchOrPen && size.width < MOBILE_WIDTH_THRESHOLD
+        ? TOUCH_PEN_RADIUS_MULT_MOBILE
+        : isTouchOrPen
+          ? TOUCH_PEN_RADIUS_MULT
+          : 1
+    const baseMult = touchMult
 
     const targetCursorMult =
       !isTouchOrPen && pointerCursorRef.current ? 2 : 1
@@ -429,12 +465,22 @@ const FullscreenQuad: React.FC<
 
 interface HeatDitherGridCanvasProps {
   controls: BackgroundControls
+  /** Vertical parallax offset 0..1 (e.g. scroll-based). Pattern shifts so background lags. */
+  parallaxOffsetY?: number
 }
 
 const TOUCH_PEN_RADIUS_MULT = 2
+const TOUCH_PEN_RADIUS_MULT_MOBILE = 2.5
 const CLICK_PULSE_DURATION = 0.35
+/** Reference viewport (e.g. design size). Grid scales with viewport to keep proportion. */
+const REFERENCE_WIDTH = 1600
+const REFERENCE_HEIGHT = 1270
+const MOBILE_WIDTH_THRESHOLD = 600
 
-export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({ controls }) => {
+export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({
+  controls,
+  parallaxOffsetY = 0,
+}) => {
   const pointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
   const scrollRef = useRef(0)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -528,6 +574,7 @@ export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({ cont
           pointerTypeRef={pointerTypeRef}
           pointerCursorRef={pointerCursorRef}
           clickPulseRef={clickPulseRef}
+          parallaxOffsetY={parallaxOffsetY}
         />
       </Canvas>
     </div>

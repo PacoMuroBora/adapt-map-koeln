@@ -5,6 +5,7 @@ import { draftMode } from 'next/headers'
 import React from 'react'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
+import { LandingBackground } from '@/components/background/LandingBackground'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { getPageBySlug } from '@/utilities/getPageBySlug'
 import { generateMeta } from '@/utilities/generateMeta'
@@ -29,11 +30,13 @@ export default async function HomePage() {
   const { contentBlocks } = page
 
   return (
-    <article>
-      {draft && <LivePreviewListener />}
-      <PayloadRedirects disableNotFound url="/" />
-      <RenderBlocks blocks={contentBlocks} />
-    </article>
+    <LandingBackground>
+      <article>
+        {draft && <LivePreviewListener />}
+        <PayloadRedirects disableNotFound url="/" />
+        <RenderBlocks blocks={contentBlocks} isLandingLayout />
+      </article>
+    </LandingBackground>
   )
 }
 

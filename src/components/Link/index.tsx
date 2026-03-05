@@ -44,23 +44,25 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     'slug' in refValue &&
     refValue.slug
   const isQuestionnaireRef = type === 'reference' && reference?.relationTo === 'questionnaires'
-  const href =
-    disabled !== true
-      ? hasSlug
-        ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
-        : isQuestionnaireRef
-          ? `/questionnaire/${(refValue as { name?: string }).name ?? 'current'}`
-          : url
-      : undefined
+  const resolvedHref =
+    disabled === true && label
+      ? '/under-construction'
+      : disabled !== true
+        ? hasSlug
+          ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
+          : isQuestionnaireRef
+            ? `/questionnaire/${(refValue as { name?: string }).name ?? 'current'}`
+            : url
+        : undefined
 
-  if (!href && !disabled) return null
+  if (!resolvedHref && !disabled) return null
   if (disabled && !label) return null
 
   return (
     <Button
       className={className}
-      disabled={disabled ?? false}
-      href={href ?? undefined}
+      disabled={!resolvedHref ? (disabled ?? false) : false}
+      href={resolvedHref ?? undefined}
       iconAfter={iconAfter != null && iconAfter !== '' ? iconAfter : undefined}
       iconBefore={iconBefore != null && iconBefore !== '' ? iconBefore : undefined}
       newTab={newTab ?? false}
