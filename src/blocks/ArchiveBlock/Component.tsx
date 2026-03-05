@@ -1,5 +1,5 @@
 import type { DefaultTypedEditorState } from '@payloadcms/richtext-lexical'
-import type { Category, Post } from '@/payload-types'
+import type { Post } from '@/payload-types'
 
 import { getPayloadClient } from '@/lib/payload'
 import React from 'react'
@@ -7,9 +7,13 @@ import RichText from '@/components/RichText'
 
 import { CollectionArchive } from '@/components/CollectionArchive'
 
+type ArchiveCategory = {
+  id?: string | null
+}
+
 type ArchiveBlockProps = {
   id?: string
-  categories?: (string | Category)[] | null
+  categories?: (string | ArchiveCategory)[] | null
   introContent?: DefaultTypedEditorState | null
   limit?: number | null
   populateBy?: 'collection' | 'selection' | null
@@ -26,7 +30,7 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps> = async (props) => {
   if (populateBy === 'collection') {
     const payload = await getPayloadClient()
 
-    const flattenedCategories = categories?.map((category: string | Category) => {
+    const flattenedCategories = categories?.map((category: string | ArchiveCategory) => {
       if (typeof category === 'object') return category.id
       else return category
     })

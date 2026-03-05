@@ -320,7 +320,7 @@ export async function POST(req: Request) {
           description: climateDescription || undefined,
         },
         desiredChanges: desiredChangesArray,
-        problem_index: problemIndex,
+        problem_index: Math.round(problemIndex),
         sub_scores: subScores,
         user_text: body.freeText || undefined,
       },
