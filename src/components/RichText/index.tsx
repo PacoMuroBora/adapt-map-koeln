@@ -9,7 +9,6 @@ import {
   JSXConvertersFunction,
   LinkJSXConverter,
   RichText as ConvertRichText,
-  UploadJSXConverter,
 } from '@payloadcms/richtext-lexical/react'
 
 import { CodeBlock, CodeBlockProps } from '@/blocks/Code/Component'
@@ -64,22 +63,49 @@ const createJsxConverters: (bodySize: 'default' | 'large') => JSXConvertersFunct
     ...defaultConverters,
     ...LinkJSXConverter({ internalDocToHref }),
     upload: (args) => {
-      const DefaultUpload =
-        defaultConverters.upload ?? (UploadJSXConverter as { upload: (a: typeof args) => React.ReactNode }).upload
-      const result = typeof DefaultUpload === 'function' ? DefaultUpload(args) : null
-      if (!result) return null
       const node = args.node as Record<string, unknown>
-      const collectionKey = Object.keys(node).find(
-        (k) => k !== 'type' && typeof node[k] === 'object',
-      )
-      const fields = collectionKey
-        ? (node[collectionKey] as { fields?: { size?: string } } | undefined)?.fields
-        : undefined
-      const size = (fields?.size ?? 'medium') as keyof typeof richTextImageSizeClasses
-      const sizeClass = richTextImageSizeClasses[size] ?? richTextImageSizeClasses.medium
+      const value = node.value as Record<string, unknown> | undefined
+      if (!value || typeof value !== 'object') return null
+
+      const url = value.url as string | undefined
+      if (!url) return null
+
+      const mimeType = value.mimeType as string | undefined
+      if (!mimeType?.startsWith('image')) {
+        return (
+          <a href={url} rel="noopener noreferrer">
+            {(value.filename as string) ?? url}
+          </a>
+        )
+      }
+
+      const alt = (value.alt as string) || (value.filename as string) || ''
+      const fields = node.fields as { size?: string } | undefined
+      const size = (fields?.size ?? 'full') as keyof typeof richTextImageSizeClasses
+      const sizeClass = richTextImageSizeClasses[size] ?? richTextImageSizeClasses.full
+
+      const sizes = value.sizes as Record<string, { url?: string; width?: number; mimeType?: string }> | undefined
+
       return (
-        <span className={cn('payload-richtext-upload my-4 block', sizeClass)}>
-          {result}
+        <span className={cn('my-4 block', sizeClass)}>
+          {sizes && Object.keys(sizes).length > 0 ? (
+            <picture>
+              {Object.entries(sizes).map(([key, imgSize]) => {
+                if (!imgSize?.url || !imgSize?.width || !imgSize?.mimeType) return null
+                return (
+                  <source
+                    key={key}
+                    media={`(max-width: ${imgSize.width}px)`}
+                    srcSet={imgSize.url}
+                    type={imgSize.mimeType}
+                  />
+                )
+              })}
+              <img src={url} alt={alt} className="w-full h-auto block" />
+            </picture>
+          ) : (
+            <img src={url} alt={alt} className="w-full h-auto block" />
+          )}
         </span>
       )
     },
