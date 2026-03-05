@@ -70,7 +70,7 @@ export function SubmissionsAnalytics() {
   return (
     <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2">
       {/* Line chart card (time series) */}
-      <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
+      <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
         <CardHeader className="pb-4 space-y-1">
           <div className="flex items-center justify-between gap-4">
             <CardTitle className="text-lg font-semibold tracking-title uppercase">
@@ -177,7 +177,7 @@ export function SubmissionsAnalytics() {
       </Card>
 
       {/* Horizontal bars card */}
-      <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
+      <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
         <CardHeader className="pb-4 space-y-1">
           <div className="flex items-center justify-between gap-4">
             <div>

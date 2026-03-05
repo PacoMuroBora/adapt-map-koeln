@@ -128,7 +128,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
   }
 
   return (
-    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
+    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div className="space-y-1">
           <CardTitle className="text-xl font-semibold tracking-title uppercase">
@@ -213,7 +213,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      <CardContent className="flex-1 min-h-0 overflow-hidden p-0">
+      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 pt-0 pb-6">
         {loading && (
           <div className="flex h-full flex-col gap-3 p-4">
             <Skeleton className="h-10 w-full bg-secondary" />
@@ -227,7 +227,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
           </div>
         )}
         {!loading && !error && (
-          <div className="h-full overflow-y-auto p-2">
+          <div className="h-full overflow-y-auto px-6 py-2">
             <ul className="space-y-1">
               {filtered.map((item) => {
                 const created = new Date(item.createdAt)
@@ -239,7 +239,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       onClick={() => openDetail(item)}
                       className={cn(
                         'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-left text-base transition-colors',
-                        'hover:bg-secondary/60',
+                        'hover:bg-secondary/30',
                       )}
                     >
                       <div className="min-w-0 flex-1">
