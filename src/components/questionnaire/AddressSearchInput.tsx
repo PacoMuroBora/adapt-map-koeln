@@ -66,12 +66,8 @@ export function AddressSearchInput({
   const justSelectedRef = useRef(false)
   const houseNumbersCacheRef = useRef<Map<string, AddressSuggestion[]>>(new Map())
 
-  // Restore street display when navigating back with saved value
-  React.useEffect(() => {
-    if (streetFromValue && query !== streetFromValue) {
-      setQuery(streetFromValue)
-    }
-  }, [streetFromValue])
+  // Restore search box from saved value only when user focuses the search and it's empty (e.g. navigated back).
+  // Do NOT sync when street changes from the manual field — that would overwrite the search input.
 
   // Parse "Mozartstraße 1" → { street: "Mozartstraße", numberPrefix: "1" }
   const parsedStreetNumber = React.useMemo(() => {
@@ -299,6 +295,8 @@ export function AddressSearchInput({
               onError?.(null)
             }}
             onFocus={() => {
+              // Restore search display from saved value only when box is empty (e.g. navigated back)
+              if (query === '' && streetFromValue) setQuery(streetFromValue)
               if (suggestions.length > 0) setShowSuggestions(true)
               else if (
                 query.trim().length >= 2 &&

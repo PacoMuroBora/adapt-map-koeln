@@ -264,11 +264,11 @@ export function QuestionCaseInput({
             </Label>
             <Input
               id={`${question.key}-housenumber`}
-              type="number"
+              type="text"
               shape="round"
               size="lg"
               inputMode="text"
-              autoComplete="off"
+              autoComplete="address-line2"
               placeholder="z.B. 12"
               value={addressAnswer.housenumber}
               onChange={(e) => setAddress({ housenumber: e.target.value.trim() || '' })}
@@ -279,25 +279,51 @@ export function QuestionCaseInput({
             <Label htmlFor={`${question.key}-plz`} className="text-[12px] uppercase">
               Postleitzahl
             </Label>
-            <InputOTP
-              length={5}
-              value={addressAnswer.postal_code ?? ''}
-              onChange={(val) => {
-                setAddress({ postal_code: val })
-                if (val.length === 5) {
-                  setError(
-                    isValidColognePlz(val)
-                      ? null
-                      : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
-                  )
-                } else {
-                  setError(null)
-                }
-              }}
-              variant="plz"
-              placeholderChar="0"
-              shape="round"
-            />
+            <div className="relative">
+              {/* Hidden input for browser autofill (postal-code); value syncs into the 5-digit OTP below */}
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={5}
+                tabIndex={-1}
+                aria-hidden
+                className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                value={addressAnswer.postal_code ?? ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 5)
+                  setAddress({ postal_code: digits })
+                  if (digits.length === 5) {
+                    setError(
+                      isValidColognePlz(digits)
+                        ? null
+                        : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
+                    )
+                  } else {
+                    setError(null)
+                  }
+                }}
+              />
+              <InputOTP
+                length={5}
+                value={addressAnswer.postal_code ?? ''}
+                onChange={(val) => {
+                  setAddress({ postal_code: val })
+                  if (val.length === 5) {
+                    setError(
+                      isValidColognePlz(val)
+                        ? null
+                        : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
+                    )
+                  } else {
+                    setError(null)
+                  }
+                }}
+                variant="plz"
+                placeholderChar="0"
+                shape="round"
+              />
+            </div>
           </div>
         </div>
       )
@@ -824,7 +850,7 @@ export function QuestionCaseInput({
                             id={`${question.key}-${subQ.key}-housenumber`}
                             type="text"
                             inputMode="text"
-                            autoComplete="off"
+                            autoComplete="address-line2"
                             placeholder="z.B. 12"
                             value={addrAnswer.housenumber}
                             onChange={(e) => setAddr({ housenumber: e.target.value.trim() || '' })}
