@@ -7,6 +7,14 @@ import type { MediaBlock as MediaBlockProps } from '@/payload-types'
 
 import { Media } from '../../components/Media'
 
+/** CSS classes for MediaBlock image size (used in RichText and layout) */
+const mediaBlockSizeClasses: Record<string, string> = {
+  small: 'max-w-xs',
+  medium: 'max-w-md',
+  large: 'max-w-2xl',
+  full: 'w-full max-w-full',
+}
+
 type Props = MediaBlockProps & {
   breakout?: boolean
   captionClassName?: string
@@ -24,14 +32,17 @@ export const MediaBlock: React.FC<Props> = (props) => {
     enableGutter = true,
     imgClassName,
     media,
+    size = 'medium',
     staticImage,
     disableInnerContainer,
   } = props
 
+  const sizeClass = mediaBlockSizeClasses[size] ?? mediaBlockSizeClasses.medium
+
   return (
     <div
       className={cn(
-        '',
+        sizeClass,
         {
           container: enableGutter,
         },
@@ -39,11 +50,7 @@ export const MediaBlock: React.FC<Props> = (props) => {
       )}
     >
       {(media || staticImage) && (
-        <Media
-          imgClassName={cn('border border-border rounded-[0.8rem]', imgClassName)}
-          resource={media}
-          src={staticImage}
-        />
+        <Media imgClassName={imgClassName} resource={media} src={staticImage} />
       )}
     </div>
   )

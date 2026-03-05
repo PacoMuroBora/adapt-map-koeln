@@ -10,5 +10,21 @@ export const MediaBlock: Block = {
       relationTo: 'media',
       required: true,
     },
+    {
+      name: 'size',
+      type: 'select',
+      label: 'Image size',
+      options: [
+        { label: 'Small', value: 'small' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'Large', value: 'large' },
+        { label: 'Full width', value: 'full' },
+      ],
+      defaultValue: 'medium',
+      required: true,
+      admin: {
+        description: 'Display width of the image in the content.',
+      },
+    },
   ],
 }
