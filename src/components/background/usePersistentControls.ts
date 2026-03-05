@@ -47,10 +47,10 @@ const defaultState: BackgroundControls = {
 
   interactionMode: 'mouse+scroll',
   interactionPointerRadius: 0.05,
-  interactionPointerStrength: 1.76,
+  interactionPointerStrength: 1.04,
   interactionScrollStrength: 0.94,
-  trailStrength: 0.4,
-  trailFadeSeconds: 0.9,
+  trailStrength: 0.5,
+  trailFadeSeconds: 0.8,
 }
 
 export interface PersistentControlsResult {

@@ -41,7 +41,8 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uColorDark;
 
 
-  uniform float uPointerRadius;
+  uniform float uPointerRadius;      // base radius (trail points)
+  uniform float uPointerRadiusHead;  // head only (current cursor; can be 1.5x on hover)
   uniform float uPointerStrength;
   uniform float uScrollStrength;
 
@@ -89,8 +90,8 @@ const fragmentShader = /* glsl */ `
 
     if (uInteractionMode == 1 || uInteractionMode == 3) {
       float d = distance(sampleUV, uPointer);
-      if (uPointerRadius > 0.0) {
-        float falloff = smoothstep(uPointerRadius, 0.0, d);
+      if (uPointerRadiusHead > 0.0) {
+        float falloff = smoothstep(uPointerRadiusHead, 0.0, d);
         interaction += falloff * uPointerStrength;
       }
     }
@@ -248,15 +249,20 @@ const FullscreenQuad: React.FC<
   QuadProps & {
     pointerRef: React.MutableRefObject<{ x: number; y: number }>
     scrollRef: React.MutableRefObject<number>
+    pointerTypeRef: React.MutableRefObject<string>
+    pointerCursorRef: React.MutableRefObject<boolean>
+    clickPulseRef: React.MutableRefObject<number>
   }
-> = ({ controls, pointerRef, scrollRef }) => {
+> = ({ controls, pointerRef, scrollRef, pointerTypeRef, pointerCursorRef, clickPulseRef }) => {
   const materialRef = useRef<THREE.ShaderMaterial | null>(null)
   const { size, viewport } = useThree()
 
   const trailRef = useRef<{ x: number; y: number; age: number }[]>([])
   const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
+  const cursorMultAnimRef = useRef(1)
 
   const MAX_TRAIL = 64
+  const CURSOR_HOVER_EASE = 6
 
   const uniforms = useMemo(
     () => ({
@@ -281,6 +287,7 @@ const FullscreenQuad: React.FC<
       uColorDark: { value: new THREE.Color(controls.lineColor) },
 
       uPointerRadius: { value: controls.interactionPointerRadius },
+      uPointerRadiusHead: { value: controls.interactionPointerRadius },
       uPointerStrength: { value: controls.interactionPointerStrength },
       uScrollStrength: { value: controls.interactionScrollStrength },
 
@@ -319,7 +326,6 @@ const FullscreenQuad: React.FC<
     uniformsRef.uColorLight.value.set(controls.squareColor)
     uniformsRef.uColorDark.value.set(controls.lineColor)
 
-    uniformsRef.uPointerRadius.value = controls.interactionPointerRadius
     uniformsRef.uPointerStrength.value = controls.interactionPointerStrength
     uniformsRef.uScrollStrength.value = controls.interactionScrollStrength
     uniformsRef.uTrailStrength.value = controls.trailStrength
@@ -335,6 +341,29 @@ const FullscreenQuad: React.FC<
     uniformsRef.uTime.value += delta
     uniformsRef.uPointer.value.set(pointer.x, pointer.y)
     uniformsRef.uScroll.value = scroll
+
+    const isTouchOrPen =
+      pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen'
+    const baseMult = isTouchOrPen ? TOUCH_PEN_RADIUS_MULT : 1
+
+    const targetCursorMult =
+      !isTouchOrPen && pointerCursorRef.current ? 2 : 1
+    const cur = cursorMultAnimRef.current
+    cursorMultAnimRef.current =
+      cur + (targetCursorMult - cur) * Math.min(1, delta * CURSOR_HOVER_EASE)
+    const cursorMult = cursorMultAnimRef.current
+
+    // Click / tap pulse: animate radius multiplier back to 1 over CLICK_PULSE_DURATION
+    const pulse = clickPulseRef.current
+    if (pulse > 0) {
+      clickPulseRef.current = Math.max(0, pulse - delta / CLICK_PULSE_DURATION)
+    }
+    const pulseMult = 1 + pulse * 0.5 // 1 -> 1.5x radius at click/tap, ease back to 1
+
+    const baseRadius = controls.interactionPointerRadius * baseMult
+    uniformsRef.uPointerRadius.value = baseRadius
+    uniformsRef.uPointerRadiusHead.value =
+      baseRadius * cursorMult * pulseMult
 
     // Mouse trail: interpolate between last and current pointer, then age / fade
     const trail = trailRef.current
@@ -402,10 +431,16 @@ interface HeatDitherGridCanvasProps {
   controls: BackgroundControls
 }
 
+const TOUCH_PEN_RADIUS_MULT = 2
+const CLICK_PULSE_DURATION = 0.35
+
 export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({ controls }) => {
   const pointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
   const scrollRef = useRef(0)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const pointerTypeRef = useRef<string>('mouse')
+  const pointerCursorRef = useRef<boolean>(false)
+  const clickPulseRef = useRef<number>(0)
 
   // Track scroll position once for the whole route
   useEffect(() => {
@@ -426,20 +461,53 @@ export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({ cont
     return () => window.removeEventListener('scroll', updateScroll)
   }, [])
 
-  const handlePointerMove = (e: { clientX: number; clientY: number }) => {
-    const el = containerRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const width = rect.width
-    const height = rect.height
-    if (width <= 0 || height <= 0) return
-    const x = (e.clientX - rect.left) / width
-    const y = 1 - (e.clientY - rect.top) / height
-    pointerRef.current = {
-      x: Math.max(0, Math.min(1, x)),
-      y: Math.max(0, Math.min(1, y)),
+  // Track pointer at window level so we keep position when cursor is over Leva, buttons, etc.
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      pointerTypeRef.current = e.pointerType
+      const target = containerRef.current
+      if (!target) return
+      const rect = target.getBoundingClientRect()
+      const width = rect.width
+      const height = rect.height
+      if (width <= 0 || height <= 0) return
+      const x = (e.clientX - rect.left) / width
+      const y = 1 - (e.clientY - rect.top) / height
+      pointerRef.current = { x, y }
+
+      // Detect CSS cursor: pointer by walking up from the event target
+      let isPointerCursor = false
+      let el = e.target as Element | null
+      while (el) {
+        const style = window.getComputedStyle(el)
+        if (style.cursor === 'pointer') {
+          isPointerCursor = true
+          break
+        }
+        el = el.parentElement
+      }
+      pointerCursorRef.current = isPointerCursor
     }
-  }
+
+    const handlePointerDown = (e: PointerEvent) => {
+      // Only primary button / primary touch
+      if (e.button !== 0 && e.button !== -1) return
+      clickPulseRef.current = 1
+    }
+
+    const handlePointerLeave = () => {
+      pointerRef.current = { x: 0.5, y: 0.5 }
+    }
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
+    window.addEventListener('pointerdown', handlePointerDown, { passive: true })
+    document.body.addEventListener('pointerleave', handlePointerLeave, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerdown', handlePointerDown)
+      document.body.removeEventListener('pointerleave', handlePointerLeave)
+    }
+  }, [])
 
   return (
     <div ref={containerRef} className="absolute inset-0 w-full h-full">
@@ -452,15 +520,14 @@ export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({ cont
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0)
         }}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={() => {
-          pointerRef.current = { x: 0.5, y: 0.5 }
-        }}
       >
         <FullscreenQuad
           controls={controls}
           pointerRef={pointerRef}
           scrollRef={scrollRef}
+          pointerTypeRef={pointerTypeRef}
+          pointerCursorRef={pointerCursorRef}
+          clickPulseRef={clickPulseRef}
         />
       </Canvas>
     </div>
