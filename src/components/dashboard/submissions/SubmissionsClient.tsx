@@ -25,14 +25,14 @@ export function SubmissionsClient() {
 
   return (
     <DashboardShell>
-      <div className="grid h-full grid-rows-[2fr_1fr] gap-10 py-6">
-        {/* Top row: list (2/3 height) */}
-        <div className="min-h-0">
+      <div className="flex h-full flex-col gap-10 py-6">
+        {/* List: fills remaining space */}
+        <div className="min-h-0 flex-1">
           <SubmissionsList onSelect={(item) => setSelected(item)} />
         </div>
 
-        {/* Bottom row: analytics (1/3 height) */}
-        <div className="min-h-0">
+        {/* Chart cards: fixed height so list gets the rest on small screens */}
+        <div className="h-[320px] flex-shrink-0">
           <SubmissionsAnalytics />
         </div>
       </div>

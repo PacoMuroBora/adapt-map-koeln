@@ -11,6 +11,8 @@ const config = {
   plugins: [tailwindcssAnimate],
   prefix: '',
   safelist: [
+    'tracking-title',
+    'tracking-label',
     'lg:col-span-4',
     'lg:col-span-6',
     'lg:col-span-8',
@@ -183,6 +185,10 @@ const config = {
         xl: 'var(--spacing-xl)',
         '2xl': 'var(--spacing-2xl)',
         '5xl': 'var(--spacing-5xl)',
+      },
+      letterSpacing: {
+        title: '0.12em',
+        label: '0.1em',
       },
       keyframes: {
         'accordion-down': {

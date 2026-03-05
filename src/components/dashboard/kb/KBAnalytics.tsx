@@ -67,17 +67,17 @@ export function KBAnalytics() {
       <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
         <CardHeader className="pb-4 space-y-1">
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
+            <CardTitle className="text-lg font-semibold tracking-title uppercase">
               Empfehlungen über Zeit
             </CardTitle>
             <div className="flex gap-2 rounded-full bg-am-white/70 p-1">
               {(Object.keys(RANGE_LABEL) as RangeKey[]).map((key) => (
                 <Button
                   key={key}
-                  variant={key === range ? 'default' : 'ghost-muted'}
+                  variant={key === range ? 'pill' : 'ghost-muted'}
                   size="tiny"
                   shape="round"
-                  className="px-2 text-[10px]"
+                  className="px-2 text-base"
                   onClick={() => setRange(key)}
                 >
                   {RANGE_LABEL[key]}
@@ -85,7 +85,7 @@ export function KBAnalytics() {
               ))}
             </div>
           </div>
-          <p className="text-sm text-foreground-alt">
+          <p className="text-base text-foreground-alt">
             {data ? `${data.totalEvents} Recommendation-Events` : 'Lade…'}
           </p>
         </CardHeader>
@@ -94,13 +94,13 @@ export function KBAnalytics() {
               Only show the empty placeholder when we have never loaded data yet. */}
           {loading && !data && <div className="flex-1" />}
           {error && !loading && !data && (
-            <div className="flex flex-1 items-center justify-center text-xs text-destructive">
+            <div className="flex flex-1 items-center justify-center text-base text-destructive">
               {error}
             </div>
           )}
           {data && !error && (
             <div className="flex flex-1 flex-col justify-between">
-              <div className="flex items-baseline justify-between text-sm">
+              <div className="flex items-baseline justify-between text-base">
                 <div className="space-y-1">
                   <p className="text-foreground-alt">Empfehlungen insgesamt</p>
                   <p className="text-3xl font-semibold text-am-purple-alt">
@@ -148,7 +148,7 @@ export function KBAnalytics() {
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-xs text-foreground-alt">
+                  <div className="flex h-full items-center justify-center text-base text-foreground-alt">
                     Keine Daten im Zeitraum
                   </div>
                 )}
@@ -161,15 +161,15 @@ export function KBAnalytics() {
       <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
         <CardHeader className="pb-4 space-y-1">
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-base font-semibold tracking-[0.16em] uppercase">
-              Häufig empfohlene Inhalte
+            <CardTitle className="text-lg font-semibold tracking-title uppercase">
+              Top-Empfehlungen
             </CardTitle>
             <div className="inline-flex gap-1 rounded-full bg-am-white/70 p-1">
               <Button
                 size="tiny"
                 shape="round"
-                variant={tab === 'items' ? 'default' : 'ghost-muted'}
-                className="px-2 text-[10px]"
+                variant={tab === 'items' ? 'pill' : 'ghost-muted'}
+                className="px-2 text-base"
                 onClick={() => setTab('items')}
               >
                 Items
@@ -177,8 +177,8 @@ export function KBAnalytics() {
               <Button
                 size="tiny"
                 shape="round"
-                variant={tab === 'themes' ? 'default' : 'ghost-muted'}
-                className="px-2 text-[10px]"
+                variant={tab === 'themes' ? 'pill' : 'ghost-muted'}
+                className="px-2 text-base"
                 onClick={() => setTab('themes')}
               >
                 Themen
@@ -186,15 +186,15 @@ export function KBAnalytics() {
               <Button
                 size="tiny"
                 shape="round"
-                variant={tab === 'categories' ? 'default' : 'ghost-muted'}
-                className="px-2 text-[10px]"
+                variant={tab === 'categories' ? 'pill' : 'ghost-muted'}
+                className="px-2 text-base"
                 onClick={() => setTab('categories')}
               >
                 Kategorien
               </Button>
             </div>
           </div>
-          <p className="text-sm text-foreground-alt">
+          <p className="text-base text-foreground-alt">
             Top-Empfehlungen nach KB-Item, Thema oder Kategorie
           </p>
         </CardHeader>
@@ -202,7 +202,7 @@ export function KBAnalytics() {
           {/* Same behavior as time-series card: keep showing existing data while reloading. */}
           {loading && !data && <div className="flex-1" />}
           {error && !loading && !data && (
-            <div className="flex flex-1 items-center justify-center text-xs text-destructive">
+            <div className="flex flex-1 items-center justify-center text-base text-destructive">
               {error}
             </div>
           )}
@@ -239,7 +239,7 @@ export function KBAnalytics() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="mt-4 text-xs text-foreground-alt">
+                <p className="mt-4 text-base text-foreground-alt">
                   Noch keine Recommendation-Events im gewählten Zeitraum.
                 </p>
               )}

@@ -22,11 +22,11 @@ export function UserPanel() {
           <UserCircle2 className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">
+          <p className="truncate text-base font-medium text-foreground">
             {loading ? 'Lade…' : user?.name || user?.email || 'Unbekannt'}
           </p>
           {user?.roles && (
-            <p className="truncate text-xs text-foreground-alt">
+            <p className="truncate text-sm text-foreground-alt">
               {typeof user.roles === 'string' ? user.roles : String(user.roles)}
             </p>
           )}
@@ -36,7 +36,7 @@ export function UserPanel() {
         variant="ghost-muted"
         size="mini"
         shape="round"
-        className="mt-3 w-full justify-center gap-2 text-xs text-foreground-alt hover:text-foreground"
+        className="mt-3 w-full justify-center gap-2 text-sm text-foreground-alt hover:text-foreground"
         onClick={handleLogout}
         disabled={loading}
       >

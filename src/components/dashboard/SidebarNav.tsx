@@ -1,9 +1,9 @@
 'use client'
 
 import {
-  BarChart3,
   BookOpenText,
   LayoutDashboard,
+  Map,
   Settings2,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -26,6 +26,11 @@ const primaryNav: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    label: 'Map',
+    href: '/dashboard/map',
+    icon: Map,
+  },
+  {
     label: 'Knowledge Base',
     href: '/dashboard/knowledge-base',
     icon: BookOpenText,
@@ -41,7 +46,7 @@ export function SidebarNav() {
   const pathname = usePathname()
 
   return (
-    <aside className="flex h-screen w-72 flex-col border-r border-border bg-secondary text-foreground">
+    <aside className="flex h-screen w-64 flex-col border-r border-border bg-secondary text-foreground">
       <div className="flex items-center gap-3 px-5 pb-5 pt-6">
         <Logo className="text-am-darker" height={22} />
       </div>
@@ -57,7 +62,7 @@ export function SidebarNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'group flex items-center gap-3 rounded-full px-3 py-2 text-base transition-colors',
+                'group flex items-center gap-3 rounded-full px-3 py-2 text-lg transition-colors',
                 'hover:bg-muted/20 hover:text-foreground',
                 isActive ? 'bg-am-green/25 text-foreground' : 'text-foreground-alt',
               )}
