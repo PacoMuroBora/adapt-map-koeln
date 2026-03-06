@@ -13,15 +13,13 @@ import {
 
 import { CodeBlock, CodeBlockProps } from '@/blocks/Code/Component'
 
-import type { BannerBlockProps } from '@/blocks/Banner/Component'
 import type { CallToActionBlock as CTABlockProps, MediaBlock as MediaBlockProps } from '@/payload-types'
-import { BannerBlock } from '@/blocks/Banner/Component'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { cn } from '@/utilities/ui'
 
 type NodeTypes =
   | DefaultNodeTypes
-  | SerializedBlockNode<CTABlockProps | MediaBlockProps | BannerBlockProps | CodeBlockProps>
+  | SerializedBlockNode<CTABlockProps | MediaBlockProps | CodeBlockProps>
 
 const headlineSizeClasses: Record<'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6', string> = {
   h1: 'text-h1 uppercase',
@@ -169,9 +167,6 @@ const createJsxConverters: (bodySize: 'default' | 'large') => JSXConvertersFunct
       return <p className={className}>{children}</p>
     },
     blocks: {
-      banner: ({ node }: { node: { fields: BannerBlockProps } }) => (
-        <BannerBlock className="col-start-2 mb-4" {...node.fields} />
-      ),
       mediaBlock: ({ node }) => (
         <MediaBlock
           className="col-start-1 col-span-3"
