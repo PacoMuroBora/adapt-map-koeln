@@ -9,7 +9,7 @@ import {
 
 export const FormBlock: Block = {
   slug: 'formBlock',
-  interfaceName: 'FormBlock',
+  interfaceName: 'Form',
   fields: [
     {
       name: 'form',

@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowUpRight,
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -26,6 +27,7 @@ const buttonIconMap: Record<
   React.ComponentType<{ size?: number; className?: string }>
 > = {
   'arrow-right': ArrowRight,
+  'arrow-left': ArrowLeft,
   'arrow-up': ArrowUp,
   'arrow-down': ArrowDown,
   'arrow-up-right': ArrowUpRight,
@@ -112,9 +114,10 @@ export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonE
   disabledHoverLabel?: string | null
 }
 
-const iconSlotClasses = (shape: 'default' | 'round') =>
+const iconSlotClasses = (shape: 'default' | 'round', hasLabelContent: boolean) =>
   cn(
-    'inline-flex shrink-0 items-center justify-center border border-current p-0.5 h-full aspect-square',
+    'inline-flex shrink-0 items-center justify-center p-0.5 h-full aspect-square',
+    hasLabelContent ? 'border border-current' : '',
     shape === 'round' ? 'rounded-full' : 'rounded-[0.25rem]',
   )
 
@@ -137,9 +140,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const isLarge = size === 'lg'
+    const hasText = React.Children.count(children) > 0
     const wrapIcon = (node: React.ReactNode) =>
       node != null && isLarge ? (
-        <div className={iconSlotClasses(shape ?? 'default')}>{node}</div>
+        <div className={iconSlotClasses(shape ?? 'default', hasText)}>{node}</div>
       ) : (
         node
       )
@@ -151,7 +155,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
     const iconBeforeSlot = renderIcon(iconBefore)
     const iconAfterSlot = renderIcon(iconAfter)
-    const hasText = React.Children.count(children) > 0
     const hasIcon = iconBeforeSlot !== null || iconAfterSlot !== null
     const isIconOnly = !hasText && hasIcon && !(iconBefore && iconAfter)
     const showDisabledHover =
@@ -173,9 +176,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const content = (
       <>
         {iconBeforeSlot}
-        <span className={cn('flex items-center justify-center', isLarge && 'px-2')}>
-          {labelContent}
-        </span>
+        {labelContent && (
+          <span className={cn('flex items-center justify-center', isLarge && 'px-2')}>
+            {labelContent}
+          </span>
+        )}
         {iconAfterSlot}
       </>
     )

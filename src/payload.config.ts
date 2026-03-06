@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url'
 import { KnowledgeBaseItems } from './collections/KnowledgeBaseItems'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
-import { Posts } from './collections/Posts'
 import { Questions } from './collections/Questions'
 import { Questionnaires } from './collections/Questionnaires'
 import { Submissions } from './collections/Submissions'
@@ -75,7 +74,6 @@ export default buildConfig({
   }),
   collections: [
     Pages,
-    Posts,
     Media,
     Users,
     Questions,

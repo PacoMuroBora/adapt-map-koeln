@@ -39,6 +39,7 @@ export const CallToAction: Block = {
       sizes: ['default', 'sm', 'lg', 'icon', 'mini', 'tiny'],
       iconBefore: [
         'arrow-right',
+        'arrow-left',
         'arrow-up',
         'arrow-down',
         'arrow-up-right',
@@ -48,6 +49,7 @@ export const CallToAction: Block = {
       ],
       iconAfter: [
         'arrow-right',
+        'arrow-left',
         'arrow-up',
         'arrow-down',
         'arrow-up-right',

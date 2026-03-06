@@ -32,6 +32,7 @@ export const Header: GlobalConfig = {
     linkGroup({
       iconBefore: [
         'arrow-right',
+        'arrow-left',
         'arrow-up',
         'arrow-down',
         'arrow-up-right',
@@ -41,6 +42,7 @@ export const Header: GlobalConfig = {
       ],
       iconAfter: [
         'arrow-right',
+        'arrow-left',
         'arrow-up',
         'arrow-down',
         'arrow-up-right',

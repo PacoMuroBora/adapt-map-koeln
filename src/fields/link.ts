@@ -45,6 +45,7 @@ export const linkButtonSizeOptions: { label: string; value: 'default' | 'sm' | '
 /** Icon options for iconBefore / iconAfter (display labels for CMS). */
 export type LinkIconOption =
   | 'arrow-right'
+  | 'arrow-left'
   | 'arrow-up'
   | 'arrow-down'
   | 'arrow-up-right'
@@ -58,6 +59,7 @@ export type LinkIconOption =
 
 export const linkIconOptions: { label: string; value: LinkIconOption }[] = [
   { label: 'Arrow Right', value: 'arrow-right' },
+  { label: 'Arrow Left', value: 'arrow-left' },
   { label: 'Arrow Up', value: 'arrow-up' },
   { label: 'Arrow Down', value: 'arrow-down' },
   { label: 'Arrow Up Right', value: 'arrow-up-right' },
@@ -157,7 +159,7 @@ export const link: LinkType = ({
         condition: (_, siblingData) => siblingData?.type === 'reference',
       },
       label: 'Document to link to',
-      relationTo: ['pages', 'posts', 'questionnaires'],
+      relationTo: ['pages', 'questionnaires'],
       required: true,
     },
     {

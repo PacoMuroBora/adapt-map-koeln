@@ -13,11 +13,8 @@ import {
 
 import { CodeBlock, CodeBlockProps } from '@/blocks/Code/Component'
 
-import type {
-  BannerBlock as BannerBlockProps,
-  CallToActionBlock as CTABlockProps,
-  MediaBlock as MediaBlockProps,
-} from '@/payload-types'
+import type { BannerBlockProps } from '@/blocks/Banner/Component'
+import type { CallToActionBlock as CTABlockProps, MediaBlock as MediaBlockProps } from '@/payload-types'
 import { BannerBlock } from '@/blocks/Banner/Component'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { cn } from '@/utilities/ui'
@@ -41,7 +38,7 @@ const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }) => {
     throw new Error('Expected value to be an object')
   }
   const slug = value.slug
-  return relationTo === 'posts' ? `/posts/${slug}` : `/${slug}`
+  return `/${slug}`
 }
 
 const bodySizeClasses = {
@@ -172,7 +169,9 @@ const createJsxConverters: (bodySize: 'default' | 'large') => JSXConvertersFunct
       return <p className={className}>{children}</p>
     },
     blocks: {
-      banner: ({ node }) => <BannerBlock className="col-start-2 mb-4" {...node.fields} />,
+      banner: ({ node }: { node: { fields: BannerBlockProps } }) => (
+        <BannerBlock className="col-start-2 mb-4" {...node.fields} />
+      ),
       mediaBlock: ({ node }) => (
         <MediaBlock
           className="col-start-1 col-span-3"

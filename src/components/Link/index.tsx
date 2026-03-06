@@ -2,7 +2,7 @@ import { Button, type ButtonProps } from '@/components/ui/button'
 import React from 'react'
 
 import type { LinkIconOption } from '@/fields/link'
-import type { Page, Post, Questionnaire } from '@/payload-types'
+import type { Page, Questionnaire } from '@/payload-types'
 
 type CMSLinkType = {
   appearance?: ButtonProps['variant'] | null
@@ -13,8 +13,8 @@ type CMSLinkType = {
   label?: string | null
   newTab?: boolean | null
   reference?: {
-    relationTo: 'pages' | 'posts' | 'questionnaires'
-    value: Page | Post | Questionnaire | string | number
+    relationTo: 'pages' | 'questionnaires'
+    value: Page | Questionnaire | string | number
   } | null
   size?: ButtonProps['size'] | null
   type?: 'custom' | 'reference' | null
