@@ -32,7 +32,7 @@ export const HeroBlockComponent: React.FC<HeroBlockProps & { isLandingLayout?: b
       className={
         isLanding
           ? 'relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-transparent'
-          : 'relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-primary background-grid-primary'
+          : 'relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-primary'
       }
     >
       <div className="max-w-[48rem] space-y-2">

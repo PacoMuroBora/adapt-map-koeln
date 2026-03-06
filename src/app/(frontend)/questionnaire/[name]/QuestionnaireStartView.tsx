@@ -49,18 +49,16 @@ export default function QuestionnaireStartView({
 
       <div className="flex flex-1 flex-col justify-center w-full h-full z-10">
         {showInstruction ? (
-          <div className="flex flex-col gap-10 w-full items-center">
+          <div className="flex flex-col gap-10 w-full max-w-[800px] mx-auto items-center text-center">
             {instructionTitle && (
-              <div className="w-full">
-                <h1 className="text-h1 font-headings font-semibold uppercase text-white w-full max-w-[800px]">
-                  {instructionTitle}
-                </h1>
-              </div>
+              <h1 className="text-h1 font-headings font-semibold uppercase text-white w-full">
+                {instructionTitle}
+              </h1>
             )}
             {instructionItems.length > 0 && (
-              <ul className="flex flex-col gap-8 w-full">
+              <ul className="flex flex-col gap-8 w-full max-w-[480px] mx-auto list-none pl-0">
                 {instructionItems.map((item, i) => (
-                  <li key={i} className="flex gap-4 items-start max-w-[480px]">
+                  <li key={i} className="flex gap-4 items-start text-left">
                     <span className="font-mono text-[32px] leading-none text-white shrink-0">
                       °{String(i + 1).padStart(2, '0')}
                     </span>
@@ -69,7 +67,7 @@ export default function QuestionnaireStartView({
                 ))}
               </ul>
             )}
-            <div className="inline-block md:mt-20">
+            <div className="md:mt-20">
               <Button
                 type="button"
                 size="lg"

@@ -398,7 +398,7 @@ export function KBList() {
                         )}
                         {item.lastSynced && (
                           <span>
-                            AI-sync : {new Date(item.lastSynced).toLocaleDateString('de-DE')}
+                            KI-Sync: {new Date(item.lastSynced).toLocaleDateString('de-DE')}
                           </span>
                         )}
                       </div>

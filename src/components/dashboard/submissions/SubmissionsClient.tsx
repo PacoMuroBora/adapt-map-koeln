@@ -10,6 +10,8 @@ import type { SubmissionsChartVariant } from './SubmissionsAnalytics'
 import { SubmissionsAnalytics } from './SubmissionsAnalytics'
 import { SubmissionsList } from './SubmissionsList'
 
+export type SubmissionListFilterTimeRange = 'all' | '7d' | '30d' | '90d'
+
 type SubmissionSummary = {
   id: string
   createdAt: string
@@ -24,7 +26,10 @@ type SubmissionSummary = {
 }
 
 export function SubmissionsClient() {
-  const [, setSelected] = useState<SubmissionSummary | null>(null)
+  const [selected, setSelected] = useState<SubmissionSummary | null>(null)
+  const [search, setSearch] = useState('')
+  const [filterTimeRange, setFilterTimeRange] = useState<SubmissionListFilterTimeRange>('all')
+  const [filterLocation, setFilterLocation] = useState('')
   const [chartOpen, setChartOpen] = useState<SubmissionsChartVariant | null>(null)
 
   const toggleChart = (variant: SubmissionsChartVariant) => {
@@ -33,11 +38,20 @@ export function SubmissionsClient() {
 
   return (
     <DashboardShell>
-      <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_2.5rem] gap-4 overflow-hidden py-0 md:grid-rows-[minmax(0,1fr)_320px] md:gap-10 md:py-6">
+      <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_3.5rem] gap-4 overflow-hidden py-0 md:grid-rows-[minmax(0,1fr)_320px] md:gap-10 md:py-6">
         <div className="min-h-0 overflow-hidden">
-          <SubmissionsList onSelect={setSelected} />
+          <SubmissionsList
+            onSelect={(item) => setSelected(item)}
+            search={search}
+            onSearchChange={setSearch}
+            filterTimeRange={filterTimeRange}
+            onFilterTimeRangeChange={setFilterTimeRange}
+            filterLocation={filterLocation}
+            onFilterLocationChange={setFilterLocation}
+          />
         </div>
 
+        {/* Bottom row: CTAs on mobile, charts on desktop */}
         <div className="flex h-14 gap-2 md:hidden">
           <Button
             variant={chartOpen === 'time' ? 'pill' : 'ghost-muted'}
@@ -60,10 +74,15 @@ export function SubmissionsClient() {
         </div>
 
         <div className="hidden min-h-0 md:block">
-          <SubmissionsAnalytics />
+          <SubmissionsAnalytics
+            search={search}
+            filterTimeRange={filterTimeRange}
+            filterLocation={filterLocation}
+          />
         </div>
       </div>
 
+      {/* Mobile bottom sheet charts, driven by same filters */}
       <div className="md:hidden">
         <Sheet open={chartOpen !== null} onOpenChange={(open) => !open && setChartOpen(null)}>
           <SheetContent
@@ -71,8 +90,22 @@ export function SubmissionsClient() {
             className="top-auto flex h-[50vh] max-h-[50vh] flex-col border-t border-border bg-background p-0"
           >
             <div className="flex-1 overflow-y-auto p-4">
-              {chartOpen === 'time' && <SubmissionsAnalytics chart="time" />}
-              {chartOpen === 'distribution' && <SubmissionsAnalytics chart="distribution" />}
+              {chartOpen === 'time' && (
+                <SubmissionsAnalytics
+                  chart="time"
+                  search={search}
+                  filterTimeRange={filterTimeRange}
+                  filterLocation={filterLocation}
+                />
+              )}
+              {chartOpen === 'distribution' && (
+                <SubmissionsAnalytics
+                  chart="distribution"
+                  search={search}
+                  filterTimeRange={filterTimeRange}
+                  filterLocation={filterLocation}
+                />
+              )}
             </div>
           </SheetContent>
         </Sheet>

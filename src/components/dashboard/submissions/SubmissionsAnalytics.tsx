@@ -28,9 +28,23 @@ const RANGE_LABEL: Record<RangeKey, string> = {
   '365d': '1J',
 }
 
+type FilterTimeRange = 'all' | '7d' | '30d' | '90d'
+
 export type SubmissionsChartVariant = 'time' | 'distribution' | 'both'
 
-export function SubmissionsAnalytics({ chart = 'both' }: { chart?: SubmissionsChartVariant }) {
+interface SubmissionsAnalyticsProps {
+  chart?: SubmissionsChartVariant
+  search?: string
+  filterTimeRange?: FilterTimeRange
+  filterLocation?: string
+}
+
+export function SubmissionsAnalytics({
+  chart = 'both',
+  search = '',
+  filterTimeRange = 'all',
+  filterLocation = '',
+}: SubmissionsAnalyticsProps = {}) {
   const [range, setRange] = useState<RangeKey>('7d')
   const [data, setData] = useState<AnalyticsResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,8 +56,12 @@ export function SubmissionsAnalytics({ chart = 'both' }: { chart?: SubmissionsCh
       setLoading(true)
       setError(null)
       try {
+        const params = new URLSearchParams({ range })
+        if (search.trim()) params.set('search', search.trim())
+        if (filterTimeRange !== 'all') params.set('filterTimeRange', filterTimeRange)
+        if (filterLocation.trim()) params.set('location', filterLocation.trim())
         const res = await dashboardFetch<AnalyticsResponse>(
-          `/api/dashboard/submissions/analytics?range=${range}`,
+          `/api/dashboard/submissions/analytics?${params.toString()}`,
           { method: 'GET' },
         )
         setData(res)
@@ -55,7 +73,7 @@ export function SubmissionsAnalytics({ chart = 'both' }: { chart?: SubmissionsCh
     }
 
     void load()
-  }, [range])
+  }, [range, search, filterTimeRange, filterLocation])
 
   const aiRate =
     data && data.totalDocs > 0 ? Math.round((data.withAi / data.totalDocs) * 100) : 0

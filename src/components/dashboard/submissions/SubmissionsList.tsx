@@ -53,18 +53,31 @@ const DESIRED_CHANGE_LABEL: Record<string, string> = {
   water_fountain: 'Wasserspender',
 }
 
+type FilterTimeRange = 'all' | '7d' | '30d' | '90d'
+
 interface SubmissionsListProps {
   onSelect: (submission: SubmissionListItem) => void
+  search: string
+  onSearchChange: (v: string) => void
+  filterTimeRange: FilterTimeRange
+  onFilterTimeRangeChange: (v: FilterTimeRange) => void
+  filterLocation: string
+  onFilterLocationChange: (v: string) => void
 }
 
-export function SubmissionsList({ onSelect }: SubmissionsListProps) {
+export function SubmissionsList({
+  onSelect,
+  search,
+  onSearchChange,
+  filterTimeRange,
+  onFilterTimeRangeChange,
+  filterLocation,
+  onFilterLocationChange,
+}: SubmissionsListProps) {
   const [data, setData] = useState<ListResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
-  const [filterTimeRange, setFilterTimeRange] = useState<'all' | '7d' | '30d' | '90d'>('all')
-  const [filterLocation, setFilterLocation] = useState('')
   const [detailId, setDetailId] = useState<string | null>(null)
   const [detailJson, setDetailJson] = useState<any | null>(null)
 
@@ -143,7 +156,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
           <Input
             placeholder="Suche nach ID, PLZ oder Stadt…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             className="h-10 flex-1 rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt md:w-96"
           />
           <Button
@@ -178,7 +191,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       size="tiny"
                       shape="round"
                       className="text-base"
-                      onClick={() => setFilterTimeRange(key)}
+                      onClick={() => onFilterTimeRangeChange(key)}
                     >
                       {key === 'all' ? 'Alle' : key === '7d' ? '7 Tage' : key === '30d' ? '30 Tage' : '90 Tage'}
                     </Button>
@@ -190,7 +203,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                 <Input
                   placeholder="z. B. 50667 oder Köln"
                   value={filterLocation}
-                  onChange={(e) => setFilterLocation(e.target.value)}
+                  onChange={(e) => onFilterLocationChange(e.target.value)}
                   className="h-9 w-48 rounded-lg bg-background text-base"
                 />
               </div>
@@ -201,8 +214,8 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                 shape="round"
                 className="text-base shrink-0"
                 onClick={() => {
-                  setFilterTimeRange('all')
-                  setFilterLocation('')
+                  onFilterTimeRangeChange('all')
+                  onFilterLocationChange('')
                 }}
               >
                 Clear
@@ -284,7 +297,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                           )}
                           <span>{created.toLocaleDateString('de-DE')}</span>
                         </div>
-                        <span className="text-base">
+                        <span className="text-base tabular-nums">
                           {created.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
