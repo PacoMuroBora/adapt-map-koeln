@@ -44,25 +44,24 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     'slug' in refValue &&
     refValue.slug
   const isQuestionnaireRef = type === 'reference' && reference?.relationTo === 'questionnaires'
-  const resolvedHref =
-    disabled === true && label
-      ? '/under-construction'
-      : disabled !== true
-        ? hasSlug
-          ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
-          : isQuestionnaireRef
-            ? `/questionnaire/${(refValue as { name?: string }).name ?? 'current'}`
-            : url
-        : undefined
+  // When disabled, pass no href so Button renders <button disabled> (works natively). No under-construction redirect.
+  const href =
+    disabled !== true
+      ? hasSlug
+        ? `${reference!.relationTo !== 'pages' ? `/${reference!.relationTo}` : ''}/${refValue.slug}`
+        : isQuestionnaireRef
+          ? `/questionnaire/${(refValue as { name?: string }).name ?? 'current'}`
+          : url
+      : undefined
 
-  if (!resolvedHref && !disabled) return null
+  if (!href && !disabled) return null
   if (disabled && !label) return null
 
   return (
     <Button
       className={className}
-      disabled={!resolvedHref ? (disabled ?? false) : false}
-      href={resolvedHref ?? undefined}
+      disabled={disabled ?? false}
+      href={href ?? undefined}
       iconAfter={iconAfter != null && iconAfter !== '' ? iconAfter : undefined}
       iconBefore={iconBefore != null && iconBefore !== '' ? iconBefore : undefined}
       newTab={newTab ?? false}
