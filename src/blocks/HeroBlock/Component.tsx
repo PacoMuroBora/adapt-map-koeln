@@ -5,8 +5,6 @@ import type { HeroBlock as HeroBlockProps } from '@/payload-types'
 import { CMSLink } from '@/components/Link'
 import RichText from '@/components/RichText'
 
-import { Shape03 } from '@/components/CustomShapes/shape03'
-
 const headlineSizeClasses: Record<NonNullable<HeroBlockProps['headlineSize']>, string> = {
   h1: 'text-h1 uppercase',
   h2: 'text-h2 uppercase',
@@ -16,23 +14,27 @@ const headlineSizeClasses: Record<NonNullable<HeroBlockProps['headlineSize']>, s
   h6: 'text-h6 uppercase',
 }
 
-export const HeroBlockComponent: React.FC<HeroBlockProps> = ({
+export const HeroBlockComponent: React.FC<HeroBlockProps & { isLandingLayout?: boolean }> = ({
   headline,
   headlineSize = 'h2',
   headlineTag = 'h1',
   overline,
   richText,
   buttons,
+  isLandingLayout: isLanding = false,
 }) => {
   const size = headlineSize ?? 'h2'
   const tag = headlineTag ?? 'h1'
   const sizeClass = headlineSizeClasses[size]
 
   return (
-    <div className="relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-primary background-grid-primary">
-      <div className="absolute -right-4 -top-10 z-10 w-[min(80vw,80vmin)]">
-        <Shape03 color="#F0FDAF" className="h-auto w-full" />
-      </div>
+    <div
+      className={
+        isLanding
+          ? 'relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-transparent'
+          : 'relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-primary background-grid-primary'
+      }
+    >
       <div className="max-w-[48rem] space-y-2">
         {overline && (
           <p className="text-muted-foreground text-sm font-mono uppercase tracking-wide">

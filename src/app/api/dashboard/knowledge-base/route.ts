@@ -1,39 +1,55 @@
+import { revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
+import { DASHBOARD_CACHE_TAGS, getCachedKnowledgeBaseList } from '@/lib/dashboard-cache'
 import { getPayloadClient } from '@/lib/payload'
 import type { KnowledgeBaseItem } from '@/payload-types'
 
+async function requireEditor(request: Request) {
+  const payload = await getPayloadClient()
+  const authResult = await payload.auth({
+    headers: request.headers,
+  } as PayloadRequest)
+  const user = authResult.user as any
+  if (!user) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  if (user.roles !== 'admin' && user.roles !== 'editor') {
+    return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+  }
+  return { payload }
+}
+
+export async function POST(request: Request) {
+  const auth = await requireEditor(request)
+  if (auth.error) return auth.error
+  const { payload } = auth
+  try {
+    const body = await request.json()
+    const doc = await payload.create({
+      collection: 'knowledge-base-items',
+      data: body,
+      overrideAccess: true,
+    })
+    revalidateTag(DASHBOARD_CACHE_TAGS.kbList)
+    revalidateTag(DASHBOARD_CACHE_TAGS.kbAnalytics)
+    return NextResponse.json({ doc })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message ?? 'Failed to create knowledge base item' },
+      { status: 500 },
+    )
+  }
+}
+
 export async function GET(request: Request) {
+  const auth = await requireEditor(request)
+  if (auth.error) return auth.error
+  const { payload } = auth
   try {
     const url = new URL(request.url)
     const search = (url.searchParams.get('q') ?? '').toLowerCase()
 
-    const payload = await getPayloadClient()
-
-    const authResult = await payload.auth({
-      headers: request.headers,
-    } as PayloadRequest)
-
-    const user = authResult.user as any
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const roles = user.roles
-    if (roles !== 'admin' && roles !== 'editor') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    const result = await payload.find({
-      collection: 'knowledge-base-items',
-      depth: 0,
-      limit: 100,
-      sort: '-createdAt',
-      overrideAccess: true,
-    })
-
+    const result = await getCachedKnowledgeBaseList()
     const docs = result.docs as KnowledgeBaseItem[]
 
     const filtered = docs.filter((doc) => {
@@ -56,7 +72,10 @@ export async function GET(request: Request) {
       solution_type: doc.solution_type,
       status: doc.status,
       location: doc.location,
+      link: doc.link ?? null,
+      categories: doc.categories ?? [],
       lastSynced: doc.embeddingMetadata?.last_synced ?? null,
+      createdAt: (doc as any).createdAt ?? null,
     }))
 
     return NextResponse.json({

@@ -34,18 +34,18 @@ export default function LoginPage() {
   const isBusy = loading || submitting
 
   return (
-    <div className="min-h-screen bg-am-darker text-foreground flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-lg bg-am-dark/80 border border-border p-8 shadow-lg">
-        <div className="mb-6 flex items-center justify-center gap-3">
-          <Logo className="text-am-white" height={20} />
-          <span className="font-headings text-lg font-semibold tracking-[0.18em] uppercase text-am-light">
-            Editor Dashboard
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+      <div className="w-full max-w-md rounded-lg bg-background p-8">
+        <div className="mb-6 flex flex-col items-center justify-center gap-5">
+          <Logo className="text-foreground" height={36} />
+          <span className="font-headings text-lg font-semibold tracking-label uppercase leading-none pb-[1px] text-foreground">
+            Dashboard
           </span>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-foreground-alt">
+            <Label htmlFor="email" className="text-foreground">
               E-Mail
             </Label>
             <Input
@@ -59,7 +59,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-foreground-alt">
+            <Label htmlFor="password" className="text-foreground">
               Passwort
             </Label>
             <Input
@@ -88,4 +88,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

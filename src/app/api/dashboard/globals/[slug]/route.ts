@@ -1,6 +1,8 @@
+import { revalidateTag } from 'next/cache'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
+import { DASHBOARD_CACHE_TAGS, getCachedGlobal } from '@/lib/dashboard-cache'
 import { getPayloadClient } from '@/lib/payload'
 
 type RouteParams = {
@@ -39,11 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const doc = await payload.findGlobal({
-      slug,
-      depth: 0,
-      overrideAccess: true,
-    })
+    const doc = await getCachedGlobal(slug)
 
     return NextResponse.json({ doc })
   } catch (error: any) {
@@ -84,6 +82,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       overrideAccess: true,
     })
 
+    revalidateTag(DASHBOARD_CACHE_TAGS.global(slug))
     return NextResponse.json({ doc: updated })
   } catch (error: any) {
     return NextResponse.json(

@@ -58,6 +58,9 @@ const buttonVariants = cva(
       variant: {
         default:
           'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover',
+        /** Like default but uses outline instead of border to avoid layout shift in pill/toggle groups */
+        pill:
+          'bg-primary text-primary-foreground hover:bg-primary-hover outline outline-2 outline-primary outline-offset-0 active:bg-hover',
         white:
           'bg-white text-white-foreground hover:bg-white/40 border border-white active:bg-primary',
         black:
@@ -81,6 +84,7 @@ const buttonVariants = cva(
 
 export type ButtonVariant =
   | 'default'
+  | 'pill'
   | 'white'
   | 'black'
   | 'outline'

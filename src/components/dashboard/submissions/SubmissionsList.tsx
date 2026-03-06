@@ -5,10 +5,13 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { dashboardFetch } from '@/lib/dashboard-api'
 import { cn } from '@/utilities/ui'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { AnimatePresence, motion } from 'motion/react'
+import { ExternalLink } from 'lucide-react'
 
 type SubmissionListItem = {
   id: string
@@ -50,15 +53,31 @@ const DESIRED_CHANGE_LABEL: Record<string, string> = {
   water_fountain: 'Wasserspender',
 }
 
+type FilterTimeRange = 'all' | '7d' | '30d' | '90d'
+
 interface SubmissionsListProps {
   onSelect: (submission: SubmissionListItem) => void
+  search: string
+  onSearchChange: (v: string) => void
+  filterTimeRange: FilterTimeRange
+  onFilterTimeRangeChange: (v: FilterTimeRange) => void
+  filterLocation: string
+  onFilterLocationChange: (v: string) => void
 }
 
-export function SubmissionsList({ onSelect }: SubmissionsListProps) {
+export function SubmissionsList({
+  onSelect,
+  search,
+  onSearchChange,
+  filterTimeRange,
+  onFilterTimeRangeChange,
+  filterLocation,
+  onFilterLocationChange,
+}: SubmissionsListProps) {
   const [data, setData] = useState<ListResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
+  const [filterOpen, setFilterOpen] = useState(false)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [detailJson, setDetailJson] = useState<any | null>(null)
 
@@ -83,13 +102,29 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
 
   const filtered =
     data?.docs.filter((item) => {
-      if (!search.trim()) return true
-      const term = search.toLowerCase()
-      return (
-        item.id.toLowerCase().includes(term) ||
-        item.postalCode.toLowerCase().includes(term) ||
-        (item.city || '').toLowerCase().includes(term)
-      )
+      const term = search.trim().toLowerCase()
+      if (term) {
+        const matchesSearch =
+          item.id.toLowerCase().includes(term) ||
+          item.postalCode.toLowerCase().includes(term) ||
+          (item.city || '').toLowerCase().includes(term)
+        if (!matchesSearch) return false
+      }
+      if (filterTimeRange !== 'all') {
+        const created = new Date(item.createdAt).getTime()
+        const now = Date.now()
+        const days = filterTimeRange === '7d' ? 7 : filterTimeRange === '30d' ? 30 : 90
+        const cutoff = now - days * 24 * 60 * 60 * 1000
+        if (created < cutoff) return false
+      }
+      if (filterLocation.trim()) {
+        const loc = filterLocation.trim().toLowerCase()
+        const matchesLoc =
+          (item.postalCode || '').toLowerCase().includes(loc) ||
+          (item.city || '').toLowerCase().includes(loc)
+        if (!matchesLoc) return false
+      }
+      return true
     }) ?? []
 
   const openDetail = async (item: SubmissionListItem) => {
@@ -107,13 +142,13 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
   }
 
   return (
-    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow-sm">
+    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-semibold tracking-[0.16em] uppercase">
+          <CardTitle className="text-xl font-semibold tracking-title uppercase">
             Submissions
           </CardTitle>
-          <p className="text-sm text-foreground-alt">
+          <p className="text-base text-foreground-alt">
             {data ? `${data.totalDocs} Einträge gesamt` : 'Lade Übersicht…'}
           </p>
         </div>
@@ -121,18 +156,75 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
           <Input
             placeholder="Suche nach ID, PLZ oder Stadt…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-10 w-64 rounded-full bg-secondary text-sm text-foreground placeholder:text-foreground-alt"
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="h-10 w-96 rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt"
           />
-          <Button variant="ghost-muted" size="mini" shape="round" className="text-sm">
+          <Button
+            variant={filterOpen ? 'pill' : 'ghost-muted'}
+            size="mini"
+            shape="round"
+            className="text-base"
+            onClick={() => setFilterOpen((o) => !o)}
+          >
             Filter
-          </Button>
-          <Button variant="ghost-muted" size="mini" shape="round" className="text-sm">
-            Anzeige
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0 overflow-hidden p-0">
+      <AnimatePresence initial={false}>
+        {filterOpen && (
+          <motion.div
+            key="filter"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="flex-shrink-0 overflow-hidden border-t border-border/50 bg-secondary/30"
+          >
+            <div className="flex flex-wrap items-end gap-4 px-4 py-3">
+              <div className="space-y-1">
+                <Label className="text-base text-foreground-alt">Zeitraum</Label>
+                <div className="flex gap-1">
+                  {(['all', '7d', '30d', '90d'] as const).map((key) => (
+                    <Button
+                      key={key}
+                      variant={filterTimeRange === key ? 'pill' : 'ghost-muted'}
+                      size="tiny"
+                      shape="round"
+                      className="text-base"
+                      onClick={() => onFilterTimeRangeChange(key)}
+                    >
+                      {key === 'all' ? 'Alle' : key === '7d' ? '7 Tage' : key === '30d' ? '30 Tage' : '90 Tage'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-base text-foreground-alt">Ort (PLZ / Stadt)</Label>
+                <Input
+                  placeholder="z. B. 50667 oder Köln"
+                  value={filterLocation}
+                  onChange={(e) => onFilterLocationChange(e.target.value)}
+                  className="h-9 w-48 rounded-lg bg-background text-base"
+                />
+              </div>
+              <div className="flex-1 min-w-4" aria-hidden />
+              <Button
+                variant="ghost-muted"
+                size="mini"
+                shape="round"
+                className="text-base shrink-0"
+                onClick={() => {
+                  onFilterTimeRangeChange('all')
+                  onFilterLocationChange('')
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 pt-0 pb-6">
         {loading && (
           <div className="flex h-full flex-col gap-3 p-4">
             <Skeleton className="h-10 w-full bg-secondary" />
@@ -141,13 +233,13 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
           </div>
         )}
         {error && !loading && (
-          <div className="flex h-full items-center justify-center p-4 text-sm text-destructive">
+          <div className="flex h-full items-center justify-center p-4 text-base text-destructive">
             {error}
           </div>
         )}
         {!loading && !error && (
-          <div className="h-full overflow-y-auto p-2">
-            <ul className="space-y-1">
+          <div className="h-full overflow-y-auto px-6 py-2">
+            <ul className="space-y-2">
               {filtered.map((item) => {
                 const created = new Date(item.createdAt)
                 const hasAi = Boolean(item.aiGeneratedAt)
@@ -157,30 +249,25 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       type="button"
                       onClick={() => openDetail(item)}
                       className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-left text-sm transition-colors',
-                        'hover:bg-secondary/60',
+                        'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-left text-base transition-colors',
+                        'hover:bg-secondary/30',
                       )}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="truncate font-medium text-foreground">
+                        <div className="flex items-end gap-2">
+                          <span className="truncate text-lg font-medium text-foreground leading-tight">
                             {item.city || 'Ohne Ort'}
                           </span>
-                          {hasAi && (
-                            <span className="rounded-full bg-am-green/30 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-am-darker">
-                              KI-Empfehlung
-                            </span>
-                          )}
                           {item.street && (
-                            <span className="truncate text-sm text-foreground-alt">
+                            <span className="truncate text-base text-foreground-alt leading-tight">
                               {item.street}
                             </span>
                           )}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-foreground-alt">
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-base text-foreground-alt">
                           <span>
                             Problemindex:{' '}
-                            <span className="inline-flex items-center rounded-full bg-am-green/40 px-2 py-0.5 text-xs font-semibold text-am-darker">
+                            <span className="inline-flex items-center rounded-full bg-am-green/40 px-2 py-0.5 text-base text-foreground">
                               {Number.isFinite(item.problemIndex)
                                 ? Math.round(item.problemIndex)
                                 : item.problemIndex}
@@ -196,9 +283,16 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end text-sm text-foreground-alt">
-                        <span>{created.toLocaleDateString('de-DE')}</span>
-                        <span className="text-xs">
+                      <div className="flex flex-col items-end gap-0 text-foreground-alt">
+                        <div className="flex flex-row flex-nowrap items-center gap-2">
+                          {hasAi && (
+                            <span className="shrink-0 rounded-full bg-am-green/30 px-2 py-0.5 text-sm font-semibold uppercase tracking-label text-am-darker">
+                              KI-Empfehlung
+                            </span>
+                          )}
+                          <span className="text-base">{created.toLocaleDateString('de-DE')}</span>
+                        </div>
+                        <span className="text-sm tabular-nums">
                           {created.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -207,7 +301,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                 )
               })}
               {filtered.length === 0 && (
-                <li className="flex h-32 items-center justify-center text-sm text-foreground-alt">
+                <li className="flex h-32 items-center justify-center text-base text-foreground-alt">
                   Keine Submissions für den aktuellen Filter.
                 </li>
               )}
@@ -219,18 +313,18 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
       <Sheet open={detailId != null} onOpenChange={(open) => !open && setDetailId(null)}>
         <SheetContent side="right" className="w-full max-w-4xl bg-card text-foreground">
           <SheetHeader>
-            <SheetTitle className="text-base uppercase tracking-[0.18em]">
+            <SheetTitle className="text-xl uppercase tracking-label">
               Submission&nbsp;#{detailId?.slice(-6)}
             </SheetTitle>
           </SheetHeader>
-          <div className="mt-4 max-h-[calc(100vh-7rem)] overflow-y-auto text-sm">
+          <div className="mt-4 max-h-[calc(100vh-7rem)] overflow-y-auto text-base">
             {detailJson ? (
               <div className="space-y-4">
                 {/* Kernmetriken */}
                 <div className="rounded-2xl bg-background p-4">
                   <div className="flex items-baseline justify-between gap-4">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
+                      <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
                         Problemindex
                       </p>
                       <p className="mt-2 inline-flex items-baseline rounded-2xl bg-am-green/40 px-3 py-1 text-3xl font-semibold text-am-darker">
@@ -239,7 +333,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                           : detailJson.problem_index ?? '–'}
                       </p>
                     </div>
-                    <div className="space-y-1 text-right text-xs text-foreground-alt">
+                    <div className="space-y-1 text-right text-base text-foreground-alt">
                       <p>
                         Erstellt:&nbsp;
                         <span className="font-medium text-foreground">
@@ -256,18 +350,18 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-foreground-alt">
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-base text-foreground-alt">
                     <div className="space-y-1">
-                      <p className="uppercase tracking-[0.18em]">Hitze-Intensität</p>
-                      <p className="text-sm text-foreground">
+                      <p className="uppercase tracking-label">Hitze-Intensität</p>
+                      <p className="text-base text-foreground">
                         {typeof detailJson.heatIntensity === 'number'
                           ? `${detailJson.heatIntensity} / 9`
                           : '–'}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="uppercase tracking-[0.18em]">Hitzetage pro Jahr</p>
-                      <p className="text-sm text-foreground">
+                      <p className="uppercase tracking-label">Hitzetage pro Jahr</p>
+                      <p className="text-base text-foreground">
                         {HEAT_FREQUENCY_LABEL[detailJson.heatFrequency] ??
                           detailJson.heatFrequency ??
                           '–'}
@@ -278,10 +372,25 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
 
                 {/* Ort */}
                 <div className="rounded-2xl bg-background p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
-                    Ort
-                  </p>
-                  <div className="mt-2 space-y-1 text-sm">
+                  <div className="flex items-center justify-between">
+                    <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
+                      Ort
+                    </p>
+                    {detailJson.location?.lat != null &&
+                      detailJson.location?.lng != null && (
+                        <a
+                          href={`https://www.google.com/maps?q=${Number(detailJson.location.lat)},${Number(detailJson.location.lng)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground-alt hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                          title="In Google Maps öffnen"
+                          aria-label="In Google Maps öffnen"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                  </div>
+                  <div className="mt-2 space-y-1 text-base">
                     <p className="font-medium">
                       {detailJson.location?.postal_code}{' '}
                       {detailJson.location?.city && (
@@ -292,9 +401,9 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       <p className="text-foreground-alt">{detailJson.location.street}</p>
                     )}
                     {(detailJson.location?.lat || detailJson.location?.lng) && (
-                      <p className="text-xs text-foreground-alt">
+                      <p className="text-base text-foreground-alt">
                         Koordinaten:{' '}
-                        <span className="font-mono text-[11px] text-foreground">
+                        <span className="font-mono text-sm text-foreground">
                           {detailJson.location?.lat?.toFixed
                             ? detailJson.location.lat.toFixed(5)
                             : detailJson.location?.lat}{' '}
@@ -310,13 +419,13 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
 
                 {/* Wohnsituation & Person */}
                 <div className="rounded-2xl bg-background p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
+                  <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
                     Kontext
                   </p>
-                  <div className="mt-2 grid grid-cols-2 gap-3 text-xs text-foreground-alt">
+                  <div className="mt-2 grid grid-cols-2 gap-3 text-base text-foreground-alt">
                     <div className="space-y-1">
-                      <p className="uppercase tracking-[0.18em]">Wohnsituation</p>
-                      <p className="text-sm text-foreground">
+                      <p className="uppercase tracking-label">Wohnsituation</p>
+                      <p className="text-base text-foreground">
                         {detailJson.livingSituation?.housingType === 'apartment'
                           ? 'Wohnung'
                           : detailJson.livingSituation?.housingType === 'house'
@@ -351,8 +460,8 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       )}
                     </div>
                     <div className="space-y-1">
-                      <p className="uppercase tracking-[0.18em]">Person</p>
-                      <p className="text-sm text-foreground">
+                      <p className="uppercase tracking-label">Person</p>
+                      <p className="text-base text-foreground">
                         {detailJson.personalFields?.age
                           ? `Alter: ${detailJson.personalFields.age}`
                           : 'Kein Alter angegeben'}
@@ -371,10 +480,10 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
 
                 {/* Klimaanpassung */}
                 <div className="rounded-2xl bg-background p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
+                  <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
                     Wissen zu Klimaanpassung
                   </p>
-                  <div className="mt-2 space-y-1 text-sm">
+                  <div className="mt-2 space-y-1 text-base">
                     <p>
                       Begriff bekannt:{' '}
                       <span className="font-medium">
@@ -391,7 +500,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
 
                 {/* Wünsche & Beschreibung */}
                 <div className="rounded-2xl bg-background p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
+                  <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
                     Wünsche
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -402,24 +511,24 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                         return (
                           <span
                             key={`${key}-${idx}`}
-                            className="rounded-full bg-secondary/60 px-3 py-1 text-xs font-medium text-foreground"
+                            className="rounded-full bg-secondary/60 px-3 py-1 text-base font-medium text-foreground"
                           >
                             {label}
                           </span>
                         )
                       })
                     ) : (
-                      <span className="text-sm text-foreground-alt">
+                      <span className="text-base text-foreground-alt">
                         Keine expliziten Wünsche ausgewählt.
                       </span>
                     )}
                   </div>
                   {detailJson.user_text && (
                     <div className="mt-4 space-y-1">
-                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
+                      <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
                         Freitext
                       </p>
-                      <p className="whitespace-pre-line text-sm text-foreground">
+                      <p className="whitespace-pre-line text-base text-foreground">
                         {detailJson.user_text}
                       </p>
                     </div>
@@ -431,17 +540,17 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                   (Array.isArray(detailJson.aiFields?.ai_referenced_kb_ids) &&
                     detailJson.aiFields.ai_referenced_kb_ids.length > 0)) && (
                   <div className="rounded-2xl bg-background p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground-alt">
+                    <p className="text-base font-medium uppercase tracking-label text-foreground-alt">
                       KI-Empfehlungen
                     </p>
                     {detailJson.aiFields?.ai_summary_de && (
-                      <p className="mt-2 whitespace-pre-line text-sm text-foreground">
+                      <p className="mt-2 whitespace-pre-line text-base text-foreground">
                         {detailJson.aiFields.ai_summary_de}
                       </p>
                     )}
                     {Array.isArray(detailJson.aiFields?.ai_referenced_kb_ids) &&
                       detailJson.aiFields.ai_referenced_kb_ids.length > 0 && (
-                        <div className="mt-3 space-y-1 text-xs">
+                        <div className="mt-3 space-y-1 text-base">
                           <p className="text-foreground-alt">
                             Verknüpfte Knowledge-Base-Items (IDs aus RAG):
                           </p>
@@ -450,7 +559,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                               (entry: any, idx: number) => (
                                 <span
                                   key={`${entry?.kb_id ?? idx}`}
-                                  className="rounded-full bg-secondary/60 px-2 py-0.5 font-mono text-[11px] text-foreground"
+                                  className="rounded-full bg-secondary/60 px-2 py-0.5 font-mono text-sm text-foreground"
                                 >
                                   {entry?.kb_id ?? 'Unbekannt'}
                                 </span>

@@ -211,30 +211,37 @@ export default function QuestionClient({
       setQuestionnaireError(null)
       const mergedAnswers = mergedAnswersOverride ?? { ...state.answers, ...stepAnswers }
       const locationAnswer = mergedAnswers.location || {}
+      const mergedUniverse = { ...state.answers, ...mergedAnswers }
+      const isAddressLike = (
+        value: unknown,
+      ): value is { street?: string; housenumber?: string; postal_code?: string; city?: string } =>
+        Boolean(
+          value &&
+            typeof value === 'object' &&
+            ('street' in value || 'housenumber' in value || 'postal_code' in value || 'city' in value),
+        )
+      const findAddressLike = (
+        source: unknown,
+      ): { street?: string; housenumber?: string; postal_code?: string; city?: string } | null => {
+        if (!source || typeof source !== 'object') return null
+        if (isAddressLike(source)) return source
+        for (const nested of Object.values(source as Record<string, unknown>)) {
+          const match = findAddressLike(nested)
+          if (match) return match
+        }
+        return null
+      }
 
-      // Resolve address object: may be under "location" or under the address question's key (only known on address step)
+      // Resolve address object from explicit location answer, top-level answers, or nested group answers.
       const addressData =
-        typeof locationAnswer === 'object' && locationAnswer !== null && 'street' in locationAnswer
-          ? locationAnswer
-          : (() => {
-              for (const v of Object.values(mergedAnswers)) {
-                if (
-                  v &&
-                  typeof v === 'object' &&
-                  'street' in v &&
-                  (typeof (v as any).postal_code === 'string' ||
-                    typeof (v as any).city === 'string')
-                ) {
-                  return v as {
-                    street?: string
-                    housenumber?: string
-                    postal_code?: string
-                    city?: string
-                  }
-                }
-              }
-              return null
-            })()
+        (isAddressLike(locationAnswer) ? locationAnswer : null) ??
+        findAddressLike(mergedUniverse) ??
+        null
+
+      const addressStreet = String(addressData?.street ?? '').trim()
+      const addressHouseNumber = String(addressData?.housenumber ?? '').trim()
+      const addressPostalCode = String(addressData?.postal_code ?? '').trim()
+      const addressCity = String(addressData?.city ?? '').trim()
 
       let mergedLocation: {
         lat: number
@@ -243,53 +250,54 @@ export default function QuestionClient({
         city?: string
         street?: string
       } | null = state.location
-        ? {
+        ? state.location.postal_code
+          ? {
             lat: state.location.lat,
             lng: state.location.lng,
-            postal_code: state.location.postal_code!,
-            city: state.location.city || (addressData?.city as string | undefined) || undefined,
+            postal_code: addressPostalCode || state.location.postal_code,
+            city: addressCity || state.location.city || undefined,
             street:
-              (addressData?.street as string | undefined) ||
+              [addressStreet, addressHouseNumber].filter(Boolean).join(' ').trim() ||
               (state.location.street && state.location.housenumber
                 ? `${state.location.street} ${state.location.housenumber}`.trim()
                 : state.location.street) ||
               undefined,
           }
+          : null
         : null
 
-      if (!mergedLocation && addressData) {
-        const street = addressData.street ?? ''
-        const housenumber = addressData.housenumber ?? ''
-        const postal_code = addressData.postal_code ?? ''
-        const city = addressData.city ?? ''
-        if (street?.trim() && (postal_code?.trim() || city?.trim())) {
-          try {
-            const geocodeRes = await fetch('/api/geocode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                street: street.trim(),
-                housenumber: (housenumber ?? '').trim() || undefined,
-                postalcode: (postal_code ?? '').trim() || undefined,
-                city: (city ?? '').trim() || undefined,
-              }),
-            })
-            if (geocodeRes.ok) {
-              const data = await geocodeRes.json()
-              const pc = data.postal_code ?? postal_code ?? ''
-              if (pc) {
-                mergedLocation = {
-                  lat: data.lat,
-                  lng: data.lng,
-                  postal_code: pc,
-                  city: data.city ?? city ?? undefined,
-                  street: [street, housenumber].filter(Boolean).join(' ').trim() || data.address,
-                }
+      const shouldGeocodeAddress =
+        addressStreet.length > 0 && (addressPostalCode.length > 0 || addressCity.length > 0)
+
+      if ((!mergedLocation || shouldGeocodeAddress) && shouldGeocodeAddress) {
+        try {
+          const geocodeRes = await fetch('/api/geocode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              street: addressStreet,
+              housenumber: addressHouseNumber || undefined,
+              postalcode: addressPostalCode || undefined,
+              city: addressCity || undefined,
+            }),
+          })
+          if (geocodeRes.ok) {
+            const data = await geocodeRes.json()
+            const pc = data.postal_code ?? addressPostalCode ?? ''
+            if (pc) {
+              mergedLocation = {
+                lat: data.lat,
+                lng: data.lng,
+                postal_code: pc,
+                city: data.city ?? (addressCity || undefined),
+                street:
+                  [addressStreet, addressHouseNumber].filter(Boolean).join(' ').trim() ||
+                  data.address,
               }
             }
-          } catch {
-            // leave mergedLocation null so we throw Standort fehlt below
           }
+        } catch {
+          // keep best-effort mergedLocation and let mandatory postal code validation fail if needed
         }
       }
 

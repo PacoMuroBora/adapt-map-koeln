@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
+import { getCachedSubmissionById } from '@/lib/dashboard-cache'
 import { getPayloadClient } from '@/lib/payload'
 import type { Submission } from '@/payload-types'
 
@@ -31,12 +32,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const doc = (await payload.findByID({
-      collection: 'submissions',
-      id,
-      depth: 0,
-      overrideAccess: true,
-    })) as Submission
+    const doc = (await getCachedSubmissionById(id)) as Submission
 
     return NextResponse.json({ doc })
   } catch (error: any) {

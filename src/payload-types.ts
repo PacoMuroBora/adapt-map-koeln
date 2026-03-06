@@ -2636,65 +2636,6 @@ export interface SiteSetting {
    */
   keywords?: string | null;
   /**
-   * Legal content pages (Impressum, Privacy Policy, Terms & Conditions)
-   */
-  legalContent: {
-    /**
-     * Impressum / Legal notice
-     */
-    impressum: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    };
-    /**
-     * Privacy policy / Datenschutzerklärung
-     */
-    privacyPolicy: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    };
-    /**
-     * Terms and conditions / AGB
-     */
-    termsAndConditions: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    };
-  };
-  /**
    * Cookie consent banner configuration
    */
   cookieBanner: {
@@ -2729,36 +2670,11 @@ export interface SiteSetting {
 export interface UiCopy {
   id: string;
   /**
-   * Landing page text
-   */
-  landingPage: {
-    title: string;
-    description?: string | null;
-    ctaButton?: string | null;
-  };
-  /**
-   * Consent screen text
-   */
-  consent: {
-    title: string;
-    message: string;
-    acceptButton?: string | null;
-    declineButton?: string | null;
-  };
-  /**
-   * Questionnaire flow text
+   * Questionnaire flow button labels (used in questionnaire steps).
    */
   questionnaire?: {
     nextButton?: string | null;
     previousButton?: string | null;
-    submitButton?: string | null;
-  };
-  /**
-   * Results page text
-   */
-  results?: {
-    title?: string | null;
-    aiRecommendationCta?: string | null;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2874,13 +2790,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   ogImage?: T;
   twitterHandle?: T;
   keywords?: T;
-  legalContent?:
-    | T
-    | {
-        impressum?: T;
-        privacyPolicy?: T;
-        termsAndConditions?: T;
-      };
   cookieBanner?:
     | T
     | {
@@ -2899,33 +2808,11 @@ export interface SiteSettingsSelect<T extends boolean = true> {
  * via the `definition` "ui-copy_select".
  */
 export interface UiCopySelect<T extends boolean = true> {
-  landingPage?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        ctaButton?: T;
-      };
-  consent?:
-    | T
-    | {
-        title?: T;
-        message?: T;
-        acceptButton?: T;
-        declineButton?: T;
-      };
   questionnaire?:
     | T
     | {
         nextButton?: T;
         previousButton?: T;
-        submitButton?: T;
-      };
-  results?:
-    | T
-    | {
-        title?: T;
-        aiRecommendationCta?: T;
       };
   updatedAt?: T;
   createdAt?: T;

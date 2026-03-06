@@ -9,10 +9,16 @@ export const Media: React.FC<Props> = (props) => {
   const { className, htmlElement = 'div', resource } = props
 
   const isVideo = typeof resource === 'object' && resource?.mimeType?.includes('video')
-  const Tag = htmlElement || Fragment
+  const Tag: React.ElementType | null = htmlElement || Fragment
+
+  if (Tag === null) {
+    return isVideo ? <VideoMedia {...props} /> : <ImageMedia {...props} />
+  }
+
+  const AnyTag = Tag as any
 
   return (
-    <Tag
+    <AnyTag
       {...(htmlElement !== null
         ? {
             className,
@@ -20,6 +26,6 @@ export const Media: React.FC<Props> = (props) => {
         : {})}
     >
       {isVideo ? <VideoMedia {...props} /> : <ImageMedia {...props} />}
-    </Tag>
+    </AnyTag>
   )
 }

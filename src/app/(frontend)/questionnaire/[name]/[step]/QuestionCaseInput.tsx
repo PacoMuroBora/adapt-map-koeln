@@ -226,18 +226,37 @@ export function QuestionCaseInput({
       }
       return (
         <div className="space-y-6">
-          <div className="space-y-1">
-            <Label htmlFor={`${question.key}-street`} className="text-[12px] uppercase">
-              Straße
-            </Label>
-            <AddressSearchInput
-              value={addressAnswer}
-              onChange={setAddress}
-              onError={setError}
-              placeholder="STRASSE SUCHEN"
-              postalCode={postalCodeForFilter}
-              disableHouseNumberSearch
-            />
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor={`${question.key}-street-search`} className="text-[12px] uppercase">
+                Straße suchen
+              </Label>
+              <AddressSearchInput
+                value={addressAnswer}
+                onChange={setAddress}
+                onError={setError}
+                placeholder="STRASSE SUCHEN"
+                postalCode={postalCodeForFilter}
+                disableHouseNumberSearch
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor={`${question.key}-street-manual`} className="text-[12px] uppercase">
+                Straße
+              </Label>
+              <Input
+                id={`${question.key}-street-manual`}
+                type="text"
+                shape="round"
+                size="lg"
+                inputMode="text"
+                autoComplete="street-address"
+                placeholder="z.B. Venloer Straße"
+                value={addressAnswer.street}
+                onChange={(e) => setAddress({ street: e.target.value.trim() })}
+                className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+              />
+            </div>
           </div>
           <div className="space-y-1">
             <Label htmlFor={`${question.key}-housenumber`} className="text-[12px] uppercase">
@@ -245,11 +264,11 @@ export function QuestionCaseInput({
             </Label>
             <Input
               id={`${question.key}-housenumber`}
-              type="number"
+              type="text"
               shape="round"
               size="lg"
               inputMode="text"
-              autoComplete="off"
+              autoComplete="address-line2"
               placeholder="z.B. 12"
               value={addressAnswer.housenumber}
               onChange={(e) => setAddress({ housenumber: e.target.value.trim() || '' })}
@@ -260,25 +279,51 @@ export function QuestionCaseInput({
             <Label htmlFor={`${question.key}-plz`} className="text-[12px] uppercase">
               Postleitzahl
             </Label>
-            <InputOTP
-              length={5}
-              value={addressAnswer.postal_code ?? ''}
-              onChange={(val) => {
-                setAddress({ postal_code: val })
-                if (val.length === 5) {
-                  setError(
-                    isValidColognePlz(val)
-                      ? null
-                      : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
-                  )
-                } else {
-                  setError(null)
-                }
-              }}
-              variant="plz"
-              placeholderChar="0"
-              shape="round"
-            />
+            <div className="relative">
+              {/* Hidden input for browser autofill (postal-code); value syncs into the 5-digit OTP below */}
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={5}
+                tabIndex={-1}
+                aria-hidden
+                className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                value={addressAnswer.postal_code ?? ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 5)
+                  setAddress({ postal_code: digits })
+                  if (digits.length === 5) {
+                    setError(
+                      isValidColognePlz(digits)
+                        ? null
+                        : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
+                    )
+                  } else {
+                    setError(null)
+                  }
+                }}
+              />
+              <InputOTP
+                length={5}
+                value={addressAnswer.postal_code ?? ''}
+                onChange={(val) => {
+                  setAddress({ postal_code: val })
+                  if (val.length === 5) {
+                    setError(
+                      isValidColognePlz(val)
+                        ? null
+                        : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
+                    )
+                  } else {
+                    setError(null)
+                  }
+                }}
+                variant="plz"
+                placeholderChar="0"
+                shape="round"
+              />
+            </div>
           </div>
         </div>
       )
@@ -758,14 +803,42 @@ export function QuestionCaseInput({
                     }
                     return (
                       <div className="space-y-4">
-                        <AddressSearchInput
-                          value={addrAnswer}
-                          onChange={(val) => setAddr(val)}
-                          onError={setError}
-                          placeholder="STRASSE SUCHEN"
-                          postalCode={postalCodeForFilter || undefined}
-                          disableHouseNumberSearch
-                        />
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor={`${question.key}-${subQ.key}-street-search`}
+                              className="text-body-sm uppercase"
+                            >
+                              Straße suchen
+                            </Label>
+                            <AddressSearchInput
+                              value={addrAnswer}
+                              onChange={(val) => setAddr(val)}
+                              onError={setError}
+                              placeholder="STRASSE SUCHEN"
+                              postalCode={postalCodeForFilter || undefined}
+                              disableHouseNumberSearch
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor={`${question.key}-${subQ.key}-street-manual`}
+                              className="text-body-sm uppercase"
+                            >
+                              Straße
+                            </Label>
+                            <Input
+                              id={`${question.key}-${subQ.key}-street-manual`}
+                              type="text"
+                              inputMode="text"
+                              autoComplete="street-address"
+                              placeholder="z.B. Venloer Straße"
+                              value={addrAnswer.street}
+                              onChange={(e) => setAddr({ street: e.target.value.trim() })}
+                              className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+                            />
+                          </div>
+                        </div>
                         <div className="space-y-2">
                           <Label
                             htmlFor={`${question.key}-${subQ.key}-housenumber`}
@@ -777,7 +850,7 @@ export function QuestionCaseInput({
                             id={`${question.key}-${subQ.key}-housenumber`}
                             type="text"
                             inputMode="text"
-                            autoComplete="off"
+                            autoComplete="address-line2"
                             placeholder="z.B. 12"
                             value={addrAnswer.housenumber}
                             onChange={(e) => setAddr({ housenumber: e.target.value.trim() || '' })}

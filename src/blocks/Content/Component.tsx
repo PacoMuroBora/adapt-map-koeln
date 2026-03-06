@@ -16,7 +16,9 @@ const headlineSizeClasses: Record<NonNullable<ContentBlockProps['headlineSize']>
   h6: 'text-h6 uppercase',
 }
 
-export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
+export const ContentBlock: React.FC<ContentBlockProps & { isLandingLayout?: boolean }> = (
+  props,
+) => {
   const {
     columns,
     cardLayout,
@@ -41,7 +43,8 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
     <div className={cn('w-full my-20', { 'p-4 md:p-8 lg:p-16': cardLayout })}>
       <div
         className={cn('w-full', {
-          'relative bg-am-purple rounded-2xl overflow-hidden': cardLayout,
+          'relative rounded-2xl overflow-hidden': cardLayout,
+          'bg-am-purple': cardLayout,
         })}
       >
         {cardLayout && (
