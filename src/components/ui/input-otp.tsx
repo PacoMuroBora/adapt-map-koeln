@@ -192,7 +192,7 @@ const InputOTP = React.forwardRef<HTMLDivElement, InputOTPProps>(
               aria-label={`OTP digit ${index + 1}`}
             />
             {separator && separatorPosition !== undefined && index === separatorPosition - 1 && (
-              <span className="text-foreground font-medium">{separator}</span>
+              <span className="text-foreground">{separator}</span>
             )}
           </React.Fragment>
         ))}
