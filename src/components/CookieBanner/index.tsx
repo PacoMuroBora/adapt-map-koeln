@@ -52,7 +52,7 @@ export function CookieBanner({ cookieBanner }: CookieBannerProps) {
       aria-labelledby="cookie-banner-title"
       aria-describedby="cookie-banner-description"
     >
-      <Card className="mx-auto max-w-4xl border shadow-lg">
+      <Card variant="black" className="max-w-[1440px] shadow-lg">
         <div className="p-4 sm:p-6">
           <h3 id="cookie-banner-title" className="mb-2 text-lg font-semibold">
             {cookieBanner.title}
@@ -67,14 +67,14 @@ export function CookieBanner({ cookieBanner }: CookieBannerProps) {
               </Button>
               <Button
                 onClick={acceptNecessary}
-                variant="outline"
+                variant="outline-white"
                 size="sm"
                 className="w-full sm:w-auto"
               >
                 {cookieBanner.acceptNecessaryText}
               </Button>
             </div>
-            <LinkButton href="/privacy" size="sm" shape="round">
+            <LinkButton href="/privacy" size="sm" shape="round" variant="white">
               {cookieBanner.privacyLinkText}
             </LinkButton>
           </div>

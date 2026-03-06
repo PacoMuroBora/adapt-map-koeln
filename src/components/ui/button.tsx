@@ -39,7 +39,7 @@ const buttonIconMap: Record<
 }
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none [&.hover-label-disabled]:pointer-events-auto',
   {
     defaultVariants: {
       size: 'default',
@@ -59,8 +59,7 @@ const buttonVariants = cva(
         default:
           'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover',
         /** Like default but uses outline instead of border to avoid layout shift in pill/toggle groups */
-        pill:
-          'bg-primary text-primary-foreground hover:bg-primary-hover outline outline-2 outline-primary outline-offset-0 active:bg-hover',
+        pill: 'bg-primary text-primary-foreground hover:bg-primary-hover outline outline-2 outline-primary outline-offset-0 active:bg-hover',
         white:
           'bg-white text-white-foreground hover:bg-white/40 border border-white active:bg-primary',
         black:
@@ -109,6 +108,8 @@ export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonE
   iconBefore?: LinkIconOption | null
   /** Icon after the text (Payload link icon option). When size is "lg", wrapped in a bordered div. */
   iconAfter?: LinkIconOption | null
+  /** When set and button is disabled, hover slides the label up and reveals this text (e.g. "verfügbar ab 9.3."). */
+  disabledHoverLabel?: string | null
 }
 
 const iconSlotClasses = (shape: 'default' | 'round') =>
@@ -125,6 +126,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size,
       shape,
       asChild = false,
+      disabledHoverLabel,
       href,
       newTab,
       iconBefore,
@@ -152,11 +154,27 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const hasText = React.Children.count(children) > 0
     const hasIcon = iconBeforeSlot !== null || iconAfterSlot !== null
     const isIconOnly = !hasText && hasIcon && !(iconBefore && iconAfter)
+    const showDisabledHover =
+      props.disabled && disabledHoverLabel && typeof disabledHoverLabel === 'string'
+    const labelContent = showDisabledHover ? (
+      <span className="inline-block h-[1.2em] overflow-hidden leading-tight">
+        <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
+          <span className="flex h-[1.2em] min-h-[1.2em] items-center justify-center">
+            {children}
+          </span>
+          <span className="flex h-[1.2em] min-h-[1.2em] items-center justify-center">
+            {disabledHoverLabel}
+          </span>
+        </span>
+      </span>
+    ) : (
+      children
+    )
     const content = (
       <>
         {iconBeforeSlot}
         <span className={cn('flex items-center justify-center', isLarge && 'px-2')}>
-          {children}
+          {labelContent}
         </span>
         {iconAfterSlot}
       </>
@@ -165,13 +183,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       buttonVariants({ variant, size, shape, className }),
       hasIcon && hasText && 'gap-2',
       isIconOnly && 'aspect-square p-0',
+      showDisabledHover && 'group hover-label-disabled !pointer-events-auto',
     )
 
-    // Render as Link when href is provided
+    // Render as Link when href is provided; pass disabled onto anchor so [&[disabled]] styles apply
     if (href) {
       const linkProps = newTab ? { target: '_blank' as const, rel: 'noopener noreferrer' } : {}
       return (
-        <Link href={href} className={classes} {...linkProps}>
+        <Link
+          href={href}
+          className={classes}
+          {...(props.disabled && { disabled: true })}
+          {...linkProps}
+        >
           {content}
         </Link>
       )
