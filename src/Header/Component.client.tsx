@@ -139,9 +139,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
               ? HEADER_HEIGHT.desktop.scrolled
               : HEADER_HEIGHT.desktop.default,
           backgroundColor: scrolled ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0)',
-          backdropFilter: scrolled ? 'blur(16px)' : 'blur(0px)',
-          borderColor: scrolled ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0)',
-          borderWidth: scrolled ? 1 : 0,
+          backdropFilter: scrolled ? 'blur(8px)' : 'blur(0px)',
           boxShadow: scrolled ? '0 2px 12px rgba(0, 0, 0, 0.1)' : '0 0 0 rgba(0, 0, 0, 0)',
         }}
         transition={tweenTransition}

@@ -254,6 +254,8 @@ export function HeatmapMap({
     }
   }, [userLocation])
 
+  const LAYER_ID = 'grid-tile-layer'
+
   const setupLayer = useCallback(() => {
     if (!mapRef.current || !gridData) return
     const map = mapRef.current.getMap() as MapLibreMap
@@ -261,8 +263,9 @@ export function HeatmapMap({
       if (map.getLayer(layerRef.current.id)) map.removeLayer(layerRef.current.id)
       layerRef.current = null
     }
+    if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID)
     const layer = new GridTileLayer({
-      id: 'grid-tile-layer',
+      id: LAYER_ID,
       data: gridData,
       tileSizeMeters,
       opacity: tileOpacity,
