@@ -117,7 +117,7 @@ export function HeatmapMap({
     zoom: userLocation ? 10 : DEFAULT_CENTER.zoom,
   })
   const [tileSizeMeters, setTileSizeMeters] = useState(500)
-  const [tileOpacity, setTileOpacity] = useState(0.35)
+  const [tileOpacity, setTileOpacity] = useState(0.42)
   const [gridData, setGridData] = useState<GridData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
