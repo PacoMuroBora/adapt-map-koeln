@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Mic, Loader2 } from 'lucide-react'
 import { cn } from '@/utilities/ui'
 
@@ -33,30 +33,44 @@ export interface AudioTranscribeButtonProps {
 
 /** Odd count so there is a center bar; heights mirrored for horizontal symmetry. */
 const BAR_COUNT = 33
-const WAVEFORM_MAX_WIDTH = 280
 
-function WaveformBars({ className }: { className?: string }) {
-  const half = Math.floor(BAR_COUNT / 2)
-  const symmetricHeights = Array.from({ length: BAR_COUNT }, (_, i) => {
-    const distFromCenter = Math.min(i, BAR_COUNT - 1 - i)
-    return 8 + (distFromCenter % 4) * 4
-  })
+const BAR_CENTER_INDEX = (BAR_COUNT - 1) / 2
+const BAR_INDEXES = Array.from({ length: BAR_COUNT }, (_, i) => i)
+
+function WaveformBars({
+  className,
+  level,
+  phase,
+}: {
+  className?: string
+  level: number
+  phase: number
+}) {
+  const dynamicHeights = useMemo(() => {
+    return BAR_INDEXES.map((index) => {
+      const distFromCenter = Math.abs(index - BAR_CENTER_INDEX)
+      const normalizedDistance = distFromCenter / BAR_CENTER_INDEX
+      const centerWeight = Math.pow(1 - normalizedDistance, 1.45)
+      const edgeDampen = 0.45 + centerWeight * 0.55
+
+      // Keep a subtle animated wave even at low input volume.
+      const wave = (Math.sin(phase + index * 0.47) + 1) / 2
+      const oscillation = wave * (4 + centerWeight * 14) * (0.45 + level * 0.9)
+      const volumeBoost = level * (8 + centerWeight * 28)
+      const baseHeight = 7 + centerWeight * 7
+
+      const rawHeight = (baseHeight + oscillation + volumeBoost) * edgeDampen
+      return Math.min(56, Math.max(6, rawHeight))
+    })
+  }, [level, phase])
+
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center gap-0.5',
-        className,
-      )}
-      aria-hidden
-    >
-      {symmetricHeights.map((heightPx, i) => (
+    <div className={cn('flex items-center justify-center gap-0.5', className)} aria-hidden>
+      {dynamicHeights.map((heightPx, i) => (
         <div
           key={i}
-          className="w-0.5 min-h-[6px] max-h-6 rounded-full bg-foreground/60 animate-waveform origin-center"
-          style={{
-            animationDelay: `${(i % (half + 1)) * 0.04}s`,
-            height: `${heightPx}px`,
-          }}
+          className="w-1 min-h-[6px] max-h-14 rounded-full bg-foreground/60 transition-[height] duration-75 ease-out origin-center"
+          style={{ height: `${heightPx}px` }}
         />
       ))}
     </div>
@@ -71,8 +85,16 @@ export function AudioTranscribeButton({
 }: AudioTranscribeButtonProps) {
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [waveLevel, setWaveLevel] = useState(0)
+  const [wavePhase, setWavePhase] = useState(0)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const rafRef = useRef<number | null>(null)
+  const lastFrameUpdateRef = useRef(0)
+  const smoothedLevelRef = useRef(0)
 
   const isRecording = status === 'recording'
   const isProcessing = status === 'processing'
@@ -82,11 +104,89 @@ export function AudioTranscribeButton({
     stream.getTracks().forEach((t) => t.stop())
   }, [])
 
+  const stopAudioAnalysis = useCallback(() => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.disconnect()
+      sourceNodeRef.current = null
+    }
+
+    analyserRef.current = null
+
+    if (audioContextRef.current) {
+      void audioContextRef.current.close()
+      audioContextRef.current = null
+    }
+
+    smoothedLevelRef.current = 0
+    lastFrameUpdateRef.current = 0
+    setWaveLevel(0)
+    setWavePhase(0)
+  }, [])
+
+  const startAudioAnalysis = useCallback(async (stream: MediaStream) => {
+    const Ctx =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!Ctx) return
+
+    const audioContext = new Ctx()
+    const source = audioContext.createMediaStreamSource(stream)
+    const analyser = audioContext.createAnalyser()
+    analyser.fftSize = 1024
+    analyser.smoothingTimeConstant = 0.8
+    source.connect(analyser)
+
+    audioContextRef.current = audioContext
+    sourceNodeRef.current = source
+    analyserRef.current = analyser
+
+    const data = new Uint8Array(analyser.fftSize)
+
+    const tick = (now: number) => {
+      const currentAnalyser = analyserRef.current
+      if (!currentAnalyser) return
+
+      currentAnalyser.getByteTimeDomainData(data)
+
+      let sumSquares = 0
+      for (let i = 0; i < data.length; i++) {
+        const normalized = (data[i] - 128) / 128
+        sumSquares += normalized * normalized
+      }
+
+      const rms = Math.sqrt(sumSquares / data.length)
+      smoothedLevelRef.current = smoothedLevelRef.current * 0.82 + rms * 0.18
+
+      // Keep updates around 20fps to avoid excessive rerenders.
+      if (now - lastFrameUpdateRef.current > 50) {
+        lastFrameUpdateRef.current = now
+        setWaveLevel(Math.min(1, smoothedLevelRef.current * 5))
+        setWavePhase(now * 0.018)
+      }
+
+      rafRef.current = requestAnimationFrame(tick)
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      stopAudioAnalysis()
+    }
+  }, [stopAudioAnalysis])
+
   const handleToggle = useCallback(async () => {
     if (disabled) return
     setError(null)
 
     if (isRecording) {
+      stopAudioAnalysis()
       const mr = mediaRecorderRef.current
       if (mr && mr.state !== 'inactive') {
         mr.stop()
@@ -103,12 +203,14 @@ export function AudioTranscribeButton({
         const mediaRecorder = new MediaRecorder(stream, { mimeType })
         mediaRecorderRef.current = mediaRecorder
         chunksRef.current = []
+        await startAudioAnalysis(stream)
 
         mediaRecorder.ondataavailable = (e) => {
           if (e.data.size > 0) chunksRef.current.push(e.data)
         }
 
         mediaRecorder.onstop = async () => {
+          stopAudioAnalysis()
           stopTracks(stream)
           mediaRecorderRef.current = null
           const blob = new Blob(chunksRef.current, { type: mimeType })
@@ -135,21 +237,17 @@ export function AudioTranscribeButton({
             }
 
             const data = await res.json()
-            const transcript =
-              typeof data?.transcript === 'string'
-                ? data.transcript.trim()
-                : ''
+            const transcript = typeof data?.transcript === 'string' ? data.transcript.trim() : ''
             if (transcript) onTranscript(transcript)
           } catch (err) {
-            setError(
-              err instanceof Error ? err.message : 'Transkription fehlgeschlagen',
-            )
+            setError(err instanceof Error ? err.message : 'Transkription fehlgeschlagen')
           } finally {
             setStatus('idle')
           }
         }
 
         mediaRecorder.onerror = () => {
+          stopAudioAnalysis()
           stopTracks(stream)
           setError('Aufnahme fehlgeschlagen')
           setStatus('idle')
@@ -158,6 +256,7 @@ export function AudioTranscribeButton({
         mediaRecorder.start()
         setStatus('recording')
       } catch (err) {
+        stopAudioAnalysis()
         setError(
           err instanceof Error
             ? err.message
@@ -165,24 +264,26 @@ export function AudioTranscribeButton({
         )
       }
     }
-  }, [disabled, isRecording, status, onTranscript, stopTracks])
+  }, [
+    disabled,
+    isRecording,
+    status,
+    onTranscript,
+    stopTracks,
+    startAudioAnalysis,
+    stopAudioAnalysis,
+  ])
 
   return (
-    <div
-      className={cn(
-        'flex flex-col items-center gap-4 pb-8',
-        className,
-      )}
-    >
+    <div className={cn('flex flex-col items-center gap-4 pb-8', className)}>
       {/* Fixed-height slot so waveform visibility causes no layout shift */}
-      <div
-        className="flex h-12 w-full max-w-[200px] items-center justify-center sm:max-w-[280px]"
-        aria-hidden
-      >
+      <div className="flex h-24 w-[86%] min-w-0 items-center justify-center sm:h-28" aria-hidden>
         <WaveformBars
+          level={waveLevel}
+          phase={wavePhase}
           className={cn(
-            'h-12 w-full max-w-[200px] transition-opacity duration-200 sm:max-w-[280px]',
-            isRecording ? 'opacity-100' : 'pointer-events-none opacity-0',
+            'h-full w-full transition-all duration-500 ease-out',
+            isRecording ? 'opacity-100 scale-100' : 'pointer-events-none opacity-0 scale-95',
           )}
         />
       </div>
@@ -192,9 +293,10 @@ export function AudioTranscribeButton({
         disabled={disabled || isProcessing}
         aria-label={isRecording ? 'Aufnahme beenden' : 'Sprache aufnehmen'}
         className={cn(
-          'flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
-          isRecording && 'bg-background text-foreground border border-border',
-          !isRecording && accent.bg && accent.icon,
+          'flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+          accent.bg,
+          accent.icon,
+          isRecording && 'scale-105 ring-2 ring-am-darker/40',
         )}
       >
         {isProcessing ? (
@@ -203,11 +305,7 @@ export function AudioTranscribeButton({
           <Mic className="h-6 w-6" aria-hidden />
         )}
       </button>
-      {error && (
-        <p className="text-xs text-destructive text-center max-w-[200px]">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-xs text-destructive text-center max-w-[200px]">{error}</p>}
     </div>
   )
 }
