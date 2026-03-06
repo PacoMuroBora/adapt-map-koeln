@@ -38,24 +38,6 @@ const config = {
     'text-body-sm',
   ],
   theme: {
-    container: {
-      center: true,
-      padding: {
-        DEFAULT: '1rem',
-        sm: '1rem',
-        md: '2rem',
-        lg: '2rem',
-        xl: '2rem',
-        '2xl': '2rem',
-      },
-      screens: {
-        sm: '100%',
-        md: '100%',
-        lg: '100%',
-        xl: '100%',
-        '2xl': '100%',
-      },
-    },
     extend: {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',

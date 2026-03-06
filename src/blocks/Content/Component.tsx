@@ -40,10 +40,10 @@ export const ContentBlock: React.FC<ContentBlockProps & { isLandingLayout?: bool
   const tag = headlineTag ?? 'h2'
 
   return (
-    <div className={cn('w-full my-20', { 'p-4 md:p-8 lg:p-16': cardLayout })}>
+    <div className={cn('container my-20', { 'py-4 md:py-8 lg:py-16': cardLayout })}>
       <div
-        className={cn('w-full', {
-          'relative rounded-2xl overflow-hidden': cardLayout,
+        className={cn('inner-container', {
+          'relative rounded-3xl overflow-hidden': cardLayout,
           'bg-am-purple': cardLayout,
         })}
       >
@@ -52,7 +52,7 @@ export const ContentBlock: React.FC<ContentBlockProps & { isLandingLayout?: bool
             <Shape01 color="#9F94FF" className="h-auto w-full" />
           </div>
         )}
-        <div className="container relative z-10 p-8 md:p-16">
+        <div className={cn('relative z-10 py-8 md:py-16', { container: cardLayout })}>
           {(overline || headline) && (
             <div className="mb-12 space-y-2 max-w-[66%] md:max-w-full">
               {overline && (
@@ -63,7 +63,7 @@ export const ContentBlock: React.FC<ContentBlockProps & { isLandingLayout?: bool
               {headline && React.createElement(tag, { className: sizeClass }, headline)}
             </div>
           )}
-          <div className="grid grid-cols-4 lg:grid-cols-12 gap-y-4 md:gap-y-16 gap-x-16">
+          <div className="grid grid-cols-4 lg:grid-cols-12 gap-y-12 gap-x-16">
             {columns &&
               columns.length > 0 &&
               columns.map((col, index) => {
@@ -71,12 +71,7 @@ export const ContentBlock: React.FC<ContentBlockProps & { isLandingLayout?: bool
 
                 return (
                   <div
-                    className={cn(
-                      `max-w-[640px] col-span-4 lg:col-span-${colsSpanClasses[size!]}`,
-                      {
-                        'md:col-span-2': size !== 'full',
-                      },
-                    )}
+                    className={cn(`max-w-[640px] col-span-4 lg:col-span-${colsSpanClasses[size!]}`)}
                     key={index}
                   >
                     {richText && <RichText data={richText} enableGutter={false} />}

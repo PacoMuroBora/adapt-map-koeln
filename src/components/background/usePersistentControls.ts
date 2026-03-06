@@ -263,7 +263,8 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
           backgroundColorScrolled:
             parsed.backgroundColorScrolled ?? DEFAULT_BACKGROUND_CONTROLS.backgroundColorScrolled,
           heroSaturation: parsed.heroSaturation ?? DEFAULT_BACKGROUND_CONTROLS.heroSaturation,
-          scrolledSaturation: parsed.scrolledSaturation ?? DEFAULT_BACKGROUND_CONTROLS.scrolledSaturation,
+          scrolledSaturation:
+            parsed.scrolledSaturation ?? DEFAULT_BACKGROUND_CONTROLS.scrolledSaturation,
           saturationLerp: parsed.saturationLerp ?? DEFAULT_BACKGROUND_CONTROLS.saturationLerp,
         }
         setValues(migrated as any)
