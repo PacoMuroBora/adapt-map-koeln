@@ -20,6 +20,17 @@ export interface BackgroundControls {
   squareColor: string
   lineColor: string
 
+  /** Base background color when using full-frame compositing (landing, hero). */
+  backgroundColor: string
+  /** Background color when scrolled (landing). */
+  backgroundColorScrolled: string
+  /** Saturation 0..1 at hero (top). */
+  heroSaturation: number
+  /** Saturation 0..1 when scrolled past hero. */
+  scrolledSaturation: number
+  /** Lerp factor per frame for saturation transition (e.g. 0.08). */
+  saturationLerp: number
+
   interactionMode: InteractionMode
   interactionPointerRadius: number
   interactionPointerStrength: number
@@ -46,6 +57,12 @@ export const DEFAULT_BACKGROUND_CONTROLS: BackgroundControls = {
   squareColor: '#f3fccb',
   lineColor: '#dafa38',
 
+  backgroundColor: '#ffffff',
+  backgroundColorScrolled: '#f4f4f4',
+  heroSaturation: 1,
+  scrolledSaturation: 1,
+  saturationLerp: 0.08,
+
   interactionMode: 'mouse+scroll',
   interactionPointerRadius: 0.05,
   interactionPointerStrength: 1.04,
@@ -54,10 +71,15 @@ export const DEFAULT_BACKGROUND_CONTROLS: BackgroundControls = {
   trailFadeSeconds: 0.8,
 }
 
-/** Same as defaults but interactionMode 'mouse' only — scroll is used for parallax translation only, not for fading the noise. */
+/** Same as defaults but interactionMode 'mouse' only; includes landing background fill and saturation transition. */
 export const LANDING_BACKGROUND_CONTROLS: BackgroundControls = {
   ...DEFAULT_BACKGROUND_CONTROLS,
   interactionMode: 'mouse',
+  backgroundColor: '#DAFA38',
+  backgroundColorScrolled: '#F4F4F4',
+  heroSaturation: 1,
+  scrolledSaturation: 0,
+  saturationLerp: 0.08,
 }
 
 export interface PersistentControlsResult {
@@ -134,6 +156,35 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
             value: DEFAULT_BACKGROUND_CONTROLS.lineColor,
             label: 'Seam line color (dark)',
           },
+          backgroundColor: {
+            value: DEFAULT_BACKGROUND_CONTROLS.backgroundColor,
+            label: 'Background (landing fill)',
+          },
+          backgroundColorScrolled: {
+            value: DEFAULT_BACKGROUND_CONTROLS.backgroundColorScrolled,
+            label: 'Background scrolled',
+          },
+          heroSaturation: {
+            value: DEFAULT_BACKGROUND_CONTROLS.heroSaturation,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            label: 'Hero saturation',
+          },
+          scrolledSaturation: {
+            value: DEFAULT_BACKGROUND_CONTROLS.scrolledSaturation,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            label: 'Scrolled saturation',
+          },
+          saturationLerp: {
+            value: DEFAULT_BACKGROUND_CONTROLS.saturationLerp,
+            min: 0.01,
+            max: 0.5,
+            step: 0.01,
+            label: 'Saturation lerp',
+          },
         },
         { collapsed: false },
       ),
@@ -201,7 +252,6 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
         gridDarkBorderThreshold?: number
       }
       if (parsed && typeof parsed === 'object') {
-        // Backward-compat for older presets using colorLight/colorDark
         const migrated = {
           ...parsed,
           squareColor: parsed.squareColor ?? parsed.colorLight,
@@ -209,6 +259,12 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
           lineThreshold: parsed.lineThreshold ?? parsed.gridDarkBorderThreshold,
           trailStrength: parsed.trailStrength ?? DEFAULT_BACKGROUND_CONTROLS.trailStrength,
           trailFadeSeconds: parsed.trailFadeSeconds ?? DEFAULT_BACKGROUND_CONTROLS.trailFadeSeconds,
+          backgroundColor: parsed.backgroundColor ?? DEFAULT_BACKGROUND_CONTROLS.backgroundColor,
+          backgroundColorScrolled:
+            parsed.backgroundColorScrolled ?? DEFAULT_BACKGROUND_CONTROLS.backgroundColorScrolled,
+          heroSaturation: parsed.heroSaturation ?? DEFAULT_BACKGROUND_CONTROLS.heroSaturation,
+          scrolledSaturation: parsed.scrolledSaturation ?? DEFAULT_BACKGROUND_CONTROLS.scrolledSaturation,
+          saturationLerp: parsed.saturationLerp ?? DEFAULT_BACKGROUND_CONTROLS.saturationLerp,
         }
         setValues(migrated as any)
       }

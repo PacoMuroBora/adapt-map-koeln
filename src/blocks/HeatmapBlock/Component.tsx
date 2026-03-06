@@ -31,7 +31,7 @@ export const HeatmapBlockComponent: React.FC<HeatmapBlockProps> = ({
             {React.createElement(tag, { className: sizeClass }, headline)}
           </div>
         )}
-        <div className="relative h-[600px] w-full overflow-hidden rounded-3xl bg-black/10">
+        <div className="relative h-[600px] w-full overflow-hidden rounded-3xl">
           <HeatmapMap />
         </div>
         {richText && (
