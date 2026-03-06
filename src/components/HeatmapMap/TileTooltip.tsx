@@ -29,10 +29,10 @@ export function TileTooltip({
       className={`pointer-events-none absolute z-50 rounded-[8px] bg-[rgba(241,241,241,0.88)] p-[12px] shadow-[6px_6px_24px_rgba(0,0,0,0.16)] backdrop-blur-[8px] ${className}`}
       style={{ left: x, top: y }}
     >
-      <div className="flex flex-col gap-[8px]">
+      <div className="flex flex-col gap-[12px]">
         {/* Row 1: Gefühlte Hitze with gradient slider */}
         <div className="flex items-center justify-between gap-3">
-          <p className="w-[90px] text-xs font-sans uppercase tracking-[0.08em] text-am-darker">
+          <p className="w-[90px] text-xs font-mono uppercase tracking-wide text-am-darker">
             <span className="block">gefühlte</span>
             <span className="block">hitze ⌀</span>
           </p>
@@ -53,7 +53,7 @@ export function TileTooltip({
 
         {/* Row 2: Heisse Tage im Jahr with numeric value */}
         <div className="flex items-center justify-between gap-3 text-am-darker">
-          <p className="w-[90px] text-xs font-sans uppercase tracking-[0.08em]">
+          <p className="w-[90px] text-xs font-mono uppercase tracking-wide">
             <span className="block">heisse tage</span>
             <span className="block">im jahr ⌀</span>
           </p>
@@ -64,7 +64,7 @@ export function TileTooltip({
 
         {/* Row 3: Einträge count */}
         <div className="flex items-center justify-between gap-3 text-am-darker">
-          <p className="w-[90px] text-xs font-sans uppercase tracking-[0.08em]">einträge</p>
+          <p className="w-[90px] text-xs font-mono uppercase tracking-wide">einträge</p>
           <p className="shrink-0 text-xl font-mono tracking-[0.01em]">{totalCount}</p>
         </div>
       </div>
