@@ -38,13 +38,13 @@ export const DEFAULT_BACKGROUND_CONTROLS: BackgroundControls = {
   lineThreshold: 0.97,
   lineSnap: false,
 
-  fieldNoiseScale: 1.45,
-  fieldSpeed: 0.76,
+  fieldNoiseScale: 0.5,
+  fieldSpeed: 0.5,
   fieldContrast: 1.6,
   fieldBrightness: 0,
 
-  squareColor: '#bdfcdb',
-  lineColor: '#0aefe6',
+  squareColor: '#f3fccb',
+  lineColor: '#dafa38',
 
   interactionMode: 'mouse+scroll',
   interactionPointerRadius: 0.05,
@@ -73,9 +73,19 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
     () => ({
       Grid: folder(
         {
-          gridCellSize: { value: DEFAULT_BACKGROUND_CONTROLS.gridCellSize, min: 8, max: 96, step: 1 },
+          gridCellSize: {
+            value: DEFAULT_BACKGROUND_CONTROLS.gridCellSize,
+            min: 8,
+            max: 96,
+            step: 1,
+          },
           gridGap: { value: DEFAULT_BACKGROUND_CONTROLS.gridGap, min: 0, max: 16, step: 0.5 },
-          gridBorderWidth: { value: DEFAULT_BACKGROUND_CONTROLS.gridBorderWidth, min: 0, max: 4, step: 0.1 },
+          gridBorderWidth: {
+            value: DEFAULT_BACKGROUND_CONTROLS.gridBorderWidth,
+            min: 0,
+            max: 4,
+            step: 0.1,
+          },
           lineThreshold: {
             value: DEFAULT_BACKGROUND_CONTROLS.lineThreshold,
             min: 0,
@@ -92,10 +102,25 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
       ),
       Field: folder(
         {
-          fieldNoiseScale: { value: DEFAULT_BACKGROUND_CONTROLS.fieldNoiseScale, min: 0.1, max: 4, step: 0.05 },
+          fieldNoiseScale: {
+            value: DEFAULT_BACKGROUND_CONTROLS.fieldNoiseScale,
+            min: 0.1,
+            max: 4,
+            step: 0.05,
+          },
           fieldSpeed: { value: DEFAULT_BACKGROUND_CONTROLS.fieldSpeed, min: 0, max: 1, step: 0.01 },
-          fieldContrast: { value: DEFAULT_BACKGROUND_CONTROLS.fieldContrast, min: 0.5, max: 3, step: 0.05 },
-          fieldBrightness: { value: DEFAULT_BACKGROUND_CONTROLS.fieldBrightness, min: -0.5, max: 1.5, step: 0.02 },
+          fieldContrast: {
+            value: DEFAULT_BACKGROUND_CONTROLS.fieldContrast,
+            min: 0.5,
+            max: 3,
+            step: 0.05,
+          },
+          fieldBrightness: {
+            value: DEFAULT_BACKGROUND_CONTROLS.fieldBrightness,
+            min: -0.5,
+            max: 1.5,
+            step: 0.02,
+          },
         },
         { collapsed: false },
       ),
@@ -239,4 +264,3 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
     loadFromJSON,
   }
 }
-

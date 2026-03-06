@@ -51,10 +51,7 @@ export function LandingBackground({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative min-h-screen">
       {/* Base layer: same as current hero (primary + grid look) */}
-      <div
-        className="fixed inset-0 -z-20 bg-primary background-grid-primary"
-        aria-hidden
-      />
+      <div className="fixed inset-0 -z-20 bg-primary" aria-hidden />
       {/* Canvas: fixed, parallax via shader offset. pointer-events-none so content is clickable; canvas uses window listeners for trail. */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <HeatDitherGridCanvas
