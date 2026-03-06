@@ -108,7 +108,12 @@ export const Questionnaires: CollectionConfig = {
           name: 'steps',
           type: 'array',
           required: true,
-          admin: { description: 'Steps in this section' },
+          admin: {
+            description: 'Steps in this section',
+            components: {
+              RowLabel: '@/collections/Questionnaires/StepRowLabel#StepRowLabel',
+            },
+          },
           fields: [
             {
               name: 'stepIdentifier',

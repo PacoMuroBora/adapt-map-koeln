@@ -534,19 +534,6 @@ export interface Question {
    */
   category?: string | null;
   /**
-   * Fields editable by editors (not admins only)
-   */
-  editorFields?: {
-    /**
-     * Order in which this question appears
-     */
-    displayOrder?: number | null;
-    /**
-     * Additional help text for users
-     */
-    helpText?: string | null;
-  };
-  /**
    * Scoring configuration (admin only)
    */
   adminScoring: {
@@ -2146,12 +2133,6 @@ export interface QuestionsSelect<T extends boolean = true> {
       };
   required?: T;
   category?: T;
-  editorFields?:
-    | T
-    | {
-        displayOrder?: T;
-        helpText?: T;
-      };
   adminScoring?:
     | T
     | {

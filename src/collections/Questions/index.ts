@@ -264,36 +264,6 @@ export const Questions: CollectionConfig = {
       },
     },
     {
-      name: 'editorFields',
-      type: 'group',
-      admin: {
-        description: 'Fields editable by editors (not admins only)',
-      },
-      access: {
-        read: () => true,
-        update: ({ req: { user } }) => {
-          const roles = (user as any)?.roles
-          return roles === 'admin' || roles === 'editor'
-        },
-      },
-      fields: [
-        {
-          name: 'displayOrder',
-          type: 'number',
-          admin: {
-            description: 'Order in which this question appears',
-          },
-        },
-        {
-          name: 'helpText',
-          type: 'textarea',
-          admin: {
-            description: 'Additional help text for users',
-          },
-        },
-      ],
-    },
-    {
       name: 'adminScoring',
       type: 'group',
       admin: {
