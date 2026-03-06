@@ -39,7 +39,7 @@ const buttonIconMap: Record<
 }
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none',
+  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:opacity-50 disabled:cursor-not-allowed',
   {
     defaultVariants: {
       size: 'default',
