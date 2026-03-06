@@ -207,8 +207,8 @@ export function KBList() {
   }
 
   return (
-    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
+    <Card variant="white" className="flex h-full min-h-0 flex-col bg-card text-foreground shadow">
+      <CardHeader className="flex flex-col gap-4 pb-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <CardTitle className="text-xl font-semibold tracking-title uppercase">
             Knowledge Base
@@ -217,31 +217,33 @@ export function KBList() {
             {data ? `${data.totalDocs} Einträge` : 'Lade…'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="default"
-            size="mini"
-            shape="round"
-            className="text-base"
-            onClick={openCreateDrawer}
-          >
-            Neuer Eintrag
-          </Button>
+        <div className="flex flex-col items-stretch gap-2 md:items-end">
+          <div className="flex w-full gap-2 md:w-auto md:justify-end">
+            <Button
+              variant="default"
+              size="mini"
+              shape="round"
+              className="flex-1 text-base md:flex-none"
+              onClick={openCreateDrawer}
+            >
+              Neuer Eintrag
+            </Button>
+            <Button
+              variant={filterOpen ? 'pill' : 'ghost-muted'}
+              size="mini"
+              shape="round"
+              className="flex-1 text-base md:flex-none"
+              onClick={() => setFilterOpen((o) => !o)}
+            >
+              Filter
+            </Button>
+          </div>
           <Input
             placeholder="Suche nach Titel, Thema oder Ort…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-10 w-96 rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt"
+            className="h-10 w-full rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt md:w-96"
           />
-          <Button
-            variant={filterOpen ? 'pill' : 'ghost-muted'}
-            size="mini"
-            shape="round"
-            className="text-base"
-            onClick={() => setFilterOpen((o) => !o)}
-          >
-            Filter
-          </Button>
         </div>
       </CardHeader>
       <AnimatePresence initial={false}>
@@ -254,7 +256,7 @@ export function KBList() {
             transition={{ duration: 0.2, ease: 'easeInOut' }}
             className="flex-shrink-0 overflow-hidden border-t border-border/50 bg-secondary/30"
           >
-            <div className="flex flex-wrap items-end gap-4 px-4 py-3">
+            <div className="flex flex-wrap items-end gap-4 px-3 py-3 md:px-4">
               <div className="space-y-1">
                 <Label className="text-base text-foreground-alt">Thema</Label>
                 <Select
@@ -348,7 +350,7 @@ export function KBList() {
           </motion.div>
         )}
       </AnimatePresence>
-      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 pt-0 pb-6">
+      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 pt-0 pb-6 md:px-0">
         {loading && (
           <div className="flex h-full flex-col gap-3 p-4">
             <Skeleton className="h-10 w-full bg-secondary" />
@@ -362,13 +364,13 @@ export function KBList() {
           </div>
         )}
         {!loading && !error && (
-          <div className="h-full overflow-y-auto px-6 py-2">
+          <div className="h-full overflow-y-auto px-3 py-2 md:-mr-6 md:pr-6">
             <ul className="space-y-2">
               {filtered.map((item) => (
                 <li key={item.id}>
                   <div
                     className={cn(
-                      'flex items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-base transition-colors',
+                      'flex items-center justify-between gap-3 rounded-2xl bg-background px-3 py-3 text-base transition-colors md:px-4',
                       'hover:bg-secondary/30',
                     )}
                   >
@@ -382,12 +384,12 @@ export function KBList() {
                           {item.displayTitle || 'Ohne Titel'}
                         </span>
                         {item.theme && (
-                          <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-sm uppercase tracking-label text-foreground">
+                          <span className="hidden rounded-full bg-secondary/60 px-2 py-0.5 text-sm uppercase tracking-label text-foreground md:inline-flex">
                             {item.theme}
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-foreground-alt">
+                      <div className="mt-1 hidden flex-wrap items-center gap-x-3 gap-y-1 text-base text-foreground-alt md:flex">
                         {item.location != null && item.location !== '' && (
                           <span>{item.location}</span>
                         )}
@@ -440,7 +442,7 @@ export function KBList() {
       </CardContent>
 
       <Sheet open={openId != null} onOpenChange={(open) => !open && setOpenId(null)}>
-        <SheetContent side="right" className="flex w-full max-w-4xl flex-col bg-card text-foreground">
+        <SheetContent side="right" className="flex w-full max-w-[100vw] flex-col bg-card text-foreground md:max-w-4xl">
           <SheetHeader>
             <SheetTitle className="text-xl uppercase tracking-label">
               {isCreateMode ? 'Neuer Eintrag' : 'Knowledge-Base-Eintrag'}

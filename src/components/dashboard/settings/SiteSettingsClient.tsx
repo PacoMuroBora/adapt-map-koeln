@@ -93,7 +93,7 @@ export function SiteSettingsClient() {
           </p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 p-6 text-base">
+      <CardContent className="space-y-6 px-3 py-6 text-base md:p-6">
         {siteSettings && (
           <>
             <div className="grid grid-cols-2 gap-4">
@@ -210,7 +210,7 @@ export function SiteSettingsClient() {
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-6 p-6 text-base md:grid-cols-2">
+      <CardContent className="grid grid-cols-1 gap-6 px-3 py-6 text-base md:grid-cols-2 md:p-6">
         {siteSettings && (
           <>
             <div className="space-y-4">
@@ -323,7 +323,7 @@ export function SiteSettingsClient() {
           </p>
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-6 p-6 text-base md:grid-cols-2">
+      <CardContent className="grid grid-cols-1 gap-6 px-3 py-6 text-base md:grid-cols-2 md:p-6">
         {uiCopy && (
           <>
             <div className="space-y-3">
@@ -389,7 +389,7 @@ export function SiteSettingsClient() {
           </p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 p-6 text-base">
+      <CardContent className="space-y-6 px-3 py-6 text-base md:p-6">
         {siteSettings && (
           <>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -501,7 +501,7 @@ export function SiteSettingsClient() {
     if (loading) {
       return (
         <Card className="h-full rounded-3xl bg-am-white text-foreground shadow-sm">
-          <CardContent className="flex h-full items-center justify-center p-6">
+          <CardContent className="flex h-full items-center justify-center px-3 py-6 md:p-6">
             <Skeleton className="h-32 w-full rounded-2xl bg-secondary/40" />
           </CardContent>
         </Card>
@@ -510,7 +510,7 @@ export function SiteSettingsClient() {
     if (error) {
       return (
         <Card className="h-full rounded-3xl bg-am-white text-foreground shadow-sm">
-          <CardContent className="flex h-full items-center justify-center p-6 text-base text-destructive">
+          <CardContent className="flex h-full items-center justify-center px-3 py-6 text-base text-destructive md:p-6">
             {error}
           </CardContent>
         </Card>
@@ -543,44 +543,46 @@ export function SiteSettingsClient() {
               Globale Einstellungen für Karten, Texte, rechtliche Inhalte und SEO.
             </p>
           </div>
-          <div className="flex w-full items-center justify-between gap-4">
-            <div className="inline-flex gap-2 rounded-full bg-secondary/40 p-1">
-              <Button
-                size="mini"
-                shape="round"
-                variant={tab === 'legal' ? 'pill' : 'ghost-muted'}
-                className={cn('px-3 text-base', tab === 'legal' && 'bg-am-green-alt text-am-dark')}
-                onClick={() => setTab('legal')}
-              >
-                Legal & Cookies
-              </Button>
-              <Button
-                size="mini"
-                shape="round"
-                variant={tab === 'map' ? 'pill' : 'ghost-muted'}
-                className={cn('px-3 text-base', tab === 'map' && 'bg-am-green-alt text-am-dark')}
-                onClick={() => setTab('map')}
-              >
-                Map
-              </Button>
-              <Button
-                size="mini"
-                shape="round"
-                variant={tab === 'ui-text' ? 'pill' : 'ghost-muted'}
-                className={cn('px-3 text-base', tab === 'ui-text' && 'bg-am-green-alt text-am-dark')}
-                onClick={() => setTab('ui-text')}
-              >
-                UI Text
-              </Button>
-              <Button
-                size="mini"
-                shape="round"
-                variant={tab === 'seo' ? 'pill' : 'ghost-muted'}
-                className={cn('px-3 text-base', tab === 'seo' && 'bg-am-green-alt text-am-dark')}
-                onClick={() => setTab('seo')}
-              >
-                SEO
-              </Button>
+          <div className="flex w-full flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+            <div className="w-full overflow-x-auto">
+              <div className="inline-flex w-max gap-2 rounded-full bg-secondary/40 p-1">
+                <Button
+                  size="mini"
+                  shape="round"
+                  variant={tab === 'legal' ? 'pill' : 'ghost-muted'}
+                  className={cn('px-3 text-base', tab === 'legal' && 'bg-am-green-alt text-am-dark')}
+                  onClick={() => setTab('legal')}
+                >
+                  Legal & Cookies
+                </Button>
+                <Button
+                  size="mini"
+                  shape="round"
+                  variant={tab === 'map' ? 'pill' : 'ghost-muted'}
+                  className={cn('px-3 text-base', tab === 'map' && 'bg-am-green-alt text-am-dark')}
+                  onClick={() => setTab('map')}
+                >
+                  Map
+                </Button>
+                <Button
+                  size="mini"
+                  shape="round"
+                  variant={tab === 'ui-text' ? 'pill' : 'ghost-muted'}
+                  className={cn('px-3 text-base', tab === 'ui-text' && 'bg-am-green-alt text-am-dark')}
+                  onClick={() => setTab('ui-text')}
+                >
+                  UI Text
+                </Button>
+                <Button
+                  size="mini"
+                  shape="round"
+                  variant={tab === 'seo' ? 'pill' : 'ghost-muted'}
+                  className={cn('px-3 text-base', tab === 'seo' && 'bg-am-green-alt text-am-dark')}
+                  onClick={() => setTab('seo')}
+                >
+                  SEO
+                </Button>
+              </div>
             </div>
             <Button
               href="/admin/collections/pages"
@@ -588,24 +590,24 @@ export function SiteSettingsClient() {
               size="default"
               shape="round"
               iconAfter="external-link"
-              className="shrink-0 px-4 py-1.5"
+              className="w-full shrink-0 px-4 py-1.5 md:w-auto"
             >
               Pages im Admin bearbeiten
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">{renderActiveTab()}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto">{renderActiveTab()}</div>
 
-        <div className="flex items-center justify-between border-t border-border/40 pt-3 text-base">
-          <div className="text-foreground-alt">
+        <div className="sticky bottom-0 z-10 flex shrink-0 items-center justify-between gap-3 border-t border-border/40 bg-background py-3 md:py-3">
+          <div className="min-w-0 text-sm text-foreground-alt md:text-base">
             {saveMessage && <span className="text-am-green-alt">{saveMessage}</span>}
             {error && <span className="text-destructive">{error}</span>}
           </div>
           <Button
-            size="lg"
+            size="default"
             shape="round"
-            className="px-6"
+            className="h-9 shrink-0 px-4 text-sm md:h-12 md:px-6 md:text-base"
             onClick={saveAll}
             disabled={saving || loading || !siteSettings || !uiCopy}
           >

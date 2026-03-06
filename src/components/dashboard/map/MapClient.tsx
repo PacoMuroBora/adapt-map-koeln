@@ -7,7 +7,7 @@ export function MapClient() {
   return (
     <DashboardShell>
       <div className="flex h-full flex-col gap-8 py-6">
-        <div className="min-h-0 flex-1 overflow-hidden rounded-xl">
+        <div className="min-h-[50vh] flex-1 overflow-hidden rounded-xl md:min-h-0">
           <HeatmapMap
             className="h-full w-full"
             interactionGuardDisabled

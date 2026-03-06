@@ -129,8 +129,8 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
   }
 
   return (
-    <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
+    <Card variant="white" className="flex h-full min-h-0 flex-col bg-card text-foreground shadow">
+      <CardHeader className="flex flex-col gap-4 pb-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <CardTitle className="text-xl font-semibold tracking-title uppercase">
             Submissions
@@ -139,18 +139,18 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
             {data ? `${data.totalDocs} Einträge gesamt` : 'Lade Übersicht…'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center gap-2 md:w-auto md:flex-wrap md:justify-end md:gap-3">
           <Input
             placeholder="Suche nach ID, PLZ oder Stadt…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-10 w-96 rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt"
+            className="h-10 flex-1 rounded-full bg-background text-base text-foreground placeholder:text-foreground-alt md:w-96"
           />
           <Button
             variant={filterOpen ? 'pill' : 'ghost-muted'}
             size="mini"
             shape="round"
-            className="text-base"
+            className="shrink-0 text-base"
             onClick={() => setFilterOpen((o) => !o)}
           >
             Filter
@@ -167,7 +167,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
             transition={{ duration: 0.2, ease: 'easeInOut' }}
             className="flex-shrink-0 overflow-hidden border-t border-border/50 bg-secondary/30"
           >
-            <div className="flex flex-wrap items-end gap-4 px-4 py-3">
+            <div className="flex flex-wrap items-end gap-4 px-3 py-3 md:px-4">
               <div className="space-y-1">
                 <Label className="text-base text-foreground-alt">Zeitraum</Label>
                 <div className="flex gap-1">
@@ -211,7 +211,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 pt-0 pb-6">
+      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 pt-0 pb-6 md:px-0">
         {loading && (
           <div className="flex h-full flex-col gap-3 p-4">
             <Skeleton className="h-10 w-full bg-secondary" />
@@ -225,7 +225,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
           </div>
         )}
         {!loading && !error && (
-          <div className="h-full overflow-y-auto px-6 py-2">
+          <div className="h-full overflow-y-auto px-3 py-2 md:-mr-6 md:pr-6">
             <ul className="space-y-2">
               {filtered.map((item) => {
                 const created = new Date(item.createdAt)
@@ -236,7 +236,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                       type="button"
                       onClick={() => openDetail(item)}
                       className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-4 py-3 text-left text-base transition-colors',
+                        'flex w-full items-center justify-between gap-3 rounded-2xl bg-background px-3 py-3 text-left text-base transition-colors md:px-4',
                         'hover:bg-secondary/30',
                       )}
                     >
@@ -246,17 +246,17 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                             {item.city || 'Ohne Ort'}
                           </span>
                           {hasAi && (
-                            <span className="rounded-full bg-am-green/30 px-2 py-0.5 text-sm font-semibold uppercase tracking-label text-am-darker">
-                              KI-Empfehlung
+                            <span className="rounded-full bg-am-green/30 px-2 py-0.5 text-sm font-semibold uppercase tracking-label text-am-darker md:hidden">
+                              KI
                             </span>
                           )}
                           {item.street && (
-                            <span className="truncate text-base text-foreground-alt leading-tight">
+                            <span className="hidden truncate text-base text-foreground-alt leading-tight md:inline">
                               {item.street}
                             </span>
                           )}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-base text-foreground-alt">
+                        <div className="mt-1 hidden flex-wrap items-center gap-3 text-base text-foreground-alt md:flex">
                           <span>
                             Problemindex:{' '}
                             <span className="inline-flex items-center rounded-full bg-am-green/40 px-2 py-0.5 text-base text-foreground">
@@ -276,7 +276,14 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
                         </div>
                       </div>
                       <div className="flex flex-col items-end text-base text-foreground-alt">
-                        <span>{created.toLocaleDateString('de-DE')}</span>
+                        <div className="flex items-center gap-2">
+                          {hasAi && (
+                            <span className="hidden rounded-full bg-am-green/30 px-2 py-0.5 text-sm font-semibold uppercase tracking-label text-am-darker md:inline-flex">
+                              KI-Empfehlung
+                            </span>
+                          )}
+                          <span>{created.toLocaleDateString('de-DE')}</span>
+                        </div>
                         <span className="text-base">
                           {created.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -296,7 +303,7 @@ export function SubmissionsList({ onSelect }: SubmissionsListProps) {
       </CardContent>
 
       <Sheet open={detailId != null} onOpenChange={(open) => !open && setDetailId(null)}>
-        <SheetContent side="right" className="w-full max-w-4xl bg-card text-foreground">
+        <SheetContent side="right" className="w-full max-w-[100vw] bg-card text-foreground md:max-w-4xl">
           <SheetHeader>
             <SheetTitle className="text-xl uppercase tracking-label">
               Submission&nbsp;#{detailId?.slice(-6)}
