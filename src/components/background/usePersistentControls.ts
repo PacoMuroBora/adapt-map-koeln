@@ -19,6 +19,9 @@ export interface BackgroundControls {
 
   squareColor: string
   lineColor: string
+  /** Grid colors when scrolled (landing); lighter for white bg. */
+  squareColorScrolled: string
+  lineColorScrolled: string
 
   /** Base background color when using full-frame compositing (landing, hero). */
   backgroundColor: string
@@ -56,9 +59,11 @@ export const DEFAULT_BACKGROUND_CONTROLS: BackgroundControls = {
 
   squareColor: '#f3fccb',
   lineColor: '#dafa38',
+  squareColorScrolled: '#fcfcfc',
+  lineColorScrolled: '#f8f8f8',
 
   backgroundColor: '#ffffff',
-  backgroundColorScrolled: '#f4f4f4',
+  backgroundColorScrolled: '#ffffff',
   heroSaturation: 1,
   scrolledSaturation: 1,
   saturationLerp: 0.08,
@@ -75,8 +80,14 @@ export const DEFAULT_BACKGROUND_CONTROLS: BackgroundControls = {
 export const LANDING_BACKGROUND_CONTROLS: BackgroundControls = {
   ...DEFAULT_BACKGROUND_CONTROLS,
   interactionMode: 'mouse',
-  backgroundColor: '#DAFA38',
-  backgroundColorScrolled: '#F4F4F4',
+  // Compensated input color so displayed hero background reads as #DAFA38
+  // in the current renderer color pipeline.
+  backgroundColor: '#EEFD81',
+  // Slightly darker + more saturated than hero bg for subtle line contrast.
+  lineColor: '#D3F620',
+  backgroundColorScrolled: '#FFFFFF',
+  squareColorScrolled: '#FCFCFC',
+  lineColorScrolled: '#F8F8F8',
   heroSaturation: 1,
   scrolledSaturation: 0,
   saturationLerp: 0.08,
@@ -155,6 +166,14 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
           lineColor: {
             value: DEFAULT_BACKGROUND_CONTROLS.lineColor,
             label: 'Seam line color (dark)',
+          },
+          squareColorScrolled: {
+            value: DEFAULT_BACKGROUND_CONTROLS.squareColorScrolled,
+            label: 'Square color scrolled',
+          },
+          lineColorScrolled: {
+            value: DEFAULT_BACKGROUND_CONTROLS.lineColorScrolled,
+            label: 'Line color scrolled',
           },
           backgroundColor: {
             value: DEFAULT_BACKGROUND_CONTROLS.backgroundColor,
@@ -256,6 +275,9 @@ export function usePersistentBackgroundControls(): PersistentControlsResult {
           ...parsed,
           squareColor: parsed.squareColor ?? parsed.colorLight,
           lineColor: parsed.lineColor ?? parsed.colorDark,
+          squareColorScrolled:
+            parsed.squareColorScrolled ?? DEFAULT_BACKGROUND_CONTROLS.squareColorScrolled,
+          lineColorScrolled: parsed.lineColorScrolled ?? DEFAULT_BACKGROUND_CONTROLS.lineColorScrolled,
           lineThreshold: parsed.lineThreshold ?? parsed.gridDarkBorderThreshold,
           trailStrength: parsed.trailStrength ?? DEFAULT_BACKGROUND_CONTROLS.trailStrength,
           trailFadeSeconds: parsed.trailFadeSeconds ?? DEFAULT_BACKGROUND_CONTROLS.trailFadeSeconds,

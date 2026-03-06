@@ -40,6 +40,8 @@ const fragmentShader = /* glsl */ `
 
   uniform vec3 uColorLight;
   uniform vec3 uColorDark;
+  uniform vec3 uColorLightScrolled;
+  uniform vec3 uColorDarkScrolled;
   uniform vec3 uBackgroundColor;
   uniform vec3 uBackgroundColorScrolled;
   uniform float uSaturation;
@@ -236,10 +238,12 @@ const fragmentShader = /* glsl */ `
     }
 
     // Single solid square color; scalar value only affects size / seam activation
-    vec3 color = uColorLight;
+    vec3 colorLight = uUseBackgroundFill > 0.5 ? mix(uColorLightScrolled, uColorLight, uSaturation) : uColorLight;
+    vec3 colorDark = uUseBackgroundFill > 0.5 ? mix(uColorDarkScrolled, uColorDark, uSaturation) : uColorDark;
+    vec3 color = colorLight;
 
     // Seam lines are composited on top
-    color = mix(color, uColorDark, seamMask);
+    color = mix(color, colorDark, seamMask);
 
     float alpha = clamp(insideSquare + seamMask, 0.0, 1.0);
 
@@ -304,7 +308,7 @@ const FullscreenQuad: React.FC<
   parallaxOffsetY = 0,
     useBackgroundFill = false,
     backgroundColor = '#ffffff',
-    backgroundColorScrolled = '#f4f4f4',
+    backgroundColorScrolled = '#ffffff',
     saturationTarget = 1,
     saturationLerp = 0.08,
 }) => {
@@ -343,8 +347,10 @@ const FullscreenQuad: React.FC<
 
       uColorLight: { value: new THREE.Color(controls.squareColor) },
       uColorDark: { value: new THREE.Color(controls.lineColor) },
+      uColorLightScrolled: { value: new THREE.Color(controls.squareColorScrolled) },
+      uColorDarkScrolled: { value: new THREE.Color(controls.lineColorScrolled) },
       uBackgroundColor: { value: new THREE.Color('#ffffff') },
-      uBackgroundColorScrolled: { value: new THREE.Color('#f4f4f4') },
+      uBackgroundColorScrolled: { value: new THREE.Color('#ffffff') },
       uSaturation: { value: 1 },
       uUseBackgroundFill: { value: 0 },
 
@@ -388,6 +394,8 @@ const FullscreenQuad: React.FC<
 
     uniformsRef.uColorLight.value.set(controls.squareColor)
     uniformsRef.uColorDark.value.set(controls.lineColor)
+    uniformsRef.uColorLightScrolled.value.set(controls.squareColorScrolled)
+    uniformsRef.uColorDarkScrolled.value.set(controls.lineColorScrolled)
 
     if (useBackgroundFill) {
       uniformsRef.uBackgroundColor.value.set(backgroundColor)
@@ -530,7 +538,7 @@ const REFERENCE_WIDTH = 1600
 const REFERENCE_HEIGHT = 1270
 const MOBILE_WIDTH_THRESHOLD = 600
 
-const defaultLandingBackgroundColor = '#DAFA38'
+const defaultLandingBackgroundColor = '#EEFD81'
 
 export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({
   controls,
@@ -540,7 +548,7 @@ export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({
   const pointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
   const useBackgroundFill = transitionProgress !== undefined
   const backgroundColor = controls.backgroundColor ?? defaultLandingBackgroundColor
-  const backgroundColorScrolled = controls.backgroundColorScrolled ?? '#F4F4F4'
+  const backgroundColorScrolled = controls.backgroundColorScrolled ?? '#FFFFFF'
   const heroSaturation = controls.heroSaturation ?? 1
   const scrolledSaturation = controls.scrolledSaturation ?? 0
   const saturationLerp = controls.saturationLerp ?? 0.08
@@ -623,12 +631,15 @@ export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({
   return (
     <div ref={containerRef} className="absolute inset-0 w-full h-full">
       <Canvas
+        linear
+        flat
         orthographic
         camera={{ position: [0, 0, 1], zoom: 1 }}
         dpr={[1, 2]}
         className="bg-transparent w-full h-full"
         gl={{ alpha: true, antialias: true }}
         onCreated={({ gl }) => {
+          gl.toneMapping = THREE.NoToneMapping
           gl.setClearColor(0x000000, 0)
         }}
       >
