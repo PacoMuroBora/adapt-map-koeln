@@ -28,18 +28,8 @@ interface GeoJSONFeatureCollection<T = GeoJSONPoint> {
   features: GeoJSONFeature<T>[]
 }
 
-const COLOR_STOPS = [
-  '#1a5f5f',
-  '#1e3a5f',
-  '#2e5a8a',
-  '#4a90c2',
-  '#87ceeb',
-  '#fffacd',
-  '#ffd700',
-  '#ffb347',
-  '#cd853f',
-  '#8b4513',
-]
+// Heatmap gradient: light purple → green → orange
+export const COLOR_STOPS = ['#9F94FF', '#DAFA38', '#FF8429']
 
 function hexToRgb(hex: string): [number, number, number] {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -94,23 +84,49 @@ uniform float u_borderOpacity;
 uniform vec3 u_borderColor;
 uniform float u_scale;
 uniform vec2 u_tileCenter;
+uniform float u_cornerRadiusPx;
 varying vec2 v_texCoord;
+
+// Signed distance to a rounded rectangle centered at 0 with half-size b and radius r
+float sdRoundRect(vec2 p, vec2 b, float r) {
+  vec2 q = abs(p) - b + vec2(r);
+  return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
 void main() {
   vec2 coord = v_texCoord * u_resolution;
-  
-  // Tile bounds are already scaled, just check if coord is within bounds
-  if (coord.x < u_tileMin.x || coord.x > u_tileMax.x || coord.y < u_tileMin.y || coord.y > u_tileMax.y) discard;
-  // Skip border rendering if border width is 0
-  if (u_borderWidthPx > 0.0) {
-    float distToEdge = min(
-      min(coord.x - u_tileMin.x, u_tileMax.x - coord.x),
-      min(coord.y - u_tileMin.y, u_tileMax.y - coord.y)
-    );
-    if (distToEdge < u_borderWidthPx) {
-      gl_FragColor = vec4(u_borderColor * u_borderOpacity, u_borderOpacity);
-      return;
-    }
+
+  // Quick reject using AABB
+  if (coord.x < u_tileMin.x || coord.x > u_tileMax.x || coord.y < u_tileMin.y || coord.y > u_tileMax.y) {
+    discard;
   }
+
+  // Convert to local space around tile center
+  vec2 tileSize = u_tileMax - u_tileMin;
+  vec2 halfSize = tileSize * 0.5;
+  vec2 center = u_tileMin + halfSize;
+  vec2 p = coord - center;
+
+  float radius = min(u_cornerRadiusPx, min(halfSize.x, halfSize.y));
+  float dist = sdRoundRect(p, halfSize, radius);
+
+  // Outside rounded rect
+  if (dist > 0.0) {
+    discard;
+  }
+
+  // Border region (within u_borderWidthPx of the edge).
+  // Important: only apply this when border is actually visible.
+  if (u_borderWidthPx > 0.0 && u_borderOpacity > 0.0 && dist > -u_borderWidthPx) {
+    // Fade border in by increasing alpha toward full opacity while keeping
+    // the tile's original hue, so it does not look gray/desaturated.
+    float t = clamp(u_borderOpacity, 0.0, 1.0);
+    vec3 borderTint = mix(u_color, u_borderColor, t);
+    float borderAlpha = mix(u_opacity, 1.0, t);
+    gl_FragColor = vec4(borderTint * borderAlpha, borderAlpha);
+    return;
+  }
+
   gl_FragColor = vec4(u_color * u_opacity, u_opacity);
 }
 `
@@ -125,15 +141,11 @@ export interface GridTileLayerOptions {
 }
 
 interface TileAnimationState {
-  scale: number
-  opacity: number
-  targetScale: number
+  opacity: number // used as border highlight factor 0–1
   targetOpacity: number
   startTime: number
-  startScale: number
   startOpacity: number
   duration: number
-  isScalingDown: boolean
 }
 
 export class GridTileLayer implements CustomLayerInterface {
@@ -161,6 +173,7 @@ export class GridTileLayer implements CustomLayerInterface {
   private uBorderColor: WebGLUniformLocation | null = null
   private uScale: WebGLUniformLocation | null = null
   private uTileCenter: WebGLUniformLocation | null = null
+  private uCornerRadius: WebGLUniformLocation | null = null
 
   private hoveredTileKey: string | null = null
   // Track animation state per tile - cleaner structure
@@ -192,6 +205,7 @@ export class GridTileLayer implements CustomLayerInterface {
     this.uBorderColor = gl.getUniformLocation(this.program!, 'u_borderColor')
     this.uScale = gl.getUniformLocation(this.program!, 'u_scale')
     this.uTileCenter = gl.getUniformLocation(this.program!, 'u_tileCenter')
+    this.uCornerRadius = gl.getUniformLocation(this.program!, 'u_cornerRadiusPx')
 
     const quad = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])
     this.quadBuffer = gl.createBuffer()
@@ -221,25 +235,18 @@ export class GridTileLayer implements CustomLayerInterface {
       const prevAnim = this.tileAnimations.get(previousKey)
       if (prevAnim) {
         // Continue from current state
-        prevAnim.targetScale = 1.0
-        prevAnim.targetOpacity = this.opacity
+        prevAnim.targetOpacity = 0.0
         prevAnim.startTime = now
-        prevAnim.startScale = prevAnim.scale
         prevAnim.startOpacity = prevAnim.opacity
         prevAnim.duration = 300
-        prevAnim.isScalingDown = false
       } else {
         // Initialize if doesn't exist
         this.tileAnimations.set(previousKey, {
-          scale: 1.0,
-          opacity: this.opacity,
-          targetScale: 1.0,
-          targetOpacity: this.opacity,
+          opacity: 0.0,
+          targetOpacity: 0.0,
           startTime: now,
-          startScale: 1.0,
-          startOpacity: this.opacity,
+          startOpacity: 0.0,
           duration: 300,
-          isScalingDown: false,
         })
       }
     }
@@ -249,25 +256,18 @@ export class GridTileLayer implements CustomLayerInterface {
       const newAnim = this.tileAnimations.get(newKey)
       if (newAnim) {
         // Continue from current state
-        newAnim.targetScale = 0.90
-        newAnim.targetOpacity = Math.min(1.0, this.opacity + 0.12)
+        newAnim.targetOpacity = 1.0
         newAnim.startTime = now
-        newAnim.startScale = newAnim.scale
         newAnim.startOpacity = newAnim.opacity
         newAnim.duration = 150
-        newAnim.isScalingDown = true
       } else {
         // Initialize if doesn't exist
         this.tileAnimations.set(newKey, {
-          scale: 1.0,
-          opacity: this.opacity,
-          targetScale: 0.90,
-          targetOpacity: Math.min(1.0, this.opacity + 0.12),
+          opacity: 0.0,
+          targetOpacity: 1.0,
           startTime: now,
-          startScale: 1.0,
-          startOpacity: this.opacity,
+          startOpacity: 0.0,
           duration: 150,
-          isScalingDown: true,
         })
       }
     }
@@ -290,10 +290,9 @@ export class GridTileLayer implements CustomLayerInterface {
 
         if (progress >= 1) {
           // Animation complete - snap to target
-          anim.scale = anim.targetScale
           anim.opacity = anim.targetOpacity
           // Remove completed animations for tiles that are not hovered and back to normal
-          if (tileKey !== this.hoveredTileKey && anim.scale === 1.0 && Math.abs(anim.opacity - this.opacity) < 0.001) {
+          if (tileKey !== this.hoveredTileKey && Math.abs(anim.opacity) < 0.001) {
             this.tileAnimations.delete(tileKey)
           } else {
             hasActiveAnimations = true
@@ -304,8 +303,7 @@ export class GridTileLayer implements CustomLayerInterface {
         hasActiveAnimations = true
 
         // Apply easing function
-        const eased = this.ease(progress, anim.isScalingDown)
-        anim.scale = anim.startScale + (anim.targetScale - anim.startScale) * eased
+        const eased = this.ease(progress)
         anim.opacity = anim.startOpacity + (anim.targetOpacity - anim.startOpacity) * eased
       }
 
@@ -327,22 +325,9 @@ export class GridTileLayer implements CustomLayerInterface {
     this.animationFrameId = requestAnimationFrame(animate)
   }
 
-  private ease(progress: number, isScalingDown: boolean): number {
-    if (isScalingDown) {
-      // Hover in: quick in (cubic), medium out (quadratic)
-      // Snappier entrance, medium exit
-      if (progress < 0.4) {
-        return 6.25 * progress * progress * progress // Quick cubic in
-      }
-      return 0.4 + 0.6 * (1 - Math.pow(1 - (progress - 0.4) / 0.6, 2)) // Medium quadratic out
-    } else {
-      // Hover out: medium in (quadratic), slow out (cubic)
-      // Medium entrance, slow smooth exit
-      if (progress < 0.3) {
-        return (progress / 0.3) * (progress / 0.3) // Medium quadratic in
-      }
-      return 0.3 + 0.7 * (1 - Math.pow(1 - (progress - 0.3) / 0.7, 3)) // Slow cubic out
-    }
+  private ease(progress: number): number {
+    // Smooth ease-out for opacity-only border animation
+    return 1 - Math.pow(1 - progress, 3)
   }
 
   prerender(_gl: WebGLRenderingContext, _o: CustomRenderMethodInput): void {}
@@ -413,33 +398,47 @@ export class GridTileLayer implements CustomLayerInterface {
       // Check if this tile has animation state
       const tileKey = `${tileX},${tileY}`
       const anim = this.tileAnimations.get(tileKey)
-      // Use animated values if this tile is being animated, otherwise use default values
-      const scale = anim ? anim.scale : 1.0
-      const tileOpacity = anim ? anim.opacity : this.opacity
+      const baseOpacity = this.opacity
+      const highlight = anim ? anim.opacity : 0.0
 
       const tileCenterX = (minPxX + maxPxX) / 2
       const tileCenterY = (minPxY + maxPxY) / 2
 
-      // Apply scale to tile bounds to make it appear smaller/larger
+      // Keep full raster size visually while overlapping neighbors enough to avoid seams
+      // from rounded corners. This ensures tiles touch in idle state.
       const tileWidth = maxPxX - minPxX
       const tileHeight = maxPxY - minPxY
-      const scaledWidth = tileWidth * scale
-      const scaledHeight = tileHeight * scale
+      const scaledWidth = tileWidth
+      const scaledHeight = tileHeight
       const scaledMinX = tileCenterX - scaledWidth / 2
       const scaledMaxX = tileCenterX + scaledWidth / 2
       const scaledMinY = tileCenterY - scaledHeight / 2
       const scaledMaxY = tileCenterY + scaledHeight / 2
+      // Radius relative to current tile size (screen space) so rounding stays
+      // visually consistent across zoom levels.
+      const minTilePx = Math.min(scaledWidth, scaledHeight)
+      const cornerRadiusPx = Math.max(5, Math.min(20, minTilePx * 0.11))
+      // No geometric overlap; seams are handled by shader border gating.
+      const seamOverlapPx = 0.0
 
       const color = valueToColor(val)
       gl.uniform2f(this.uRes!, w, h)
-      gl.uniform2f(this.uTileMin!, scaledMinX, scaledMinY)
-      gl.uniform2f(this.uTileMax!, scaledMaxX, scaledMaxY)
-      gl.uniform1f(this.uBorderWidth!, borderWidthPx)
+      gl.uniform2f(this.uTileMin!, scaledMinX - seamOverlapPx, scaledMinY - seamOverlapPx)
+      gl.uniform2f(this.uTileMax!, scaledMaxX + seamOverlapPx, scaledMaxY + seamOverlapPx)
+      // Animate outline thickness up to 2x on hover/selection.
+      const animatedBorderWidthPx = borderWidthPx * (1 + highlight)
+      gl.uniform1f(this.uBorderWidth!, animatedBorderWidthPx)
       gl.uniform1f(this.uScale!, 1.0) // No coordinate scaling needed, we scale the bounds instead
       gl.uniform2f(this.uTileCenter!, tileCenterX, tileCenterY)
+      // Rounded corners as requested
+      gl.uniform1f(this.uCornerRadius!, cornerRadiusPx)
       gl.uniform3f(this.uColor!, color[0], color[1], color[2])
-      gl.uniform1f(this.uOpacity!, tileOpacity)
-      gl.uniform1f(this.uBorderOpacity!, Math.min(1.0, tileOpacity * 1.8))
+      // Subtle hover feedback: slightly increase fill opacity on hover.
+      const fillOpacity = Math.min(1.0, baseOpacity + highlight * 0.1)
+      gl.uniform1f(this.uOpacity!, fillOpacity)
+      const borderOpacity = Math.max(0, Math.min(1, highlight))
+      gl.uniform1f(this.uBorderOpacity!, borderOpacity)
+      // Use the tile color itself for the border.
       gl.uniform3f(this.uBorderColor!, color[0], color[1], color[2])
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }

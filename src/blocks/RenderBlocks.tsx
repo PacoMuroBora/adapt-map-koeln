@@ -46,6 +46,7 @@ export const RenderBlocks: React.FC<{
       })
       if (current.length) segments.push(current)
 
+      const firstNonHeroSegIdx = segments.findIndex((s) => !s[0].isHero)
       return (
         <Fragment>
           {segments.map((seg, segIdx) => {
@@ -66,7 +67,11 @@ export const RenderBlocks: React.FC<{
               )
             }
             return (
-              <div key={segIdx} className="bg-white/70">
+              <div
+                key={segIdx}
+                className="bg-transparent"
+                {...(segIdx === firstNonHeroSegIdx ? { 'data-landing-nonhero-start': true } : {})}
+              >
                 {seg.map(({ blocks: b, index }) => {
                   const bt = (b as { blockType?: string }).blockType
                   const Block = bt && bt in blockComponents ? blockComponents[bt as keyof typeof blockComponents] : null

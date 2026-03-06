@@ -1,47 +1,13 @@
 'use client'
 
-import {
-  BookOpenText,
-  LayoutDashboard,
-  Map,
-  Settings2,
-} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useRef, useState } from 'react'
 
 import { Logo } from '@/components/Logo/Logo'
 import { cn } from '@/utilities/ui'
+import { primaryNav } from './nav-config'
 import { UserPanel } from './UserPanel'
-
-type NavItem = {
-  label: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-}
-
-const primaryNav: NavItem[] = [
-  {
-    label: 'Submissions',
-    href: '/dashboard/submissions',
-    icon: LayoutDashboard,
-  },
-  {
-    label: 'Map',
-    href: '/dashboard/map',
-    icon: Map,
-  },
-  {
-    label: 'Knowledge Base',
-    href: '/dashboard/knowledge-base',
-    icon: BookOpenText,
-  },
-  {
-    label: 'Site settings',
-    href: '/dashboard/site-settings',
-    icon: Settings2,
-  },
-]
 
 export function SidebarNav() {
   const pathname = usePathname()
@@ -49,7 +15,7 @@ export function SidebarNav() {
   const justClickedRef = useRef<string | null>(null)
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-border bg-secondary text-foreground">
+    <aside className="hidden h-screen w-64 flex-col border-r border-border bg-secondary text-foreground md:flex">
       <div className="flex items-center gap-3 px-5 pb-5 pt-6">
         <Logo className="text-am-darker" height={22} />
       </div>

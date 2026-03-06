@@ -10,7 +10,7 @@ import type { Map as MapLibreMap } from 'maplibre-gl'
 
 import { Button } from '@/components/ui/button'
 import type { Location } from '@/providers/Submission/types'
-import { GridTileLayer } from './GridTileLayer'
+import { COLOR_STOPS, GridTileLayer } from './GridTileLayer'
 import { TileTooltip } from './TileTooltip'
 
 const EARTH_RADIUS = 6378137
@@ -70,19 +70,6 @@ type HeatmapMapProps = {
   interactionGuardDisabled?: boolean
 }
 
-const COLOR_STOPS = [
-  '#1a5f5f',
-  '#1e3a5f',
-  '#2e5a8a',
-  '#4a90c2',
-  '#87ceeb',
-  '#fffacd',
-  '#ffd700',
-  '#ffb347',
-  '#cd853f',
-  '#8b4513',
-]
-
 const DEFAULT_CENTER = { longitude: 6.9603, latitude: 50.9375, zoom: 6 }
 
 function getTileAtPoint(
@@ -130,7 +117,7 @@ export function HeatmapMap({
     zoom: userLocation ? 10 : DEFAULT_CENTER.zoom,
   })
   const [tileSizeMeters, setTileSizeMeters] = useState(500)
-  const [tileOpacity, setTileOpacity] = useState(0.35)
+  const [tileOpacity, setTileOpacity] = useState(0.42)
   const [gridData, setGridData] = useState<GridData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -305,7 +292,14 @@ export function HeatmapMap({
       const { x, y } = evt.point
       const t = getTileAtPoint(x, y, gridData.features, map, tileSizeMeters)
       setHoveredTile(t)
-      setTooltipPos(t ? { x: x + 12, y: y + 12 } : null)
+      if (t) {
+        const [lng, lat] = t.geometry.coordinates
+        const pt = map.project([lng, lat])
+        // Tooltip's top-left corner is anchored to tile center
+        setTooltipPos({ x: pt.x, y: pt.y })
+      } else {
+        setTooltipPos(null)
+      }
 
       // Update layer animation
       if (layerRef.current) {
@@ -549,7 +543,7 @@ export function HeatmapMap({
 
         <div className="rounded-lg bg-white p-2 shadow-lg sm:p-3">
           <h3 className="mb-1.5 text-xs font-mono tracking-wide uppercase text-muted-foreground sm:mb-2 sm:text-sm">
-            Legende
+            Problem-Index
           </h3>
           <div className="mb-2 h-3 w-full overflow-hidden rounded border border-gray-300 sm:mb-2.5 sm:h-4">
             <div
@@ -558,12 +552,9 @@ export function HeatmapMap({
             />
           </div>
           <div className="flex justify-between text-[10px] text-gray-600 sm:text-xs">
-            <span>Niedrig (0)</span>
-            <span>Hoch (100)</span>
+            <span>Niedrig</span>
+            <span>Hoch</span>
           </div>
-          <p className="mt-1 text-[9px] text-gray-500 sm:text-[10px]">
-            Problem-Index (durchschnittlich)
-          </p>
         </div>
       </div>
     </div>

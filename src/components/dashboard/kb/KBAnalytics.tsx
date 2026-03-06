@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { dashboardFetch } from '@/lib/dashboard-api'
+import { cn } from '@/utilities/ui'
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 type RangeKey = '7d' | '30d' | '180d' | '365d'
@@ -26,7 +27,9 @@ const RANGE_LABEL: Record<RangeKey, string> = {
   '365d': '1J',
 }
 
-export function KBAnalytics() {
+export type KBChartVariant = 'time' | 'distribution' | 'both'
+
+export function KBAnalytics({ chart = 'both' }: { chart?: KBChartVariant }) {
   const [range, setRange] = useState<RangeKey>('7d')
   const [data, setData] = useState<AnalyticsResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -62,8 +65,12 @@ export function KBAnalytics() {
   const distributionYAxisLabel =
     tab === 'items' ? 'KB-Item' : tab === 'themes' ? 'Thema' : 'Kategorie'
 
+  const showTime = chart === 'time' || chart === 'both'
+  const showDistribution = chart === 'distribution' || chart === 'both'
+
   return (
-    <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2">
+    <div className={cn('h-full', showTime && showDistribution && 'grid grid-cols-1 gap-6 md:grid-cols-2')}>
+      {showTime && (
       <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
         <CardHeader className="pb-4 space-y-1">
           <div className="flex items-center justify-between gap-4">
@@ -157,7 +164,9 @@ export function KBAnalytics() {
           )}
         </CardContent>
       </Card>
+      )}
 
+      {showDistribution && (
       <Card variant="white" className="flex h-full flex-col bg-card text-foreground shadow">
         <CardHeader className="pb-4 space-y-1">
           <div className="flex items-center justify-between gap-4">
@@ -247,6 +256,7 @@ export function KBAnalytics() {
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   )
 }

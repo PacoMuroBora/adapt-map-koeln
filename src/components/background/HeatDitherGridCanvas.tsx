@@ -40,7 +40,10 @@ const fragmentShader = /* glsl */ `
 
   uniform vec3 uColorLight;
   uniform vec3 uColorDark;
-
+  uniform vec3 uBackgroundColor;
+  uniform vec3 uBackgroundColorScrolled;
+  uniform float uSaturation;
+  uniform float uUseBackgroundFill;
 
   uniform float uParallaxOffset;    // vertical parallax: noise translated opposite to scroll (scroll down -> add sample y -> texture moves down)
 
@@ -129,6 +132,11 @@ const fragmentShader = /* glsl */ `
   float lineActivationFromValue(float value, float lineStartDarkness) {
     float darkness = clamp(1.0 - value, 0.0, 1.0);
     return smoothstep(lineStartDarkness, 1.0, darkness);
+  }
+
+  vec3 applySaturation(vec3 c, float s) {
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    return mix(vec3(l), c, s);
   }
 
   void main() {
@@ -233,10 +241,21 @@ const fragmentShader = /* glsl */ `
     // Seam lines are composited on top
     color = mix(color, uColorDark, seamMask);
 
-    // Alpha: visible where we have a square or seam; background stays transparent
     float alpha = clamp(insideSquare + seamMask, 0.0, 1.0);
 
-    gl_FragColor = vec4(color, alpha);
+    vec3 finalColor;
+    float outAlpha;
+    if (uUseBackgroundFill > 0.5) {
+      vec3 bgColor = mix(uBackgroundColorScrolled, uBackgroundColor, uSaturation);
+      finalColor = mix(bgColor, color, alpha);
+      finalColor = applySaturation(finalColor, uSaturation);
+      outAlpha = 1.0;
+    } else {
+      finalColor = applySaturation(color, uSaturation);
+      outAlpha = alpha;
+    }
+
+    gl_FragColor = vec4(finalColor, outAlpha);
   }
 `
 
@@ -269,6 +288,11 @@ const FullscreenQuad: React.FC<
     pointerCursorRef: React.MutableRefObject<boolean>
     clickPulseRef: React.MutableRefObject<number>
     parallaxOffsetY?: number
+    useBackgroundFill?: boolean
+    backgroundColor?: string
+    backgroundColorScrolled?: string
+    saturationTarget?: number
+    saturationLerp?: number
   }
 > = ({
   controls,
@@ -278,6 +302,11 @@ const FullscreenQuad: React.FC<
   pointerCursorRef,
   clickPulseRef,
   parallaxOffsetY = 0,
+    useBackgroundFill = false,
+    backgroundColor = '#ffffff',
+    backgroundColorScrolled = '#f4f4f4',
+    saturationTarget = 1,
+    saturationLerp = 0.08,
 }) => {
   const materialRef = useRef<THREE.ShaderMaterial | null>(null)
   const { size, viewport, gl } = useThree()
@@ -285,6 +314,7 @@ const FullscreenQuad: React.FC<
   const trailRef = useRef<{ x: number; y: number; age: number }[]>([])
   const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
   const cursorMultAnimRef = useRef(1)
+  const saturationCurrentRef = useRef(1)
 
   const MAX_TRAIL = 64
   const CURSOR_HOVER_EASE = 6
@@ -313,6 +343,10 @@ const FullscreenQuad: React.FC<
 
       uColorLight: { value: new THREE.Color(controls.squareColor) },
       uColorDark: { value: new THREE.Color(controls.lineColor) },
+      uBackgroundColor: { value: new THREE.Color('#ffffff') },
+      uBackgroundColorScrolled: { value: new THREE.Color('#f4f4f4') },
+      uSaturation: { value: 1 },
+      uUseBackgroundFill: { value: 0 },
 
       uPointerRadius: { value: controls.interactionPointerRadius },
       uPointerRadiusHead: { value: controls.interactionPointerRadius },
@@ -355,11 +389,19 @@ const FullscreenQuad: React.FC<
     uniformsRef.uColorLight.value.set(controls.squareColor)
     uniformsRef.uColorDark.value.set(controls.lineColor)
 
+    if (useBackgroundFill) {
+      uniformsRef.uBackgroundColor.value.set(backgroundColor)
+      uniformsRef.uBackgroundColorScrolled.value.set(backgroundColorScrolled)
+      uniformsRef.uUseBackgroundFill.value = 1
+    } else {
+      uniformsRef.uUseBackgroundFill.value = 0
+    }
+
     uniformsRef.uPointerStrength.value = controls.interactionPointerStrength
     uniformsRef.uScrollStrength.value = controls.interactionScrollStrength
     uniformsRef.uTrailStrength.value = controls.trailStrength
     uniformsRef.uInteractionMode.value = interactionModeToIndex(controls.interactionMode)
-  }, [controls])
+  }, [controls, useBackgroundFill, backgroundColor, backgroundColorScrolled])
 
   useFrame((_state, delta) => {
     if (!materialRef.current) return
@@ -371,6 +413,15 @@ const FullscreenQuad: React.FC<
     uniformsRef.uPointer.value.set(pointer.x, pointer.y)
     uniformsRef.uScroll.value = scroll
     uniformsRef.uParallaxOffset.value = parallaxOffsetY
+
+    if (useBackgroundFill) {
+      const cur = saturationCurrentRef.current
+      const next = cur + (saturationTarget - cur) * Math.min(1, saturationLerp)
+      saturationCurrentRef.current = next
+      uniformsRef.uSaturation.value = next
+    } else {
+      uniformsRef.uSaturation.value = 1
+    }
 
     const isTouchOrPen =
       pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen'
@@ -467,6 +518,8 @@ interface HeatDitherGridCanvasProps {
   controls: BackgroundControls
   /** Vertical parallax offset 0..1 (e.g. scroll-based). Pattern shifts so background lags. */
   parallaxOffsetY?: number
+  /** When set (0=hero, 1=scrolled), enables background fill and saturation transition. Uses controls.backgroundColor, heroSaturation, scrolledSaturation, saturationLerp when present. */
+  transitionProgress?: number
 }
 
 const TOUCH_PEN_RADIUS_MULT = 2
@@ -477,11 +530,23 @@ const REFERENCE_WIDTH = 1600
 const REFERENCE_HEIGHT = 1270
 const MOBILE_WIDTH_THRESHOLD = 600
 
+const defaultLandingBackgroundColor = '#DAFA38'
+
 export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({
   controls,
   parallaxOffsetY = 0,
+  transitionProgress,
 }) => {
   const pointerRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 })
+  const useBackgroundFill = transitionProgress !== undefined
+  const backgroundColor = controls.backgroundColor ?? defaultLandingBackgroundColor
+  const backgroundColorScrolled = controls.backgroundColorScrolled ?? '#F4F4F4'
+  const heroSaturation = controls.heroSaturation ?? 1
+  const scrolledSaturation = controls.scrolledSaturation ?? 0
+  const saturationLerp = controls.saturationLerp ?? 0.08
+  const saturationTarget = useBackgroundFill
+    ? heroSaturation + (scrolledSaturation - heroSaturation) * Math.max(0, Math.min(1, transitionProgress ?? 0))
+    : 1
   const scrollRef = useRef(0)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pointerTypeRef = useRef<string>('mouse')
@@ -575,6 +640,11 @@ export const HeatDitherGridCanvas: React.FC<HeatDitherGridCanvasProps> = ({
           pointerCursorRef={pointerCursorRef}
           clickPulseRef={clickPulseRef}
           parallaxOffsetY={parallaxOffsetY}
+          useBackgroundFill={useBackgroundFill}
+          backgroundColor={backgroundColor}
+          backgroundColorScrolled={backgroundColorScrolled}
+          saturationTarget={saturationTarget}
+          saturationLerp={saturationLerp}
         />
       </Canvas>
     </div>
