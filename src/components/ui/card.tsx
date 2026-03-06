@@ -11,6 +11,7 @@ const cardVariants = cva('rounded-3xl text-card-foreground shadow-sm', {
       pink: 'bg-am-pink',
       turquoise: 'bg-am-turquoise',
       white: 'bg-am-white',
+      black: 'bg-am-dark text-white [&_.text-muted-foreground]:text-white/80',
     },
   },
   defaultVariants: {
