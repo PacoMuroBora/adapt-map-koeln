@@ -61,6 +61,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     <Button
       className={className}
       disabled={disabled ?? false}
+      disabledHoverLabel={disabled ? 'verfügbar ab 9.3.' : undefined}
       href={href ?? undefined}
       iconAfter={iconAfter != null && iconAfter !== '' ? iconAfter : undefined}
       iconBefore={iconBefore != null && iconBefore !== '' ? iconBefore : undefined}
