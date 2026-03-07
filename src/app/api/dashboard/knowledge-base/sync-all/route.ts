@@ -35,7 +35,6 @@ export async function POST(request: Request) {
       limit: 10000,
       depth: 0,
       where: { status: { equals: 'published' } },
-      select: { id: true },
     })
 
     const synced: string[] = []
