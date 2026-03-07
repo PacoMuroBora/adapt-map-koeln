@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server'
 import type { PayloadRequest } from 'payload'
 
-import { getCachedKnowledgeBaseAnalytics } from '@/lib/dashboard-cache'
+import {
+  getCachedKnowledgeBaseAnalytics,
+  getCachedKnowledgeBaseList,
+} from '@/lib/dashboard-cache'
 import { getPayloadClient } from '@/lib/payload'
+
+const MAX_LABEL_LENGTH = 40
+
+function truncateLabel(title: string | null | undefined): string {
+  const s = title?.trim() || ''
+  if (s.length <= MAX_LABEL_LENGTH) return s
+  return s.slice(0, MAX_LABEL_LENGTH).trim() + '…'
+}
 
 type RangeKey = '7d' | '30d' | '180d' | '365d'
 
@@ -33,8 +44,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const result = await getCachedKnowledgeBaseAnalytics(range)
+    const [result, kbListResult] = await Promise.all([
+      getCachedKnowledgeBaseAnalytics(range),
+      getCachedKnowledgeBaseList(),
+    ])
     const docs = result.docs as any[]
+    const kbItems = (kbListResult.docs ?? []) as { id: string; displayTitle?: string | null }[]
+    const kbIdToTitle = new Map<string, string>(
+      kbItems.map((item) => [String(item.id), truncateLabel(item.displayTitle)]),
+    )
 
     const byDay = new Map<string, { date: string; count: number }>()
     const byItem = new Map<string, number>()
@@ -80,11 +98,16 @@ export async function GET(request: Request) {
         .slice(0, limit)
         .map(([label, value]) => ({ label, value }))
 
+    const byItemWithLabels = top(byItem).map(({ label: id, value }) => ({
+      label: kbIdToTitle.get(id) ?? id,
+      value,
+    }))
+
     return NextResponse.json({
       range,
       totalEvents: docs.length,
       timeSeries,
-      byItem: top(byItem),
+      byItem: byItemWithLabels,
       byTheme: top(byTheme),
       byCategory: top(byCategory),
     })
