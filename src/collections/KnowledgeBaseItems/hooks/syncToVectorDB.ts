@@ -5,8 +5,9 @@ import { triggerKBSync as triggerKBSyncUtil } from '../../../utilities/triggerKB
 import type { KnowledgeBaseItem } from '../../../payload-types'
 
 /**
- * Hook to sync Knowledge Base items to vector database via n8n webhook
- * Only syncs when status is 'published' and content has changed
+ * Hook to sync Knowledge Base items to vector database via n8n webhook.
+ * AI/vector sync runs only when status is 'published'. Draft/archived saves do not sync.
+ * Unpublishing (status was published → draft/archived) triggers a delete in the vector DB.
  */
 export const syncKnowledgeBaseToVectorDB: CollectionAfterChangeHook<KnowledgeBaseItem> = async ({
   doc,
@@ -14,31 +15,36 @@ export const syncKnowledgeBaseToVectorDB: CollectionAfterChangeHook<KnowledgeBas
   operation,
   req: { payload, context },
 }) => {
-  // Skip if sync is disabled (e.g., during bulk operations)
   if (context.skipKBSync) {
     return doc
   }
 
-  // Only sync published items
+  // Only run AI/vector sync for published entries
   if (doc.status !== 'published') {
-    // If item was unpublished, trigger delete sync
     if (previousDoc?.status === 'published') {
       await triggerKBSync('delete', String(doc.id), payload)
     }
     return doc
   }
 
-  // Check if content actually changed (to avoid unnecessary syncs)
+  // Check if content actually changed (any field editable from dashboard or admin)
   const contentChanged =
     !previousDoc ||
     doc.companyOrTip?.company !== previousDoc.companyOrTip?.company ||
     doc.companyOrTip?.tip !== previousDoc.companyOrTip?.tip ||
+    doc.displayTitle !== previousDoc.displayTitle ||
     doc.description !== previousDoc.description ||
     doc.problems_solved !== previousDoc.problems_solved ||
+    doc.link !== previousDoc.link ||
+    doc.solution_type !== previousDoc.solution_type ||
+    doc.theme !== previousDoc.theme ||
+    doc.location !== previousDoc.location ||
+    doc.use_case !== previousDoc.use_case ||
+    doc.applicable_when !== previousDoc.applicable_when ||
+    doc.additional_context !== previousDoc.additional_context ||
     JSON.stringify(doc.categories) !== JSON.stringify(previousDoc.categories) ||
     JSON.stringify(doc.keywords) !== JSON.stringify(previousDoc.keywords)
 
-  // Only sync if content changed or it's a new item
   if (contentChanged || operation === 'create') {
     const action = operation === 'create' ? 'create' : 'update'
     await triggerKBSync(action, String(doc.id), payload)

@@ -154,7 +154,7 @@ export function SubmissionsAnalytics({
 
               <div className="mt-4 h-36 rounded-2xl bg-gradient-to-t from-am-purple/10 to-am-purple/30 pl-3 pr-3 pt-2 pb-1">
                 {data.timeSeries.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={144}>
                     <LineChart
                       data={data.timeSeries}
                       // Minimal but readable padding around plot area
@@ -257,7 +257,7 @@ export function SubmissionsAnalytics({
           {data && !error && (
             <div className="flex flex-1 flex-col gap-3">
               {bars.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                   <BarChart
                     data={bars}
                     layout="vertical"

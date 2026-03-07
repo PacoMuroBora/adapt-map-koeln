@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from 'react'
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -25,7 +34,7 @@ import {
 } from '@/components/ui/sheet'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, RefreshCw } from 'lucide-react'
 import { categoryOptions } from '@/collections/KnowledgeBaseItems/categoryOptions'
 import { themeOptions } from '@/collections/KnowledgeBaseItems/themeOptions'
 import { AnimatePresence, motion } from 'motion/react'
@@ -63,6 +72,11 @@ export function KBList() {
   const [detail, setDetail] = useState<any | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [syncAllOpen, setSyncAllOpen] = useState(false)
+  const [syncAllLoading, setSyncAllLoading] = useState(false)
+  const [syncResult, setSyncResult] = useState<{ type: 'success' | 'error'; message: string } | null>(
+    null,
+  )
 
   useEffect(() => {
     const load = async () => {
@@ -137,6 +151,8 @@ export function KBList() {
     displayTitle: '',
     description: '',
     problems_solved: '',
+    additional_context: '',
+    applicable_when: '',
     link: '',
     solution_type: '',
     theme: '',
@@ -166,6 +182,40 @@ export function KBList() {
     })
   }
 
+  const handleSyncAll = async () => {
+    setSyncAllLoading(true)
+    setSyncResult(null)
+    try {
+      const res = await dashboardFetch<{ synced: number; errors?: string[]; total: number }>(
+        '/api/dashboard/knowledge-base/sync-all',
+        { method: 'POST' },
+      )
+      setSyncAllOpen(false)
+      const loadRes = await dashboardFetch<ListResponse>('/api/dashboard/knowledge-base', {
+        method: 'GET',
+      })
+      setData(loadRes)
+      if (res.errors?.length) {
+        setSyncResult({
+          type: 'error',
+          message: `${res.synced}/${res.total} synchronisiert. Fehler: ${res.errors.slice(0, 3).join('; ')}`,
+        })
+      } else {
+        setSyncResult({
+          type: 'success',
+          message: `${res.synced} Einträge erfolgreich synchronisiert.`,
+        })
+      }
+      setTimeout(() => setSyncResult(null), 6000)
+    } catch (err: any) {
+      setSyncAllOpen(false)
+      setSyncResult({ type: 'error', message: err?.message || 'Sync fehlgeschlagen' })
+      setTimeout(() => setSyncResult(null), 6000)
+    } finally {
+      setSyncAllLoading(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!openId || !detail) return
     setSaving(true)
@@ -177,6 +227,8 @@ export function KBList() {
         status: detail.status ?? 'draft',
         description: detail.description,
         problems_solved: detail.problems_solved,
+        additional_context: detail.additional_context,
+        applicable_when: detail.applicable_when,
         link: detail.link,
         solution_type: detail.solution_type && String(detail.solution_type).trim() ? detail.solution_type : undefined,
         theme: detail.theme && String(detail.theme).trim() ? detail.theme : undefined,
@@ -198,6 +250,11 @@ export function KBList() {
           body: payload,
         })
         setOpenId(null)
+        setDetail(null)
+        const res = await dashboardFetch<ListResponse>('/api/dashboard/knowledge-base', {
+          method: 'GET',
+        })
+        setData(res)
       }
     } catch (err: any) {
       setSaveError(err?.message || 'Fehler beim Speichern')
@@ -216,9 +273,19 @@ export function KBList() {
           <p className="text-base text-foreground-alt">
             {data ? `${data.totalDocs} Einträge` : 'Lade…'}
           </p>
+          {syncResult && (
+            <p
+              className={cn(
+                'text-body-sm',
+                syncResult.type === 'success' ? 'text-am-green-alt' : 'text-destructive',
+              )}
+            >
+              {syncResult.message}
+            </p>
+          )}
         </div>
         <div className="flex flex-col items-stretch gap-2 md:items-end">
-          <div className="flex w-full gap-2 md:w-auto md:justify-end">
+          <div className="flex w-full flex-wrap gap-2 md:w-auto md:justify-end">
             <Button
               variant="default"
               size="mini"
@@ -227,6 +294,21 @@ export function KBList() {
               onClick={openCreateDrawer}
             >
               Neuer Eintrag
+            </Button>
+            <Button
+              variant="ghost-muted"
+              size="mini"
+              shape="round"
+              className="flex-1 text-base md:flex-none"
+              onClick={() => setSyncAllOpen(true)}
+              disabled={syncAllLoading || !data?.totalDocs}
+              aria-label="Alle Einträge mit KI-Suche synchronisieren"
+            >
+              <RefreshCw
+                className={cn('mr-1.5 size-4', syncAllLoading && 'animate-spin')}
+                aria-hidden
+              />
+              Alle synchronisieren
             </Button>
             <Button
               variant={filterOpen ? 'pill' : 'ghost-muted'}
@@ -509,33 +591,35 @@ export function KBList() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-foreground-alt">Solution type</Label>
-                  <Input
-                    value={detail.solution_type ?? ''}
-                    onChange={(e) => handleFieldChange('solution_type', e.target.value)}
-                    placeholder="z. B. startup"
-                    className="h-9 max-w-xs rounded-lg bg-background text-base"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-foreground-alt">Thema</Label>
-                  <Select
-                    value={detail.theme && String(detail.theme).trim() ? detail.theme : '__none__'}
-                    onValueChange={(v) => handleFieldChange('theme', v === '__none__' ? '' : v)}
-                  >
-                    <SelectTrigger className="h-9 rounded-lg border-border/70 bg-background text-base">
-                      <SelectValue placeholder="Thema wählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">—</SelectItem>
-                      {themeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground-alt">Thema</Label>
+                    <Select
+                      value={detail.theme && String(detail.theme).trim() ? detail.theme : '__none__'}
+                      onValueChange={(v) => handleFieldChange('theme', v === '__none__' ? '' : v)}
+                    >
+                      <SelectTrigger className="h-9 rounded-lg border-border/70 bg-background text-base">
+                        <SelectValue placeholder="Thema wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">—</SelectItem>
+                        {themeOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground-alt">Solution type</Label>
+                    <Input
+                      value={detail.solution_type ?? ''}
+                      onChange={(e) => handleFieldChange('solution_type', e.target.value)}
+                      placeholder="z. B. startup"
+                      className="h-9 w-full rounded-lg bg-background text-base"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground-alt">Kategorien</Label>
@@ -590,13 +674,42 @@ export function KBList() {
                     className="min-h-[90px] rounded-xl bg-background text-base"
                   />
                 </div>
-                {saveError && <p className="text-base text-destructive">{saveError}</p>}
+                <div className="space-y-2">
+                  <Label className="text-foreground-alt">Zusätzlicher Kontext</Label>
+                  <Textarea
+                    color="purple"
+                    size="sm"
+                    value={detail.additional_context ?? ''}
+                    onChange={(e) => handleFieldChange('additional_context', e.target.value)}
+                    placeholder="Kontextdaten aus der Quelldaten"
+                    className="min-h-[90px] rounded-xl bg-background text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground-alt">Anwendbar wenn</Label>
+                  <Textarea
+                    color="purple"
+                    size="sm"
+                    value={detail.applicable_when ?? ''}
+                    onChange={(e) => handleFieldChange('applicable_when', e.target.value)}
+                    placeholder="Bedingungen, unter denen die Lösung anwendbar ist"
+                    className="min-h-[90px] rounded-xl bg-background text-base"
+                  />
+                </div>
               </>
             ) : (
               <p className="text-foreground-alt">Lade Eintrag…</p>
             )}
           </div>
-          <SheetFooter className="border-t border-border/40 pt-4">
+          <SheetFooter className="flex-col gap-3 border-t border-border/40 pt-4">
+            <p
+              className={cn(
+                'text-body-sm',
+                saveError ? 'text-destructive' : 'text-foreground-alt',
+              )}
+            >
+              {saveError ?? 'Der Eintrag wird beim Speichern automatisch mit der KI-Suche synchronisiert.'}
+            </p>
             <Button
               size="lg"
               shape="round"
@@ -609,6 +722,31 @@ export function KBList() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={syncAllOpen} onOpenChange={setSyncAllOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alle Einträge synchronisieren?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle veröffentlichten Knowledge-Base-Einträge werden mit der KI-/Vektor-Datenbank
+              abgeglichen. Das kann je nach Anzahl der Einträge einen Moment dauern.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button
+              variant="default"
+              size="lg"
+              shape="round"
+              className="bg-am-green-alt text-am-dark hover:bg-am-green-alt/90"
+              onClick={handleSyncAll}
+              disabled={syncAllLoading}
+            >
+              {syncAllLoading ? 'Synchronisiere…' : 'Synchronisieren'}
+            </Button>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }
