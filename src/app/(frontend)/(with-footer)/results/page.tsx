@@ -130,7 +130,7 @@ export default function ResultsPage() {
         <div className="inner-container py-16 md:py-28 space-y-6">
           <div>
             <h2 className="mb-4 text-h1 uppercase">Das kannst du jetzt tun</h2>
-            <p className="text-body text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               Basierend auf deinen Antworten hat unsere KI dir folgende Vorschläge zusammengefasst.
             </p>
           </div>
