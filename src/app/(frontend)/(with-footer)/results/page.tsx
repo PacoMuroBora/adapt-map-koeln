@@ -73,10 +73,15 @@ export default function ResultsPage() {
 
   useEffect(() => {
     const postalCode = state.location?.postal_code
-    if (!postalCode) return
+    const submissionId = state.submissionId
+    if (!postalCode && !submissionId) return
 
     let cancelled = false
-    fetch(`/api/submissions/count-by-plz?postalCode=${encodeURIComponent(postalCode)}`)
+    const query =
+      postalCode != null && postalCode !== ''
+        ? `postalCode=${encodeURIComponent(postalCode)}`
+        : `submissionId=${encodeURIComponent(submissionId!)}`
+    fetch(`/api/submissions/count-by-plz?${query}`)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed to fetch'))))
       .then((data: { count: number; districtName?: string | null; city?: string | null }) => {
         if (!cancelled) {
@@ -93,24 +98,26 @@ export default function ResultsPage() {
     return () => {
       cancelled = true
     }
-  }, [state.location?.postal_code])
+  }, [state.location?.postal_code, state.submissionId])
 
   if (showError) {
     return (
       <div className="min-h-screen">
         <section className="container relative bg-black background-grid-dark">
-          <div className="inner-container relative z-10 flex flex-col justify-center items-center min-h-screen gap-8 py-16">
-            <AlertCircle className="size-16 text-destructive" aria-hidden />
-            <div className="flex flex-col gap-4 text-center max-w-md">
+          <div className="inner-container relative z-10 flex flex-col justify-center min-h-screen gap-8 py-16">
+            <AlertCircle className="size-8 text-destructive" aria-hidden />
+            <div className="flex flex-col gap-4 max-w-md">
               <h1 className="font-headings text-h2 font-semibold text-white">Keine Umfragedaten</h1>
               <p className="font-body text-body text-white/90">
                 Es wurden keine Umfragedaten gefunden. Bitte starte die Umfrage von vorne, um deine
                 Ergebnisse zu sehen.
               </p>
+              <div>
+                <Button variant="white" size="lg" iconAfter="arrow-up-right" shape="round">
+                  <Link href="/questionnaire/hitze">Umfrage erneut starten</Link>
+                </Button>
+              </div>
             </div>
-            <Button asChild variant="default" size="lg">
-              <Link href="/">Zur Startseite</Link>
-            </Button>
           </div>
         </section>
       </div>
@@ -129,7 +136,7 @@ export default function ResultsPage() {
                 <h1 className="font-headings text-h2 font-semibold text-white">
                   {plzStats?.count != null
                     ? `Du bist die ${plzStats.count}. Person aus ${plzStats.districtName ?? plzStats.city ?? state.location?.city ?? 'deiner Region'} die mitgemacht hat.`
-                    : `Du bist eine Person aus ${state.location?.city ?? 'deiner Region'} die mitgemacht hat.`}
+                    : `Danke fürs Mitmachen!`}
                 </h1>
               </div>
               <p className="font-body text-body text-white">
@@ -182,7 +189,7 @@ export default function ResultsPage() {
       </div>
 
       <div className="inner-container my-12">
-        <Button variant="default" size="lg">
+        <Button variant="default" size="lg" iconAfter="arrow-up-right" shape="round">
           <Link href="/questionnaire/hitze">Neue Umfrage starten</Link>
         </Button>
       </div>

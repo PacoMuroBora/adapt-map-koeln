@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import QuestionnaireNav from '@/components/questionnaire/QuestionnaireNav'
 import { useQuestionnaireNavigation } from '../useQuestionnaireNavigation'
+import { useSetQuestionnaireProgress } from '../QuestionnaireProgressContext'
 import { Button } from '@/components/ui/button'
 
 type QuestionnaireStartViewProps = {
@@ -39,11 +40,14 @@ export default function QuestionnaireStartView({
 
   const onNext = onStartProp ?? (() => router.push(`/questionnaire/${questionnaireName}/1`))
 
+  // Hide progress bar on start view
+  useSetQuestionnaireProgress(null)
+
   const showInstruction =
     useInstructionScreen && (instructionTitle != null || instructionItems.length > 0)
 
   return (
-    <div className="flex w-full h-full flex-col gap-8 px-4 md:px-8 lg:px-16 pt-20 overflow-hidden">
+    <div className="flex w-full h-screen flex-col gap-8 px-4 md:px-8 lg:px-16 pt-20 overflow-hidden">
       {/* background grid */}
       <div className="fixed inset-0 z-0 h-screen w-screen background-grid-dark" />
 

@@ -4,24 +4,43 @@ import { getDistrictForPlz } from '@/utilities/colognePlz'
 
 /**
  * GET /api/submissions/count-by-plz?postalCode=51063
+ * GET /api/submissions/count-by-plz?submissionId=xxx
  * Returns the number of submissions for the given postal code (PLZ), district (Stadtteil) and optional city.
  * Public endpoint for the results page headline ("Du bist die X. Person aus Y die mitgemacht hat.").
+ * If submissionId is provided instead of postalCode, the submission's PLZ is looked up first.
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const postalCode = searchParams.get('postalCode')?.trim()
-
-    if (!postalCode) {
-      return NextResponse.json({ error: 'Missing postalCode query parameter' }, { status: 400 })
-    }
+    let postalCode = searchParams.get('postalCode')?.trim()
+    const submissionId = searchParams.get('submissionId')?.trim()
 
     const payload = await getPayloadClient()
 
+    if (!postalCode && submissionId) {
+      const submission = await payload.findByID({
+        collection: 'submissions',
+        id: submissionId,
+        depth: 0,
+        select: { location: true },
+        overrideAccess: true,
+      })
+      const loc = submission?.location as { postal_code?: string; city?: string } | undefined
+      postalCode = loc?.postal_code?.trim() ?? undefined
+    }
+
+    if (!postalCode) {
+      return NextResponse.json(
+        { error: 'Missing postalCode or valid submissionId query parameter' },
+        { status: 400 },
+      )
+    }
+
+    const plz = postalCode
     const result = await payload.find({
       collection: 'submissions',
       where: {
-        'location.postal_code': { equals: postalCode },
+        'location.postal_code': { equals: plz },
       },
       limit: 1,
       depth: 0,
@@ -34,7 +53,7 @@ export async function GET(request: NextRequest) {
       result.docs[0] && typeof result.docs[0].location === 'object' && result.docs[0].location?.city
         ? String(result.docs[0].location.city).trim()
         : null
-    const districtName = getDistrictForPlz(postalCode)
+    const districtName = getDistrictForPlz(plz)
 
     return NextResponse.json(
       { count, districtName: districtName ?? null, city: city || null },

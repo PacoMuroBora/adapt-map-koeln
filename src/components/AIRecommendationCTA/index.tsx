@@ -64,13 +64,13 @@ export function AIRecommendationCTA() {
   if (state.aiSummary && state.aiRecommendations) {
     return (
       <div className="space-y-2 py-12">
-        <p className="text-body-lg text-muted-foreground">{state.aiSummary}</p>
+        <p className="text-body-lg text-muted-foreground max-w-[800px]">{state.aiSummary}</p>
         {state.aiRecommendations && state.aiRecommendations.length > 0 && (
           <div className="space-y-4">
             <h4 className="font-mono uppercase tracking-wide text-body font-normal text-muted pt-12">
               Empfehlungen
             </h4>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
+            <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
               {state.aiRecommendations.map((rec: any, index: number) => {
                 const num = String(index + 1).padStart(2, '0')
                 return (
