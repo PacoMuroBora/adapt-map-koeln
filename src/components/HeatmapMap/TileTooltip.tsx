@@ -7,6 +7,7 @@ type ValueCounts = Record<number, number>
 type TileTooltipProps = {
   totalCount: number
   averageProblemIndex: number
+  averageHotDaysPerYear: number
   valueCounts: ValueCounts
   x: number
   y: number
@@ -16,6 +17,7 @@ type TileTooltipProps = {
 export function TileTooltip({
   totalCount,
   averageProblemIndex,
+  averageHotDaysPerYear,
   valueCounts,
   x,
   y,
@@ -58,7 +60,7 @@ export function TileTooltip({
             <span className="block">im jahr ⌀</span>
           </p>
           <p className="shrink-0 text-xl font-mono tracking-[0.01em]">
-            {Math.round(averageProblemIndex)}
+            {Math.round(averageHotDaysPerYear)}
           </p>
         </div>
 

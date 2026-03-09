@@ -557,18 +557,24 @@ export function SubmissionsList({
                       detailJson.aiFields.ai_referenced_kb_ids.length > 0 && (
                         <div className="mt-3 space-y-1 text-base">
                           <p className="text-foreground-alt">
-                            Verknüpfte Knowledge-Base-Items (IDs aus RAG):
+                            Verknüpfte Knowledge-Base-Items:
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {detailJson.aiFields.ai_referenced_kb_ids.map(
-                              (entry: any, idx: number) => (
-                                <span
-                                  key={`${entry?.kb_id ?? idx}`}
-                                  className="rounded-full bg-secondary/60 px-2 py-0.5 font-mono text-sm text-foreground"
-                                >
-                                  {entry?.kb_id ?? 'Unbekannt'}
-                                </span>
-                              ),
+                              (entry: any, idx: number) => {
+                                const displayId =
+                                  typeof entry === 'string'
+                                    ? entry
+                                    : entry?.id ?? entry?.kb_id ?? 'Unbekannt'
+                                return (
+                                  <span
+                                    key={`${displayId}-${idx}`}
+                                    className="rounded-full bg-secondary/60 px-2 py-0.5 font-mono text-sm text-foreground"
+                                  >
+                                    {displayId}
+                                  </span>
+                                )
+                              },
                             )}
                           </div>
                         </div>

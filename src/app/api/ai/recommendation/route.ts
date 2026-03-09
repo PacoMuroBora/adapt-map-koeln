@@ -3,6 +3,42 @@ import { getPayloadClient } from '@/lib/payload'
 import { getN8nWebhookUrl } from '@/utilities/getN8nWebhookUrl'
 import type { KnowledgeBaseItem, Submission } from '@/payload-types'
 
+const HEAT_FREQUENCY_LABELS: Record<string, string> = {
+  '1-3': '1 – 3 Tage pro Jahr',
+  '4-10': '4 – 10 Tage pro Jahr',
+  '11-20': '11 – 20 Tage pro Jahr',
+  '21-40': '21 – 40 Tage pro Jahr',
+  '>40': 'Mehr als 40 Tage pro Jahr',
+}
+
+const HOUSING_TYPE_LABELS: Record<string, string> = {
+  apartment: 'In einer Wohnung',
+  house: 'In einem Haus',
+}
+
+const CITY_AREA_LABELS: Record<string, string> = {
+  inner: 'Innenstadt',
+  outer: 'Äußerer Bereich / Stadtrand',
+}
+
+const NEIGHBORHOOD_LABELS: Record<string, string> = {
+  open_streets: 'Offene Straßen',
+  greenery: 'Viel begrünt',
+  main_road: 'Hauptstraße',
+  park: 'Parknähe',
+  no_greenery: 'Keine Begrünung',
+  river: 'Flussnähe',
+  closed_surfaces: 'Versiegelte Flächen',
+}
+
+const DESIRED_CHANGES_LABELS: Record<string, string> = {
+  schatten: 'Verschattung',
+  cooling: 'Schatten kreieren',
+  dachbegruenung: 'Dachbegrünung anlegen',
+  strassenbegruenung: 'Straßenbegrünung anlegen',
+  wasserstellen: 'Wasserstellen anlegen',
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { submissionId } = await req.json()
@@ -42,7 +78,13 @@ export async function POST(req: NextRequest) {
     // Get n8n webhook URL
     const n8nEndpoint = await getN8nWebhookUrl('aiRecommendation')
 
-    // Prepare request payload for n8n with all submission data
+    const ls = submission.livingSituation
+    const greenNeighborhood = Array.isArray(ls?.greenNeighborhood)
+      ? ls.greenNeighborhood
+      : ls?.greenNeighborhood
+        ? [ls.greenNeighborhood]
+        : []
+
     const n8nPayload = {
       submissionId: submission.id,
       metadata: submission.metadata || null,
@@ -55,11 +97,26 @@ export async function POST(req: NextRequest) {
       },
       personalFields: submission.personalFields || null,
       questionnaireVersion: submission.questionnaireVersion,
-      heatFrequency: submission.heatFrequency,
+      heatFrequency: HEAT_FREQUENCY_LABELS[submission.heatFrequency] ?? submission.heatFrequency,
       heatIntensity: submission.heatIntensity,
-      livingSituation: submission.livingSituation || null,
-      climateAdaptationKnowledge: submission.climateAdaptationKnowledge || null,
-      desiredChanges: submission.desiredChanges || null,
+      livingSituation: ls
+        ? {
+            housingType: HOUSING_TYPE_LABELS[ls.housingType] ?? ls.housingType,
+            greenNeighborhood: greenNeighborhood.map(
+              (v: string) => NEIGHBORHOOD_LABELS[v] ?? v,
+            ),
+            cityArea: CITY_AREA_LABELS[ls.cityArea] ?? ls.cityArea,
+          }
+        : null,
+      climateAdaptationKnowledge: submission.climateAdaptationKnowledge
+        ? {
+            knowsTerm: submission.climateAdaptationKnowledge.knowsTerm ? 'Ja' : 'Nein',
+            description: submission.climateAdaptationKnowledge.description || null,
+          }
+        : null,
+      desiredChanges: Array.isArray(submission.desiredChanges)
+        ? submission.desiredChanges.map((d) => DESIRED_CHANGES_LABELS[d.icon] ?? d.icon)
+        : null,
       problemIndex: submission.problem_index,
       subScores: submission.sub_scores || null,
       freeText: submission.user_text || null,
@@ -161,13 +218,12 @@ export async function POST(req: NextRequest) {
             aiFields: {
               ai_summary_de: (aiResult as any).summary,
               ai_recommendations_de: (aiResult as any).recommendations,
-              // Payload field is an array of objects: [{ kb_id }]
-              ai_referenced_kb_ids: validKbIds.map((kb_id) => ({ kb_id })),
+              ai_referenced_kb_ids: validKbIds,
               ai_model_metadata: (aiResult as any).modelMetadata || {},
               ai_generated_at: nowISO,
             },
           },
-          overrideAccess: true, // System operation - updating AI-generated fields
+          overrideAccess: true,
         })
 
         // Persist recommendation usage events for analytics

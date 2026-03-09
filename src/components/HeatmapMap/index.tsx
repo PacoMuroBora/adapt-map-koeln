@@ -49,6 +49,7 @@ type GridFeature = {
     tileY: number
     tileSizeMeters: number
     averageProblemIndex: number
+    averageHotDaysPerYear: number
     totalCount: number
     valueCounts: Record<number, number>
     value: number
@@ -485,6 +486,7 @@ export function HeatmapMap({
         <TileTooltip
           totalCount={hoveredTile.properties.totalCount}
           averageProblemIndex={hoveredTile.properties.averageProblemIndex}
+          averageHotDaysPerYear={hoveredTile.properties.averageHotDaysPerYear}
           valueCounts={hoveredTile.properties.valueCounts}
           x={tooltipPos.x}
           y={tooltipPos.y}

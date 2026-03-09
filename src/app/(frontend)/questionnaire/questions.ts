@@ -3,9 +3,16 @@ export interface QuestionOption {
   label: string
 }
 
+export interface SubmissionBinding {
+  mode?: 'explicitField' | 'customKey' | null
+  fieldPath?: string | null
+  customKey?: string | null
+}
+
 export interface Question {
   id: string
   key: string
+  submissionBinding?: SubmissionBinding
   title: string
   description?: string
   type:

@@ -683,6 +683,45 @@ export interface Question {
     startValue: number;
   };
   /**
+   * Maps this question answer to a specific submission field. If not set, answer is logged but not persisted.
+   */
+  submissionBinding?: {
+    /**
+     * "Submission Field" writes directly to a typed Submissions field. "Custom Key" is for navigation/meta answers that are only logged.
+     */
+    mode?: ('explicitField' | 'customKey') | null;
+    /**
+     * Target field path in the Submissions collection
+     */
+    fieldPath?:
+      | (
+          | 'heatFrequency'
+          | 'heatIntensity'
+          | 'user_text'
+          | 'location'
+          | 'location.postal_code'
+          | 'location.city'
+          | 'location.street'
+          | 'location.lat'
+          | 'location.lng'
+          | 'personalFields.age'
+          | 'personalFields.gender'
+          | 'personalFields.householdSize'
+          | 'livingSituation.housingType'
+          | 'livingSituation.greenNeighborhood'
+          | 'livingSituation.cityArea'
+          | 'climateAdaptationKnowledge.knowsTerm'
+          | 'climateAdaptationKnowledge.description'
+          | 'consent'
+          | 'desiredChanges'
+        )
+      | null;
+    /**
+     * Custom identifier for this answer. Not persisted in submission – used for logging/debugging only.
+     */
+    customKey?: string | null;
+  };
+  /**
    * Whether this question must be answered. If yes button says "Weiter", if no button says "Überspringen".
    */
   required?: boolean | null;
@@ -1115,9 +1154,11 @@ export interface Submission {
      */
     housingType: 'apartment' | 'house';
     /**
-     * Is the neighborhood open and green?
+     * Neighborhood characteristics (multi-select)
      */
-    greenNeighborhood: 'yes' | 'no' | 'unsure';
+    greenNeighborhood?:
+      | ('open_streets' | 'greenery' | 'main_road' | 'park' | 'no_greenery' | 'river' | 'closed_surfaces')[]
+      | null;
     /**
      * Inner city or outer area
      */
@@ -1138,15 +1179,7 @@ export interface Submission {
    */
   desiredChanges?:
     | {
-        icon:
-          | 'greening'
-          | 'water'
-          | 'shadow'
-          | 'shading'
-          | 'cooling'
-          | 'roof_greening'
-          | 'facade_greening'
-          | 'water_fountain';
+        icon: 'schatten' | 'cooling' | 'dachbegruenung' | 'strassenbegruenung' | 'wasserstellen';
         id?: string | null;
       }[]
     | null;
@@ -1167,21 +1200,13 @@ export interface Submission {
     | boolean
     | null;
   /**
+   * User consented to data collection and processing
+   */
+  consent?: boolean | null;
+  /**
    * Free text input from user
    */
   user_text?: string | null;
-  /**
-   * Answers that do not map to specific submission fields (question key -> value)
-   */
-  dynamicAnswers?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
   /**
    * AI-generated recommendations
    */
@@ -1203,14 +1228,9 @@ export interface Submission {
       | boolean
       | null;
     /**
-     * IDs of referenced knowledge base items
+     * Referenced knowledge base items from AI recommendations
      */
-    ai_referenced_kb_ids?:
-      | {
-          kb_id?: string | null;
-          id?: string | null;
-        }[]
-      | null;
+    ai_referenced_kb_ids?: (string | KnowledgeBaseItem)[] | null;
     /**
      * Metadata about the AI model used
      */
@@ -2053,6 +2073,13 @@ export interface QuestionsSelect<T extends boolean = true> {
         max?: T;
         startValue?: T;
       };
+  submissionBinding?:
+    | T
+    | {
+        mode?: T;
+        fieldPath?: T;
+        customKey?: T;
+      };
   required?: T;
   category?: T;
   editorFields?:
@@ -2185,19 +2212,14 @@ export interface SubmissionsSelect<T extends boolean = true> {
       };
   problem_index?: T;
   sub_scores?: T;
+  consent?: T;
   user_text?: T;
-  dynamicAnswers?: T;
   aiFields?:
     | T
     | {
         ai_summary_de?: T;
         ai_recommendations_de?: T;
-        ai_referenced_kb_ids?:
-          | T
-          | {
-              kb_id?: T;
-              id?: T;
-            };
+        ai_referenced_kb_ids?: T;
         ai_model_metadata?: T;
         ai_generated_at?: T;
       };
