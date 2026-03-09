@@ -38,6 +38,12 @@ const config = {
     'text-body-sm',
   ],
   theme: {
+    // No responsive max-widths for .container; layout uses custom .container in globals.css
+    container: {
+      center: false,
+      padding: '0',
+      screens: {},
+    },
     extend: {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',

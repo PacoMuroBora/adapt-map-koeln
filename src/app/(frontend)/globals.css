@@ -169,16 +169,18 @@ body {
   }
 }
 
+/* Override any Tailwind default container max-widths; layout uses full width */
 .container {
-  @apply px-4 md:px-8 lg:px-16 w-full;
+  @apply w-full;
+  max-width: none !important;
 }
 
 .inner-container {
-  @apply w-full max-w-[1920px] mx-auto;
+  @apply w-full px-4 md:px-8 lg:px-16 max-w-[1920px] mx-auto;
 }
 
 .card-container {
-  @apply w-full px-0 md:px-8 lg:px-16;
+  @apply w-full px-0 md:px-8 lg:px-16 max-w-[1920px] mx-auto;
 }
 
 .background-grid-dark {
