@@ -87,7 +87,7 @@ export default function ResultsPage() {
     <div className="min-h-screen">
       {/* Intro section – design: Figma Results intro */}
       <section className="container relative bg-black background-grid-dark">
-        <div className="inner-container relative z-10 flex flex-col justify-end pb-6 pt-16 min-h-screen gap-12">
+        <div className="inner-container relative z-10 flex flex-col justify-end pb-6 md:pb-12 lg:pb-24 pt-16 min-h-screen gap-12">
           <div className="flex max-w-[640px] lg:max-w-[800px] flex-col gap-8 md:gap-10">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-0 uppercase space-y-2">
@@ -102,11 +102,11 @@ export default function ResultsPage() {
               </p>
             </div>
           </div>
-          <div className="flex gap-4 text-body-md">
+          <div className="flex flex-row gap-4 text-body-md">
             {/* card heat color */}
             <div
               style={{ backgroundColor: problemIndexColor, color: problemIndexTextColor }}
-              className={`size-40 rounded-3xl p-4 flex flex-col justify-between ${
+              className={`w-full aspect-square md:size-40 rounded-3xl p-4 flex flex-col justify-between ${
                 problemIndexTextColor === 'black' ? 'text-black' : 'text-white'
               }`}
             >
@@ -114,10 +114,10 @@ export default function ResultsPage() {
               <p>So wäre dein Hitzegefühl als Farbe</p>
             </div>
             {/* card hot days */}
-            <div className="bg-white size-40 rounded-3xl p-4 flex flex-col justify-between">
+            <div className="bg-white w-full aspect-square md:size-40 rounded-3xl p-4 flex flex-col justify-between">
               <span>°</span>
               <div>
-                <p className="text-h5 font-mono font-normal">12-18</p>
+                <p className="text-h5 font-mono font-normal pb-2">12-18</p>
                 <p>Tage im Jahr ist dir zu heiß</p>
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function ResultsPage() {
         />
       </div>
 
-      <div className="container inner-container my-12">
+      <div className="inner-container my-12">
         <Button variant="default" size="lg">
           <Link href="/questionnaire/hitze">Neue Umfrage starten</Link>
         </Button>

@@ -86,7 +86,12 @@ export async function POST(req: NextRequest) {
     const aiResult = Array.isArray(rawResult) ? rawResult[0] : rawResult
 
     // Validate response structure
-    if (!aiResult || typeof aiResult !== 'object' || !aiResult.summary || !aiResult.recommendations) {
+    if (
+      !aiResult ||
+      typeof aiResult !== 'object' ||
+      !aiResult.summary ||
+      !aiResult.recommendations
+    ) {
       throw new Error('Invalid response from n8n workflow')
     }
 
