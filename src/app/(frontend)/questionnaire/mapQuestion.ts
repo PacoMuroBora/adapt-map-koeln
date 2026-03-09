@@ -36,7 +36,7 @@ export function mapPayloadQuestionToFrontend(p: PayloadQuestion): Question {
         }
       : undefined,
     title: p.title_de,
-    description: p.description_de ?? p.editorFields?.helpText ?? undefined,
+    description: p.description_de ?? undefined,
     type: BE_TYPE_TO_FRONTEND[p.type] ?? 'text',
     required: p.required ?? false,
     options: p.options?.map((o) => ({ value: o.value, label: o.label })) ?? undefined,

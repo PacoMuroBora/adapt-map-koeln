@@ -56,6 +56,13 @@ export default function ResultsPage() {
   const [plzStats, setPlzStats] = React.useState<PlzStats>(null)
   const [showError, setShowError] = React.useState(false)
 
+  const problemIndex = state.problemIndex ?? 0
+  const problemIndexColor = useMemo(() => problemIndexToGradientColor(problemIndex), [problemIndex])
+  const problemIndexTextColor = useMemo(
+    () => contrastTextColor(problemIndexColor),
+    [problemIndexColor],
+  )
+
   useEffect(() => {
     if (!state.submissionId && (state.problemIndex === null || state.problemIndex === undefined)) {
       setShowError(true)
@@ -109,13 +116,6 @@ export default function ResultsPage() {
       </div>
     )
   }
-
-  const problemIndex = state.problemIndex ?? 0
-  const problemIndexColor = useMemo(() => problemIndexToGradientColor(problemIndex), [problemIndex])
-  const problemIndexTextColor = useMemo(
-    () => contrastTextColor(problemIndexColor),
-    [problemIndexColor],
-  )
 
   return (
     <div className="min-h-screen">
