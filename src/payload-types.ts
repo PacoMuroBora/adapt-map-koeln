@@ -396,10 +396,6 @@ export interface Questionnaire {
 export interface Question {
   id: string;
   /**
-   * Unique identifier for the question (e.g., "q1", "heat_comfort")
-   */
-  key: string;
-  /**
    * Question title in German
    */
   title_de: string;
@@ -528,11 +524,11 @@ export interface Question {
   /**
    * Maps this question answer to a specific submission field. If not set, answer is logged but not persisted.
    */
-  submissionBinding?: {
+  submissionBinding: {
     /**
      * "Submission Field" writes directly to a typed Submissions field. "Custom Key" is for navigation/meta answers that are only logged.
      */
-    mode?: ('explicitField' | 'customKey') | null;
+    mode: 'explicitField' | 'customKey';
     /**
      * Target field path in the Submissions collection
      */
@@ -2095,7 +2091,6 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "questions_select".
  */
 export interface QuestionsSelect<T extends boolean = true> {
-  key?: T;
   title_de?: T;
   description_de?: T;
   type?: T;

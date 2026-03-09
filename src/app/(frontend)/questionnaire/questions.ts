@@ -11,7 +11,6 @@ export interface SubmissionBinding {
 
 export interface Question {
   id: string
-  key: string
   submissionBinding?: SubmissionBinding
   title: string
   description?: string

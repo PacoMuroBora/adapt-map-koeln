@@ -89,7 +89,7 @@ export default function QuestionnaireRuntimeClient({ runtime }: Props) {
         sectionsProgress={page.sectionsProgress}
         currentSectionIndex={page.currentSectionIndex}
         conditionalStepConfig={{
-          parentQuestionKey: page.parentQuestionKey,
+          parentQuestionId: page.parentQuestionId,
           conditions: page.conditions,
         }}
         localNavigation={localNavigation}

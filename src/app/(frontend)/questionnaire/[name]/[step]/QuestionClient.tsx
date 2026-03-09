@@ -30,7 +30,7 @@ import {
 } from '../../QuestionnaireProgressContext'
 
 export type ConditionalStepConfig = {
-  parentQuestionKey: string
+  parentQuestionId: string
   conditions: { showWhenAnswerValue: string; question: Question }[]
 }
 
@@ -97,7 +97,7 @@ export default function QuestionClient({
 
   const resolvedConditionalQuestions = useMemo(() => {
     if (!conditionalStepConfig) return null
-    const parentAnswer = state.answers[conditionalStepConfig.parentQuestionKey]
+    const parentAnswer = state.answers[conditionalStepConfig.parentQuestionId]
     const value = parentAnswer != null ? String(parentAnswer) : ''
     const match = conditionalStepConfig.conditions.find((c) => c.showWhenAnswerValue === value)
     return match ? [match.question] : []
@@ -301,7 +301,7 @@ export default function QuestionClient({
 
       const freeTextQuestion = effectiveQuestions.find((q) => q.type === 'textarea')
       const freeText = freeTextQuestion
-        ? String(mergedAnswers[freeTextQuestion.key] ?? '').trim() || undefined
+        ? String(mergedAnswers[freeTextQuestion.id] ?? '').trim() || undefined
         : state.userText || undefined
       const personalFields = {
         ...state.personalFields,
@@ -386,7 +386,7 @@ export default function QuestionClient({
       locationQuestion &&
       !resolvedAddress &&
       state.location?.postal_code &&
-      state.answers[locationQuestion.key] === 'gps'
+      state.answers[locationQuestion.id] === 'gps'
     ) {
       const loc = state.location
       setResolvedAddress({
@@ -396,7 +396,7 @@ export default function QuestionClient({
         house_number: null,
       })
     }
-  }, [locationQuestion?.key, state.location, state.answers, resolvedAddress])
+  }, [locationQuestion?.id, state.location, state.answers, resolvedAddress])
 
   // Skip plz/address when user already used GPS (whole step is skippable). Skip all consecutive skippable steps in one go when we have allStepQuestionTypes.
   useEffect(() => {
@@ -439,30 +439,30 @@ export default function QuestionClient({
       if (
         q.type === 'slider' &&
         q.required &&
-        (getAnswer(q.key) === null || getAnswer(q.key) === undefined)
+        (getAnswer(q.id) === null || getAnswer(q.id) === undefined)
       ) {
         const min = q.sliderConfig?.min ?? 0
-        setAnswer(q.key, min)
+        setAnswer(q.id, min)
       }
       if (
         q.type === 'sliderHorizontalRange' &&
         q.required &&
-        (getAnswer(q.key) === null || getAnswer(q.key) === undefined)
+        (getAnswer(q.id) === null || getAnswer(q.id) === undefined)
       ) {
         const min = q.sliderConfig?.min ?? 0
         const max = q.sliderConfig?.max ?? 100
-        setAnswer(q.key, [min, max])
+        setAnswer(q.id, [min, max])
       }
       if (
         q.type === 'sliderVertical' &&
         q.required &&
-        (getAnswer(q.key) === null || getAnswer(q.key) === undefined)
+        (getAnswer(q.id) === null || getAnswer(q.id) === undefined)
       ) {
         const min = q.sliderVerticalConfig?.min ?? 0
         const max = q.sliderVerticalConfig?.max ?? 10
         const step = q.sliderVerticalConfig?.step ?? 1
         const middle = min + Math.round((max - min) / (2 * step)) * step
-        setAnswer(q.key, middle)
+        setAnswer(q.id, middle)
       }
     }
   }, [])
@@ -549,7 +549,7 @@ export default function QuestionClient({
                 city: data.city,
                 street: streetWithNumber || undefined,
               })
-              if (locationQuestion) updateAnswer(locationQuestion.key, 'gps')
+              if (locationQuestion) updateAnswer(locationQuestion.id, 'gps')
               setResolvedAddress({
                 postal_code: data.postal_code,
                 city: data.city,
@@ -643,7 +643,7 @@ export default function QuestionClient({
         city: data.city,
         street: streetWithNumber || undefined,
       })
-      if (locationQuestion) updateAnswer(locationQuestion.key, 'gps')
+      if (locationQuestion) updateAnswer(locationQuestion.id, 'gps')
       setResolvedAddress({
         postal_code: data.postal_code,
         city: data.city,
@@ -682,7 +682,7 @@ export default function QuestionClient({
 
   const handleManualAddress = () => {
     if (locationQuestion) {
-      updateAnswer(locationQuestion.key, 'manual')
+      updateAnswer(locationQuestion.id, 'manual')
     }
     updateLocation({ lat: 0, lng: 0, postal_code: null, city: null })
     updateCurrentStep('questionnaire')
@@ -774,8 +774,8 @@ export default function QuestionClient({
                           >
                             <QuestionCaseInput
                               question={q}
-                              answer={getAnswer(q.key)}
-                              setAnswer={(v) => setAnswer(q.key, v)}
+                              answer={getAnswer(q.id)}
+                              setAnswer={(v) => setAnswer(q.id, v)}
                               context={questionInputContext}
                               color={
                                 (colorSection ?? 'purple') as

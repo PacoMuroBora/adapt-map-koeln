@@ -60,10 +60,9 @@ export async function GET() {
       questionCount: questions.length,
       questions: questions
         .map((q) => {
-          if (typeof q !== 'object' || q === null || typeof (q as { key?: unknown }).key === 'undefined') return null
+          if (typeof q !== 'object' || q === null || typeof (q as { id?: unknown }).id === 'undefined') return null
           const qu = q as {
             id?: string
-            key?: string
             title_de?: string
             description_de?: string
             type?: string
@@ -77,7 +76,6 @@ export async function GET() {
           }
           return {
             id: qu.id,
-            key: qu.key,
             title_de: qu.title_de,
             description_de: qu.description_de,
             type: qu.type,

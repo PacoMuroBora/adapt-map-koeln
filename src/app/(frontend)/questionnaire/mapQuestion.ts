@@ -28,7 +28,6 @@ const BE_TYPE_TO_FRONTEND: Record<PayloadQuestion['type'], Question['type']> = {
 export function mapPayloadQuestionToFrontend(p: PayloadQuestion): Question {
   return {
     id: p.id,
-    key: p.key,
     submissionBinding: p.submissionBinding
       ? {
           mode: p.submissionBinding.mode ?? null,

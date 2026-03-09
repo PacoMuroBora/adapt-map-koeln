@@ -216,41 +216,6 @@ function applyLocationBinding(
   if (addr.city) target.location.city = String(addr.city).trim()
 }
 
-/**
- * Fallback mapping from known legacy question keys to submission field paths.
- * Used when a question has no submissionBinding configured yet.
- */
-const LEGACY_KEY_MAP: Record<string, string> = {
-  heat_frequency: 'heatFrequency',
-  heatFrequency: 'heatFrequency',
-  heat_intensity: 'heatIntensity',
-  heatIntensity: 'heatIntensity',
-  livingsituation: 'livingSituation.housingType',
-  housingType: 'livingSituation.housingType',
-  housing_type: 'livingSituation.housingType',
-  livingsituation_location: 'livingSituation.cityArea',
-  cityArea: 'livingSituation.cityArea',
-  city_area: 'livingSituation.cityArea',
-  greenNeighborhood: 'livingSituation.greenNeighborhood',
-  green_neighborhood: 'livingSituation.greenNeighborhood',
-  heat_klimawandel: 'climateAdaptationKnowledge.knowsTerm',
-  knowsTerm: 'climateAdaptationKnowledge.knowsTerm',
-  heat_klimawandel_freitext: 'climateAdaptationKnowledge.description',
-  description: 'climateAdaptationKnowledge.description',
-  heat_changes: 'desiredChanges',
-  desiredChanges: 'desiredChanges',
-  heat_ideen: 'user_text',
-  neighborhood: 'livingSituation.greenNeighborhood',
-  age: 'personalFields.age',
-  gender: 'personalFields.gender',
-  householdSize: 'personalFields.householdSize',
-  consent: 'consent',
-  location_manual: 'location',
-}
-
-/** Keys that are navigation/meta state and should be silently skipped */
-const SKIP_KEYS = new Set(['location_auto_manual', 'location', 'location_plz', 'livingSituation'])
-
 export async function POST(req: Request) {
   try {
     const body: SubmissionPayload = await req.json()
@@ -267,40 +232,35 @@ export async function POST(req: Request) {
     const answers = body.answers
     const warnings: string[] = []
 
-    // --- Server-side binding resolution ---
-    const answerKeys = Object.keys(answers)
+    // --- Server-side binding resolution (answers are keyed by question id) ---
+    const answerIds = Object.keys(answers)
     const { docs: questions } = await payload.find({
       collection: 'questions',
-      where: { key: { in: answerKeys } },
-      limit: answerKeys.length + 10,
+      where: { id: { in: answerIds } },
+      limit: answerIds.length + 10,
       depth: 0,
       overrideAccess: true,
     })
     const bindingMap = new Map<string, SubmissionBinding>(
-      questions.map((q) => [q.key, (q as any).submissionBinding ?? {}]),
+      questions.map((q) => [q.id, (q as any).submissionBinding ?? {}]),
     )
 
-    // --- Build submission data from bindings (with legacy fallback) ---
+    // --- Build submission data from bindings ---
     const mapped: Record<string, any> = {}
-    for (const [key, value] of Object.entries(answers)) {
+    for (const [questionId, value] of Object.entries(answers)) {
       if (value === undefined || value === null) continue
-      if (SKIP_KEYS.has(key)) continue
 
-      const binding = bindingMap.get(key)
+      const binding = bindingMap.get(questionId)
       let fieldPath: string | null = null
 
       if (binding?.mode === 'explicitField' && binding.fieldPath) {
         fieldPath = binding.fieldPath
       } else if (binding?.mode === 'customKey') {
-        warnings.push(`Custom key "${binding.customKey ?? key}" – not persisted`)
+        warnings.push(`Custom key "${binding.customKey ?? questionId}" – not persisted`)
         continue
       } else {
-        // No binding configured — try legacy fallback
-        fieldPath = LEGACY_KEY_MAP[key] ?? null
-        if (!fieldPath) {
-          warnings.push(`No binding for answer key "${key}"`)
-          continue
-        }
+        warnings.push(`No binding for question id "${questionId}"`)
+        continue
       }
 
       if (fieldPath === 'location') {

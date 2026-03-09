@@ -12,7 +12,7 @@ import {
 type Section = NonNullable<PayloadQuestionnaire['sections']>[number]
 
 function ensurePayloadQuestion(q: unknown): q is PayloadQuestion {
-  return typeof q === 'object' && q !== null && 'key' in (q as object)
+  return typeof q === 'object' && q !== null && 'type' in (q as object)
 }
 
 export type ConditionalStepCondition = {
@@ -48,7 +48,7 @@ export type RuntimeConditionalStepPage = {
   type: 'conditional-step'
   sectionIndex: number
   stepIndex: number
-  parentQuestionKey: string
+  parentQuestionId: string
   conditions: ConditionalStepCondition[]
   colorSection?: string
   sectionStepsTotal: number
@@ -86,7 +86,7 @@ function buildAllStepQuestionTypes(
     if (resolved?.type === 'step') {
       const q = resolved.step.question
       const raw =
-        q && typeof q === 'object' && q !== null && 'key' in q ? [q as PayloadQuestion] : []
+        q && typeof q === 'object' && q !== null && 'type' in q ? [q as PayloadQuestion] : []
       const mapped = raw.map(mapPayloadQuestionToFrontend)
       out.push(mapped.length > 0 ? [mapped[0].type] : [])
     } else if (resolved?.type === 'conditional-step') {
@@ -97,7 +97,7 @@ function buildAllStepQuestionTypes(
               ? (c as { 'conditional question': unknown })['conditional question']
               : null
           const payloadQ =
-            condQ && typeof condQ === 'object' && condQ !== null && 'key' in condQ
+            condQ && typeof condQ === 'object' && condQ !== null && 'type' in condQ
               ? (condQ as PayloadQuestion)
               : null
           return payloadQ ? mapPayloadQuestionToFrontend(payloadQ).type : null
@@ -234,11 +234,11 @@ export function buildQuestionnaireRuntime(
 
     if (resolved.type === 'conditional-step') {
       const parentQuestion = resolved.step.question
-      const parentKey =
-        parentQuestion && typeof parentQuestion === 'object' && 'key' in parentQuestion
-          ? (parentQuestion as PayloadQuestion).key
+      const parentId =
+        parentQuestion && typeof parentQuestion === 'object' && 'id' in parentQuestion
+          ? (parentQuestion as PayloadQuestion).id
           : null
-      if (!parentKey) continue
+      if (!parentId) continue
       const conditionsWithMapped: ConditionalStepCondition[] = (resolved.conditions ?? [])
         .map((c) => {
           const condQ =
@@ -246,7 +246,7 @@ export function buildQuestionnaireRuntime(
               ? (c as { 'conditional question': unknown })['conditional question']
               : null
           const payloadQ =
-            condQ && typeof condQ === 'object' && condQ !== null && 'key' in condQ
+            condQ && typeof condQ === 'object' && condQ !== null && 'type' in condQ
               ? (condQ as PayloadQuestion)
               : null
           if (!payloadQ || !c) return null
@@ -268,7 +268,7 @@ export function buildQuestionnaireRuntime(
         type: 'conditional-step',
         sectionIndex: resolved.sectionIndex,
         stepIndex: resolved.stepIndex,
-        parentQuestionKey: parentKey,
+        parentQuestionId: parentId,
         conditions: conditionsWithMapped,
         colorSection: resolved.section.colorSection ?? undefined,
         sectionStepsTotal,
@@ -282,7 +282,7 @@ export function buildQuestionnaireRuntime(
     if (resolved.type === 'step') {
       const stepQuestion = resolved.step.question
       const rawStepQuestions =
-        stepQuestion && typeof stepQuestion === 'object' && stepQuestion !== null && 'key' in stepQuestion
+        stepQuestion && typeof stepQuestion === 'object' && stepQuestion !== null && 'type' in stepQuestion
           ? [stepQuestion as PayloadQuestion]
           : []
       const mapped = rawStepQuestions.map(mapPayloadQuestionToFrontend)

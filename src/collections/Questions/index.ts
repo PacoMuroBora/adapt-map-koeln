@@ -18,16 +18,6 @@ export const Questions: CollectionConfig = {
   },
   fields: [
     {
-      name: 'key',
-      type: 'text',
-      required: true,
-      unique: true,
-      index: true,
-      admin: {
-        description: 'Unique identifier for the question (e.g., "q1", "heat_comfort")',
-      },
-    },
-    {
       name: 'title_de',
       type: 'text',
       required: true,
@@ -257,6 +247,7 @@ export const Questions: CollectionConfig = {
         {
           name: 'mode',
           type: 'select',
+          required: true,
           options: [
             { label: 'Submission Field', value: 'explicitField' },
             { label: 'Custom Key (not persisted)', value: 'customKey' },
@@ -270,6 +261,12 @@ export const Questions: CollectionConfig = {
         {
           name: 'fieldPath',
           type: 'select',
+          validate: (value: unknown, { siblingData }: { siblingData: any }) => {
+            if (siblingData?.mode === 'explicitField' && !value) {
+              return 'Field path is required when mode is "Submission Field"'
+            }
+            return true
+          },
           options: [
             { label: 'Hitzetage pro Jahr (heatFrequency)', value: 'heatFrequency' },
             { label: 'Hitze-Intensität (heatIntensity)', value: 'heatIntensity' },
@@ -305,10 +302,6 @@ export const Questions: CollectionConfig = {
             },
             { label: 'Einwilligung (consent)', value: 'consent' },
             { label: 'Gewünschte Veränderungen (desiredChanges)', value: 'desiredChanges' },
-            {
-              label: 'Nachbarschaft-Merkmale (livingSituation.greenNeighborhood)',
-              value: 'livingSituation.greenNeighborhood',
-            },
           ],
           admin: {
             condition: (_data, siblingData) => siblingData?.mode === 'explicitField',
@@ -318,6 +311,12 @@ export const Questions: CollectionConfig = {
         {
           name: 'customKey',
           type: 'text',
+          validate: (value: unknown, { siblingData }: { siblingData: any }) => {
+            if (siblingData?.mode === 'customKey' && !value) {
+              return 'Custom key is required when mode is "Custom Key"'
+            }
+            return true
+          },
           admin: {
             condition: (_data, siblingData) => siblingData?.mode === 'customKey',
             description:

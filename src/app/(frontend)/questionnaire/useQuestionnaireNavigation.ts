@@ -67,14 +67,14 @@ export function useQuestionnaireNavigation(
     if (questions?.length && stepAnswers) {
       for (const q of questions) {
         if (q.type === 'group' && q.groupFields) {
-          const groupVal = stepAnswers[q.key] as Record<string, unknown> | undefined
+          const groupVal = stepAnswers[q.id] as Record<string, unknown> | undefined
           if (groupVal) {
             q.groupFields.forEach((subQ) => {
-              updateAnswer(subQ.key, groupVal[subQ.key])
+              updateAnswer(subQ.id, groupVal[subQ.id])
             })
           }
         } else {
-          updateAnswer(q.key, stepAnswers[q.key])
+          updateAnswer(q.id, stepAnswers[q.id])
         }
       }
     }
@@ -115,14 +115,14 @@ export function useQuestionnaireNavigation(
     if (questions?.length && stepAnswers) {
       for (const q of questions) {
         if (q.type === 'group' && q.groupFields) {
-          const groupVal = stepAnswers[q.key] as Record<string, unknown> | undefined
+          const groupVal = stepAnswers[q.id] as Record<string, unknown> | undefined
           if (groupVal) {
             q.groupFields.forEach((subQ) => {
-              updateAnswer(subQ.key, groupVal[subQ.key])
+              updateAnswer(subQ.id, groupVal[subQ.id])
             })
           }
         } else {
-          updateAnswer(q.key, stepAnswers[q.key])
+          updateAnswer(q.id, stepAnswers[q.id])
         }
       }
     }
