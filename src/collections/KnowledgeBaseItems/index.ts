@@ -233,7 +233,7 @@ export const KnowledgeBaseItems: CollectionConfig = {
             typeof data.companyOrTip.tip === 'string'
               ? data.companyOrTip.tip
               : String(data.companyOrTip.tip)
-          data.displayTitle = tipText.length > 50 ? tipText.substring(0, 50) + '...' : tipText
+          data.displayTitle = tipText.trim() || 'Untitled'
         } else {
           data.displayTitle = 'Untitled'
         }

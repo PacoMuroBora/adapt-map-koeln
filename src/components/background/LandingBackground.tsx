@@ -16,8 +16,9 @@ function lerp(a: number, b: number, t: number): number {
 /** Fraction of viewport height over which saturation transition completes (smaller = less scroll to reach grayscale). */
 const SATURATION_TRANSITION_ZONE = 0.35
 
-/** Transition progress 0 (hero) -> 1 (scrolled): when first non-hero section top enters viewport from bottom. */
+/** Transition progress 0 (hero) -> 1 (scrolled): when first non-hero section top enters viewport from bottom. At scroll top we always use hero colors (#DAFA38). */
 function getSaturationTransitionProgress(): number {
+  if (typeof window !== 'undefined' && window.scrollY <= 2) return 0
   const el = document.querySelector('[data-landing-nonhero-start]')
   if (!el) return 0
   const rect = el.getBoundingClientRect()

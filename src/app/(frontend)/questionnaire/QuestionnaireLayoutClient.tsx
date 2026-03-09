@@ -22,9 +22,7 @@ export function QuestionnaireCloseProvider({ children }: { children: React.React
     return () => setOnAbort(null)
   }, [])
   return (
-    <CloseContext.Provider value={{ onAbort, registerClose }}>
-      {children}
-    </CloseContext.Provider>
+    <CloseContext.Provider value={{ onAbort, registerClose }}>{children}</CloseContext.Provider>
   )
 }
 
@@ -32,7 +30,7 @@ export default function QuestionnaireLayoutClient({ children }: { children: Reac
   return (
     <>
       <div className="fixed inset-0 z-0 bg-black" aria-hidden />
-      <div className="relative flex h-[calc(100vh-3.5rem)] min-h-[calc(100vh-3.5rem)] flex-col bg-black md:h-auto md:min-h-[calc(100vh-3.5rem)] md:justify-center">
+      <div className="relative flex h-full flex-col bg-black md:h-auto md:min-h-[calc(100vh-3.5rem)] md:justify-center">
         {children}
       </div>
     </>

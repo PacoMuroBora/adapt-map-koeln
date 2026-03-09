@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '@/utilities/ui'
 
 import type { HeroBlock as HeroBlockProps } from '@/payload-types'
 
@@ -29,35 +30,36 @@ export const HeroBlockComponent: React.FC<HeroBlockProps & { isLandingLayout?: b
 
   return (
     <div
-      className={
-        isLanding
-          ? 'relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-transparent'
-          : 'relative container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24 flex flex-col justify-end w-screen h-screen bg-primary'
-      }
+      className={cn(
+        'relative container py-8 md:py-12 lg:py-24 flex flex-col justify-end w-screen h-screen',
+        isLanding ? 'bg-transparent' : 'bg-primary',
+      )}
     >
-      <div className="max-w-[48rem] space-y-2">
-        {overline && (
-          <p className="text-muted-foreground text-sm font-mono uppercase tracking-wide">
-            {overline}
-          </p>
-        )}
-        {headline && React.createElement(tag, { className: sizeClass }, headline)}
-        {richText && (
-          <RichText
-            className="text-lg text-muted-foreground"
-            data={richText}
-            enableGutter={false}
-          />
-        )}
-        {Array.isArray(buttons) && buttons.length > 0 && (
-          <ul className="flex flex-wrap gap-4 pt-12">
-            {buttons.map(({ link }, i) => (
-              <li key={i}>
-                <CMSLink {...link} />
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="inner-container">
+        <div className="max-w-[48rem] space-y-2">
+          {overline && (
+            <p className="text-muted-foreground text-sm font-mono uppercase tracking-wide">
+              {overline}
+            </p>
+          )}
+          {headline && React.createElement(tag, { className: sizeClass }, headline)}
+          {richText && (
+            <RichText
+              className="text-lg text-muted-foreground"
+              data={richText}
+              enableGutter={false}
+            />
+          )}
+          {Array.isArray(buttons) && buttons.length > 0 && (
+            <ul className="flex flex-wrap gap-4 pt-12">
+              {buttons.map(({ link }, i) => (
+                <li key={i}>
+                  <CMSLink {...link} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   )

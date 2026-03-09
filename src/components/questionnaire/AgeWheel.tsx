@@ -16,7 +16,7 @@ const CURVE_STRENGTH_MOBILE = 4
 const CURVE_STRENGTH_DESKTOP = 2.5
 const CURVE_BREAKPOINT = 768
 
-const HEIGHT = 300
+const HEIGHT = 260
 
 export type AgeWheelProps = {
   value: number
@@ -53,6 +53,7 @@ export default function AgeWheel({
   const skipNextValueSyncRef = React.useRef(false)
   const momentumPhaseRef = React.useRef(false)
   const momentumSettleTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [hasInteracted, setHasInteracted] = React.useState(false)
 
   const runSnapToNearest = React.useCallback(() => {
     if (!containerWidth) return
@@ -165,10 +166,7 @@ export default function AgeWheel({
             fill="#9F94FF"
           />
         </svg>
-        <div
-          className="absolute left-0 right-0 top-full z-0 h-[100vh] bg-[#9F94FF]"
-          aria-hidden
-        />
+        <div className="absolute left-0 right-0 top-full z-0 h-[100vh] bg-[#9F94FF]" aria-hidden />
       </div>
       {/* active value indicator */}
       <div
@@ -186,6 +184,7 @@ export default function AgeWheel({
               power: 0.5,
               timeConstant: 500,
             }}
+            onDragStart={() => setHasInteracted(true)}
             onDragEnd={handleDragEnd}
             className="absolute flex items-end justify-start"
             style={{
@@ -208,11 +207,14 @@ export default function AgeWheel({
                 <motion.div
                   key={i}
                   className="flex shrink-0 grow-0 justify-center font-mono font-light text-am-darker"
+                  initial={{
+                    fontSize: isCenter ? '2.5rem' : '1.25rem',
+                  }}
                   animate={{
                     fontSize: isCenter ? '2.5rem' : '1.25rem',
                   }}
                   transition={{
-                    duration: 0.35,
+                    duration: hasInteracted ? 0.35 : 0,
                     ease: [0.25, 0.1, 0.25, 1],
                   }}
                   style={{

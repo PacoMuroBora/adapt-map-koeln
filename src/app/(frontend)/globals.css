@@ -169,6 +169,20 @@ body {
   }
 }
 
+/* Override any Tailwind default container max-widths; layout uses full width */
+.container {
+  @apply w-full;
+  max-width: none !important;
+}
+
+.container-card {
+  @apply w-full md:px-8 lg:px-16 max-w-[1920px] mx-auto;
+}
+
+.inner-container {
+  @apply w-full px-4 md:px-8 lg:px-16 max-w-[1920px] mx-auto;
+}
+
 .background-grid-dark {
   --bg: #1E1E20;
   /* line color: edit %23333335 in the SVG below (# → %23) */

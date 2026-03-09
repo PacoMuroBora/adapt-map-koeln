@@ -118,7 +118,7 @@ export function KBAnalytics({ chart = 'both' }: { chart?: KBChartVariant }) {
 
               <div className="mt-4 h-36 rounded-2xl bg-gradient-to-t from-am-turq/10 to-am-turq/30 pl-3 pr-3 pt-2 pb-1">
                 {data.timeSeries.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={144}>
                     <LineChart
                       data={data.timeSeries}
                       // Minimal but readable padding around plot area
@@ -218,7 +218,7 @@ export function KBAnalytics({ chart = 'both' }: { chart?: KBChartVariant }) {
           {data && !error && (
             <div className="flex flex-1 flex-col gap-2">
               {bars.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                   <BarChart
                     data={bars}
                     layout="vertical"

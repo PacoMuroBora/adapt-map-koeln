@@ -151,12 +151,7 @@ export default function QuestionClient({
     } else {
       localNavigation.goToFeedback()
     }
-  }, [
-    conditionalStepConfig,
-    resolvedConditionalQuestions?.length,
-    stepNumber,
-    localNavigation,
-  ])
+  }, [conditionalStepConfig, resolvedConditionalQuestions?.length, stepNumber, localNavigation])
   const resultsRoute = '/results'
 
   const onStepClickSection = useCallback(
@@ -217,8 +212,11 @@ export default function QuestionClient({
       ): value is { street?: string; housenumber?: string; postal_code?: string; city?: string } =>
         Boolean(
           value &&
-            typeof value === 'object' &&
-            ('street' in value || 'housenumber' in value || 'postal_code' in value || 'city' in value),
+          typeof value === 'object' &&
+          ('street' in value ||
+            'housenumber' in value ||
+            'postal_code' in value ||
+            'city' in value),
         )
       const findAddressLike = (
         source: unknown,
@@ -252,17 +250,17 @@ export default function QuestionClient({
       } | null = state.location
         ? state.location.postal_code
           ? {
-            lat: state.location.lat,
-            lng: state.location.lng,
-            postal_code: addressPostalCode || state.location.postal_code,
-            city: addressCity || state.location.city || undefined,
-            street:
-              [addressStreet, addressHouseNumber].filter(Boolean).join(' ').trim() ||
-              (state.location.street && state.location.housenumber
-                ? `${state.location.street} ${state.location.housenumber}`.trim()
-                : state.location.street) ||
-              undefined,
-          }
+              lat: state.location.lat,
+              lng: state.location.lng,
+              postal_code: addressPostalCode || state.location.postal_code,
+              city: addressCity || state.location.city || undefined,
+              street:
+                [addressStreet, addressHouseNumber].filter(Boolean).join(' ').trim() ||
+                (state.location.street && state.location.housenumber
+                  ? `${state.location.street} ${state.location.housenumber}`.trim()
+                  : state.location.street) ||
+                undefined,
+            }
           : null
         : null
 
@@ -741,14 +739,14 @@ export default function QuestionClient({
                   <div className="flex min-h-0 flex-1 flex-col overflow-auto">
                     <div
                       className={cn(
-                        'space-y-8 px-6 py-8',
+                        'space-y-8 px-6 pt-8 pb-6',
                         effectiveQuestions.some((q) => q.type === 'textarea') &&
                           'flex min-h-full flex-1 flex-col',
                       )}
                     >
                       {effectiveQuestions[0]?.title != null && (
                         <div>
-                          <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
+                          <h1 className="mb-2 text-h5 font-headings font-semibold uppercase hyphens-auto">
                             {effectiveQuestions[0].title}
                           </h1>
                           {effectiveQuestions[0].description != null && (

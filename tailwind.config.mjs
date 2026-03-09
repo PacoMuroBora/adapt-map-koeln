@@ -38,23 +38,11 @@ const config = {
     'text-body-sm',
   ],
   theme: {
+    // No responsive max-widths for .container; layout uses custom .container in globals.css
     container: {
-      center: true,
-      padding: {
-        DEFAULT: '1rem',
-        sm: '1rem',
-        md: '2rem',
-        lg: '2rem',
-        xl: '2rem',
-        '2xl': '2rem',
-      },
-      screens: {
-        sm: '100%',
-        md: '100%',
-        lg: '100%',
-        xl: '100%',
-        '2xl': '100%',
-      },
+      center: false,
+      padding: '0',
+      screens: {},
     },
     extend: {
       animation: {
@@ -175,6 +163,7 @@ const config = {
         // Design system body: fixed sizes, lineHeight as %
         'body-lg': ['1.1875rem', { lineHeight: '140%' }],
         body: ['1.0625rem', { lineHeight: '140%' }],
+        'body-md': ['1rem', { lineHeight: '130%' }],
         'body-sm': ['0.875rem', { lineHeight: '120%' }],
       },
       spacing: {

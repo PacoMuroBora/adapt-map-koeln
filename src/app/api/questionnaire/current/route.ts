@@ -73,6 +73,7 @@ export async function GET() {
             required?: boolean
             category?: unknown
             editorFields?: unknown
+            submissionBinding?: unknown
           }
           return {
             id: qu.id,
@@ -86,6 +87,7 @@ export async function GET() {
             required: qu.required,
             category: qu.category,
             editorFields: qu.editorFields,
+            submissionBinding: qu.submissionBinding,
           }
         })
         .filter((q) => q !== null),

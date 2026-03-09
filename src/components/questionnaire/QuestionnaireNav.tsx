@@ -62,7 +62,7 @@ export default function QuestionnaireNav({
 
   return (
     <>
-      <div className="fixed bottom-8 left-0 right-0 z-10 flex h-20 flex-row items-center justify-center px-4">
+      <div className="fixed bottom-4 left-0 right-0 z-10 flex h-20 flex-row items-center justify-center px-4">
         <div className="relative flex h-14 w-full flex-row items-center gap-4">
           {!isFirstPage && (
             <div

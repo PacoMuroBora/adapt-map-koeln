@@ -28,6 +28,8 @@ interface HeaderClientProps {
 export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const pathname = usePathname()
   const isQuestionnaire = pathname?.startsWith('/questionnaire')
+  const isResultsPage = pathname === '/results'
+  const isDarkBackground = isQuestionnaire || isResultsPage
   const questionnaireClose = useQuestionnaireClose()
   const [scrolled, setScrolled] = useState(false)
   /** Mobile-first default so mobile reload doesn't flash desktop height before hydration */
@@ -63,12 +65,12 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   }, [scrolled, logoHeight])
 
   const triggerClassName = `shrink-0 size-6 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded ${
-    !scrolled && isQuestionnaire
+    !scrolled && isDarkBackground
       ? 'text-white focus-visible:ring-white'
       : 'text-am-dark focus-visible:ring-am-dark'
   }`
 
-  const logoClassName = scrolled || !isQuestionnaire ? 'text-black' : 'text-white'
+  const logoClassName = scrolled || !isDarkBackground ? 'text-black' : 'text-white'
   const closeClassName =
     'flex size-6 items-center justify-center rounded text-am-dark transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-am-dark focus:ring-offset-2'
 
@@ -93,7 +95,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     )
 
   const headerContent = (
-    <div className="flex h-full w-full items-center justify-between px-4 md:px-0">
+    <div className="flex h-full w-full items-center justify-between">
       <Link href="/" aria-label="Startseite">
         <span className="inline-block origin-left mt-1">
           <Logo className={logoClassName} height={logoHeightSnapshot} />
@@ -114,7 +116,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
           <div className="hidden md:flex">
             <HeaderDesktopNav
               data={data}
-              inverted={!scrolled && isQuestionnaire}
+              inverted={!scrolled && isDarkBackground}
               buttonLink={buttonLink}
               scrolled={scrolled}
             />
@@ -125,10 +127,10 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   )
 
   return (
-    <div className="fixed inset-x-0 top-0 z-20 p-2 md:p-4">
+    <div className="fixed inset-x-0 top-0 z-50 p-2 md:p-4">
       {/* Nav Container */}
       <motion.header
-        className="w-full rounded-full py-3 md:pl-4 md:pr-1 md:py-0"
+        className="inner-container rounded-full py-3 md:pl-4 md:pr-1 md:py-0"
         initial={false}
         animate={{
           height: isMobile

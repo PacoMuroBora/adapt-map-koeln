@@ -4,7 +4,8 @@ import type { SiteSetting } from '@/payload-types'
 
 /**
  * Get the full n8n webhook URL based on environment and SiteSettings configuration.
- * In development, uses full URL. In production, strips domain and uses internal routing.
+ * In development, uses full URL.
+ * In production, prefers internal routing when explicitly configured, otherwise uses public URL.
  *
  * @param webhookPath - The webhook path (e.g., 'aiRecommendation', 'kbSync', or 'audioTranscribe')
  * @returns The full webhook URL
@@ -30,12 +31,15 @@ export async function getN8nWebhookUrl(
         : '/webhook/audio-to-transcribe'
   const configuredPath = webhookPathValue || defaultPath
 
-  // Extract path from full URL if provided (strip domain)
+  const isFullUrl =
+    configuredPath.startsWith('http://') || configuredPath.startsWith('https://')
+
+  // Extract path from full URL if provided (strip domain, keep query string)
   let pathOnly = configuredPath
-  if (configuredPath.startsWith('http://') || configuredPath.startsWith('https://')) {
+  if (isFullUrl) {
     try {
       const url = new URL(configuredPath)
-      pathOnly = url.pathname
+      pathOnly = `${url.pathname}${url.search}`
     } catch {
       // If URL parsing fails, use as-is
       pathOnly = configuredPath
@@ -52,15 +56,26 @@ export async function getN8nWebhookUrl(
   if (isDevelopment) {
     // Development: use full URL
     // If configured value was a full URL, use it; otherwise construct from domain
-    if (configuredPath.startsWith('http://') || configuredPath.startsWith('https://')) {
+    if (isFullUrl) {
       return configuredPath
     }
     const n8nDomain = process.env.N8N_DOMAIN || 'https://n8n.adaptmap.de'
     return `${n8nDomain}${pathOnly}`
   }
 
-  // Production: strip domain and use internal routing
-  const n8nInternalUrl =
-    process.env.N8N_INTERNAL_URL || process.env.N8N_DOMAIN || 'http://localhost:5678'
-  return `${n8nInternalUrl}${pathOnly}`
+  // Production:
+  // - If N8N_INTERNAL_URL is provided, route through that internal host.
+  // - Otherwise, use configured full URL directly when available.
+  // - As last fallback, use N8N_DOMAIN.
+  const n8nInternalUrl = process.env.N8N_INTERNAL_URL
+  if (n8nInternalUrl) {
+    return `${n8nInternalUrl}${pathOnly}`
+  }
+
+  if (isFullUrl) {
+    return configuredPath
+  }
+
+  const n8nDomain = process.env.N8N_DOMAIN || 'https://n8n.adaptmap.de'
+  return `${n8nDomain}${pathOnly}`
 }

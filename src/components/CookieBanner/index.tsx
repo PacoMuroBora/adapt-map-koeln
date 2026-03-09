@@ -47,12 +47,12 @@ export function CookieBanner({ cookieBanner }: CookieBannerProps) {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6"
+      className="fixed bottom-0 right-0 z-50 p-4 sm:p-6"
       role="dialog"
       aria-labelledby="cookie-banner-title"
       aria-describedby="cookie-banner-description"
     >
-      <Card variant="black" className="max-w-[1440px] shadow-lg">
+      <Card variant="black" className="max-w-2xl shadow-lg">
         <div className="p-4 sm:p-6">
           <h3 id="cookie-banner-title" className="mb-2 text-lg font-semibold">
             {cookieBanner.title}
