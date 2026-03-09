@@ -21,7 +21,6 @@ import HorizontalRangeSlider from '@/components/questionnaire/HorizontalRangeSli
 import VerticalSlider from '@/components/questionnaire/VerticalSlider'
 import IconSelection from '@/components/questionnaire/IconSelection'
 import AgeWheel from '@/components/questionnaire/AgeWheel'
-import { AddressSearchInput } from '@/components/questionnaire/AddressSearchInput'
 import { AudioTranscribeButton } from '@/components/questionnaire/AudioTranscribeButton'
 import { LinkButton } from '@/components/ui/link-button'
 import { Loader2 } from 'lucide-react'
@@ -229,22 +228,9 @@ export function QuestionCaseInput({
           <div className="space-y-4">
             <div className="space-y-1">
               <Label
-                htmlFor={`${question.key}-street-search`}
+                htmlFor={`${question.key}-street-manual`}
                 className="font-sm font-mono uppercase tracking-wide"
               >
-                Straße suchen
-              </Label>
-              <AddressSearchInput
-                value={addressAnswer}
-                onChange={setAddress}
-                onError={setError}
-                placeholder="Strasse suchen"
-                postalCode={postalCodeForFilter}
-                disableHouseNumberSearch
-              />
-            </div>
-            {/* <div className="space-y-1">
-              <Label htmlFor={`${question.key}-street-manual`} className="font-sm font-mono uppercase tracking-wide">
                 Straße
               </Label>
               <Input
@@ -253,13 +239,13 @@ export function QuestionCaseInput({
                 shape="round"
                 size="lg"
                 inputMode="text"
-                autoComplete="street-address"
+                autoComplete="address-line1"
                 placeholder="z.B. Venloer Straße"
                 value={addressAnswer.street}
                 onChange={(e) => setAddress({ street: e.target.value.trim() })}
                 className="font-body text-body-lg placeholder:text-muted-foreground"
               />
-            </div> */}
+            </div>
           </div>
           <div className="space-y-1">
             <Label
@@ -807,41 +793,23 @@ export function QuestionCaseInput({
                     }
                     return (
                       <div className="space-y-4">
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor={`${question.key}-${subQ.key}-street-search`}
-                              className="text-body-sm uppercase"
-                            >
-                              Straße suchen
-                            </Label>
-                            <AddressSearchInput
-                              value={addrAnswer}
-                              onChange={(val) => setAddr(val)}
-                              onError={setError}
-                              placeholder="STRASSE SUCHEN"
-                              postalCode={postalCodeForFilter || undefined}
-                              disableHouseNumberSearch
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor={`${question.key}-${subQ.key}-street-manual`}
-                              className="text-body-sm uppercase"
-                            >
-                              Straße
-                            </Label>
-                            <Input
-                              id={`${question.key}-${subQ.key}-street-manual`}
-                              type="text"
-                              inputMode="text"
-                              autoComplete="street-address"
-                              placeholder="z.B. Venloer Straße"
-                              value={addrAnswer.street}
-                              onChange={(e) => setAddr({ street: e.target.value.trim() })}
-                              className="font-body text-body-lg placeholder:text-muted-foreground"
-                            />
-                          </div>
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor={`${question.key}-${subQ.key}-street-manual`}
+                            className="text-body-sm uppercase"
+                          >
+                            Straße
+                          </Label>
+                          <Input
+                            id={`${question.key}-${subQ.key}-street-manual`}
+                            type="text"
+                            inputMode="text"
+                            autoComplete="address-line1"
+                            placeholder="z.B. Venloer Straße"
+                            value={addrAnswer.street}
+                            onChange={(e) => setAddr({ street: e.target.value.trim() })}
+                            className="font-body text-body-lg placeholder:text-muted-foreground"
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label
