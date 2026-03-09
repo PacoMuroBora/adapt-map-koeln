@@ -628,8 +628,8 @@ export function QuestionCaseInput({
       const rows = taConfig?.rows ?? 4
       const len = String(answer ?? '').length
       return (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-2 overflow-auto">
+        <div className="flex flex-col h-full gap-2">
+          <div className="space-y-2 overflow-auto h-full">
             <Textarea
               value={answer || ''}
               onChange={(e) => {
@@ -640,7 +640,6 @@ export function QuestionCaseInput({
               placeholder="Schreib etwas..."
               rows={rows}
               color={color}
-              className="resize-none"
             />
             <div className="flex justify-end px-2">
               <span className={len >= maxLen ? 'text-sm text-destructive' : 'text-sm text-muted'}>
@@ -648,7 +647,7 @@ export function QuestionCaseInput({
               </span>
             </div>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-end">
+          <div className="flex flex-col items-center justify-end">
             <AudioTranscribeButton
               color={color}
               onTranscript={(text) => {
@@ -678,10 +677,13 @@ export function QuestionCaseInput({
             className="mt-1"
           />
           <div className="space-y-1">
-            <Label htmlFor={`consent-${question.key}`} className="text-body cursor-pointer">
+            <label
+              htmlFor={`consent-${question.key}`}
+              className="block text-body-md cursor-pointer font-sans text-foreground"
+            >
               {consentText}
-              {question.required && <span className="text-destructive ml-1">*</span>}
-            </Label>
+              {question.required && <span className="ml-1 text-destructive">*</span>}
+            </label>
           </div>
         </div>
       )

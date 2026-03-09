@@ -12,10 +12,7 @@ type Color = 'purple' | 'orange' | 'green' | 'pink' | 'turquoise'
  * Section accent (progress bar) colors — NOT the card background.
  * Card uses base (e.g. bg-am-orange); CTA and progress bar use -alt (e.g. bg-am-orange-alt).
  */
-const SECTION_ACCENT_CLASSES: Record<
-  Color,
-  { bg: string; icon: string }
-> = {
+const SECTION_ACCENT_CLASSES: Record<Color, { bg: string; icon: string }> = {
   purple: { bg: 'bg-am-purple-alt', icon: 'text-am-darker' },
   orange: { bg: 'bg-am-orange-alt', icon: 'text-am-darker' },
   green: { bg: 'bg-am-green-alt', icon: 'text-am-darker' },
@@ -37,14 +34,19 @@ const BAR_COUNT = 33
 const BAR_CENTER_INDEX = (BAR_COUNT - 1) / 2
 const BAR_INDEXES = Array.from({ length: BAR_COUNT }, (_, i) => i)
 
+const BAR_MAX_HEIGHT = 56
+
 function WaveformBars({
   className,
   level,
   phase,
+  compact = false,
 }: {
   className?: string
   level: number
   phase: number
+  /** Scale bars to fit inside small button; use currentColor for visibility */
+  compact?: boolean
 }) {
   const dynamicHeights = useMemo(() => {
     return BAR_INDEXES.map((index) => {
@@ -60,16 +62,20 @@ function WaveformBars({
       const baseHeight = 7 + centerWeight * 7
 
       const rawHeight = (baseHeight + oscillation + volumeBoost) * edgeDampen
-      return Math.min(56, Math.max(6, rawHeight))
+      const heightPx = Math.min(BAR_MAX_HEIGHT, Math.max(6, rawHeight))
+      return compact ? (heightPx / BAR_MAX_HEIGHT) * 20 : heightPx
     })
-  }, [level, phase])
+  }, [level, phase, compact])
 
   return (
     <div className={cn('flex items-center justify-center gap-0.5', className)} aria-hidden>
       {dynamicHeights.map((heightPx, i) => (
         <div
           key={i}
-          className="w-1 min-h-[6px] max-h-14 rounded-full bg-foreground/60 transition-[height] duration-75 ease-out origin-center"
+          className={cn(
+            'min-w-px w-px shrink-0 min-h-[3px] rounded-full transition-[height] duration-75 ease-out origin-center',
+            compact ? 'max-h-5 bg-current' : 'min-h-[6px] max-h-14 bg-foreground/60',
+          )}
           style={{ height: `${heightPx}px` }}
         />
       ))}
@@ -197,9 +203,7 @@ export function AudioTranscribeButton({
     if (status === 'idle') {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : 'audio/mp4'
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
         const mediaRecorder = new MediaRecorder(stream, { mimeType })
         mediaRecorderRef.current = mediaRecorder
         chunksRef.current = []
@@ -258,9 +262,7 @@ export function AudioTranscribeButton({
       } catch (err) {
         stopAudioAnalysis()
         setError(
-          err instanceof Error
-            ? err.message
-            : 'Mikrofon nicht verfügbar. Bitte Zugriff erlauben.',
+          err instanceof Error ? err.message : 'Mikrofon nicht verfügbar. Bitte Zugriff erlauben.',
         )
       }
     }
@@ -275,34 +277,30 @@ export function AudioTranscribeButton({
   ])
 
   return (
-    <div className={cn('flex flex-col items-center gap-4 pb-8', className)}>
-      {/* Fixed-height slot so waveform visibility causes no layout shift */}
-      <div className="flex h-24 w-[86%] min-w-0 items-center justify-center sm:h-28" aria-hidden>
-        <WaveformBars
-          level={waveLevel}
-          phase={wavePhase}
-          className={cn(
-            'h-full w-full transition-all duration-500 ease-out',
-            isRecording ? 'opacity-100 scale-100' : 'pointer-events-none opacity-0 scale-95',
-          )}
-        />
-      </div>
+    <div className={cn('flex flex-col items-center gap-2', className)}>
       <button
         type="button"
         onClick={handleToggle}
         disabled={disabled || isProcessing}
         aria-label={isRecording ? 'Aufnahme beenden' : 'Sprache aufnehmen'}
         className={cn(
-          'flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+          'flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full shadow-sm transition-all focus-visible:outline-none focus-visible:ring-none disabled:pointer-events-none disabled:opacity-50',
           accent.bg,
           accent.icon,
           isRecording && 'scale-105 ring-2 ring-am-darker/40',
         )}
       >
         {isProcessing ? (
-          <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
+          <Loader2 className="h-6 w-6 shrink-0 animate-spin" aria-hidden />
+        ) : isRecording ? (
+          <WaveformBars
+            level={waveLevel}
+            phase={wavePhase}
+            compact
+            className="h-6 w-[85%] min-w-0 shrink-0 transition-none"
+          />
         ) : (
-          <Mic className="h-6 w-6" aria-hidden />
+          <Mic className="h-6 w-6 shrink-0" aria-hidden />
         )}
       </button>
       {error && <p className="text-xs text-destructive text-center max-w-[200px]">{error}</p>}
