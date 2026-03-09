@@ -7,7 +7,7 @@ const cardVariants = cva('rounded-3xl text-card-foreground shadow-sm', {
     variant: {
       purple: 'bg-am-purple',
       orange: 'bg-am-orange',
-      green: 'bg-am-green',
+      primary: 'bg-am-green-alt',
       pink: 'bg-am-pink',
       turquoise: 'bg-am-turquoise',
       white: 'bg-am-white',
@@ -31,7 +31,11 @@ Card.displayName = 'Card'
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex flex-col space-y-1.5 px-3 py-6 md:p-6', className)} {...props} />
+    <div
+      ref={ref}
+      className={cn('flex flex-col space-y-1.5 px-3 py-6 md:p-6', className)}
+      {...props}
+    />
   ),
 )
 CardHeader.displayName = 'CardHeader'
@@ -64,7 +68,11 @@ CardContent.displayName = 'CardContent'
 
 const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex items-center px-3 pt-0 pb-6 md:p-6 md:pt-0', className)} {...props} />
+    <div
+      ref={ref}
+      className={cn('flex items-center px-3 pt-0 pb-6 md:p-6 md:pt-0', className)}
+      {...props}
+    />
   ),
 )
 CardFooter.displayName = 'CardFooter'

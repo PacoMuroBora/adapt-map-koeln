@@ -101,7 +101,7 @@ export function QuestionCaseInput({
               <div className="w-full">
                 <p className="text-body-sm uppercase font-mono text-muted">Dein Standort</p>
                 <div className="rounded-2xl bg-white px-4 py-3 mt-2">
-                  <p className="mt-1 font-medium">{formatDisplayAddress(resolvedAddress)}</p>
+                  <p className="mt-1">{formatDisplayAddress(resolvedAddress)}</p>
                 </div>
               </div>
               <Button
@@ -228,20 +228,23 @@ export function QuestionCaseInput({
         <div className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor={`${question.key}-street-search`} className="text-[12px] uppercase">
+              <Label
+                htmlFor={`${question.key}-street-search`}
+                className="font-sm font-mono uppercase tracking-wide"
+              >
                 Straße suchen
               </Label>
               <AddressSearchInput
                 value={addressAnswer}
                 onChange={setAddress}
                 onError={setError}
-                placeholder="STRASSE SUCHEN"
+                placeholder="Strasse suchen"
                 postalCode={postalCodeForFilter}
                 disableHouseNumberSearch
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor={`${question.key}-street-manual`} className="text-[12px] uppercase">
+            {/* <div className="space-y-1">
+              <Label htmlFor={`${question.key}-street-manual`} className="font-sm font-mono uppercase tracking-wide">
                 Straße
               </Label>
               <Input
@@ -254,12 +257,15 @@ export function QuestionCaseInput({
                 placeholder="z.B. Venloer Straße"
                 value={addressAnswer.street}
                 onChange={(e) => setAddress({ street: e.target.value.trim() })}
-                className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+                className="font-body text-body-lg placeholder:text-muted-foreground"
               />
-            </div>
+            </div> */}
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`${question.key}-housenumber`} className="text-[12px] uppercase">
+            <Label
+              htmlFor={`${question.key}-housenumber`}
+              className="font-sm font-mono uppercase tracking-wide"
+            >
               Hausnummer
             </Label>
             <Input
@@ -272,11 +278,14 @@ export function QuestionCaseInput({
               placeholder="z.B. 12"
               value={addressAnswer.housenumber}
               onChange={(e) => setAddress({ housenumber: e.target.value.trim() || '' })}
-              className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+              className="font-body text-body-lg placeholder:text-muted-foreground"
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`${question.key}-plz`} className="text-[12px] uppercase">
+            <Label
+              htmlFor={`${question.key}-plz`}
+              className="font-sm font-mono uppercase tracking-wide"
+            >
               Postleitzahl
             </Label>
             <div className="relative">
@@ -634,11 +643,7 @@ export function QuestionCaseInput({
               className="resize-none"
             />
             <div className="flex justify-end px-2">
-              <span
-                className={
-                  len >= maxLen ? 'text-sm text-destructive' : 'text-sm text-muted'
-                }
-              >
+              <span className={len >= maxLen ? 'text-sm text-destructive' : 'text-sm text-muted'}>
                 {maxLen - len} verbleibend
               </span>
             </div>
@@ -673,10 +678,7 @@ export function QuestionCaseInput({
             className="mt-1"
           />
           <div className="space-y-1">
-            <Label
-              htmlFor={`consent-${question.key}`}
-              className="text-base font-medium leading-none cursor-pointer"
-            >
+            <Label htmlFor={`consent-${question.key}`} className="text-body cursor-pointer">
               {consentText}
               {question.required && <span className="text-destructive ml-1">*</span>}
             </Label>
@@ -835,7 +837,7 @@ export function QuestionCaseInput({
                               placeholder="z.B. Venloer Straße"
                               value={addrAnswer.street}
                               onChange={(e) => setAddr({ street: e.target.value.trim() })}
-                              className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+                              className="font-body text-body-lg placeholder:text-muted-foreground"
                             />
                           </div>
                         </div>
@@ -854,7 +856,7 @@ export function QuestionCaseInput({
                             placeholder="z.B. 12"
                             value={addrAnswer.housenumber}
                             onChange={(e) => setAddr({ housenumber: e.target.value.trim() || '' })}
-                            className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+                            className="font-body text-body-lg placeholder:text-muted-foreground"
                           />
                         </div>
                       </div>

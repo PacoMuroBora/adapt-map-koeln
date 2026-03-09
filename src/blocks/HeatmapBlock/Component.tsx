@@ -24,8 +24,8 @@ export const HeatmapBlockComponent: React.FC<HeatmapBlockProps> = ({
   const tag = headlineTag ?? 'h2'
 
   return (
-    <div className="w-full">
-      <div className="container px-4 py-8 md:px-8 md:py-12 lg:px-16 lg:py-24">
+    <div className="container">
+      <div className="inner-container py-8 md:py-12 lg:py-24">
         {headline && (
           <div className="mb-6 md:mb-8 max-w-[800px]">
             {React.createElement(tag, { className: sizeClass }, headline)}

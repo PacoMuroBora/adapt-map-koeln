@@ -543,9 +543,9 @@ export function HeatmapMap({
 
         <div className="rounded-lg bg-white p-2 shadow-lg sm:p-3">
           <h3 className="mb-1.5 text-xs font-mono tracking-wide uppercase text-muted-foreground sm:mb-2 sm:text-sm">
-            Problem-Index
+            Hitzeskala
           </h3>
-          <div className="mb-2 h-3 w-full overflow-hidden rounded border border-gray-300 sm:mb-2.5 sm:h-4">
+          <div className="mb-2 h-2 w-full overflow-hidden rounded-full sm:mb-2.5 sm:h-3">
             <div
               className="h-full w-full"
               style={{ background: `linear-gradient(to right, ${COLOR_STOPS.join(', ')})` }}

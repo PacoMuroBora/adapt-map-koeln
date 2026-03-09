@@ -104,9 +104,7 @@ export default function IconSelection({
             >
               <Icon className={`h-8 w-8 ${isSelected ? iconColor : 'text-muted-foreground'}`} />
               <span
-                className={`text-sm font-medium ${
-                  isSelected ? 'text-foreground' : 'text-muted-foreground'
-                }`}
+                className={`text-sm ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}
               >
                 {option.label}
               </span>
