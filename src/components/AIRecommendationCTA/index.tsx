@@ -67,14 +67,14 @@ export function AIRecommendationCTA() {
         <p className="text-body-lg text-muted-foreground">{state.aiSummary}</p>
         {state.aiRecommendations && state.aiRecommendations.length > 0 && (
           <div className="space-y-4">
-            <h4 className="font-mono uppercase tracking-wide text-body font-normal text-muted">
+            <h4 className="font-mono uppercase tracking-wide text-body font-normal text-muted pt-12">
               Empfehlungen
             </h4>
-            <ul className="space-y-4">
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
               {state.aiRecommendations.map((rec: any, index: number) => {
                 const num = String(index + 1).padStart(2, '0')
                 return (
-                  <li key={index} className="rounded-3xl border border-border p-4 space-y-4">
+                  <li key={index} className="rounded-3xl border border-border p-4 lg:p-8 space-y-4">
                     <div className="flex items-center gap-2 mb-4 text-muted">
                       <div className="size-1.5 border border-muted rounded-full" />
                       <p className="text-body-sm font-mono font-normal">{num}</p>

@@ -4,9 +4,8 @@ import { AIRecommendationCTA } from '@/components/AIRecommendationCTA'
 import { Button } from '@/components/ui/button'
 import { HeatmapBlockComponent } from '@/blocks/HeatmapBlock/Component'
 import { useSubmission } from '@/providers/Submission'
-import { CheckCircle2, AlertCircle, Info } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import React, { useEffect, useMemo } from 'react'
 
 /** Gradient from Figma (reversed: purple = low, orange = high): 0% #4D3EC9 → … → 100% #FF8429. Maps index 0–100 to hex. */
@@ -50,16 +49,66 @@ function contrastTextColor(hex: string): 'black' | 'white' {
   return luminance > 0.4 ? 'black' : 'white'
 }
 
+type PlzStats = { count: number; districtName: string | null; city: string | null } | null
+
 export default function ResultsPage() {
-  const router = useRouter()
   const { state } = useSubmission()
+  const [plzStats, setPlzStats] = React.useState<PlzStats>(null)
+  const [showError, setShowError] = React.useState(false)
 
   useEffect(() => {
-    // If no submission data, redirect to start
     if (!state.submissionId && (state.problemIndex === null || state.problemIndex === undefined)) {
-      router.push('/')
+      setShowError(true)
+    } else {
+      setShowError(false)
     }
-  }, [state, router])
+  }, [state])
+
+  useEffect(() => {
+    const postalCode = state.location?.postal_code
+    if (!postalCode) return
+
+    let cancelled = false
+    fetch(`/api/submissions/count-by-plz?postalCode=${encodeURIComponent(postalCode)}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed to fetch'))))
+      .then((data: { count: number; districtName?: string | null; city?: string | null }) => {
+        if (!cancelled) {
+          setPlzStats({
+            count: data.count,
+            districtName: data.districtName ?? null,
+            city: data.city ?? null,
+          })
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPlzStats(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [state.location?.postal_code])
+
+  if (showError) {
+    return (
+      <div className="min-h-screen">
+        <section className="container relative bg-black background-grid-dark">
+          <div className="inner-container relative z-10 flex flex-col justify-center items-center min-h-screen gap-8 py-16">
+            <AlertCircle className="size-16 text-destructive" aria-hidden />
+            <div className="flex flex-col gap-4 text-center max-w-md">
+              <h1 className="font-headings text-h2 font-semibold text-white">Keine Umfragedaten</h1>
+              <p className="font-body text-body text-white/90">
+                Es wurden keine Umfragedaten gefunden. Bitte starte die Umfrage von vorne, um deine
+                Ergebnisse zu sehen.
+              </p>
+            </div>
+            <Button asChild variant="default" size="lg">
+              <Link href="/">Zur Startseite</Link>
+            </Button>
+          </div>
+        </section>
+      </div>
+    )
+  }
 
   const problemIndex = state.problemIndex ?? 0
   const problemIndexColor = useMemo(() => problemIndexToGradientColor(problemIndex), [problemIndex])
@@ -67,21 +116,6 @@ export default function ResultsPage() {
     () => contrastTextColor(problemIndexColor),
     [problemIndexColor],
   )
-  const severity = problemIndex >= 70 ? 'hoch' : problemIndex >= 40 ? 'mittel' : 'niedrig'
-  const severityColor =
-    problemIndex >= 70
-      ? 'text-destructive'
-      : problemIndex >= 40
-        ? 'text-yellow-600'
-        : 'text-green-600'
-  const severityIcon =
-    problemIndex >= 70 ? (
-      <AlertCircle className="h-6 w-6" />
-    ) : problemIndex >= 40 ? (
-      <Info className="h-6 w-6" />
-    ) : (
-      <CheckCircle2 className="h-6 w-6" />
-    )
 
   return (
     <div className="min-h-screen">
@@ -93,7 +127,9 @@ export default function ResultsPage() {
               <div className="flex flex-col gap-0 uppercase space-y-2">
                 <p className="font-mono text-sm uppercase tracking-wide text-primary">adaptmap</p>
                 <h1 className="font-headings text-h2 font-semibold text-white">
-                  Du bist die 245. Person aus Köln-Mülheim die mitgemacht hat.
+                  {plzStats?.count != null
+                    ? `Du bist die ${plzStats.count}. Person aus ${plzStats.districtName ?? plzStats.city ?? state.location?.city ?? 'deiner Region'} die mitgemacht hat.`
+                    : `Du bist eine Person aus ${state.location?.city ?? 'deiner Region'} die mitgemacht hat.`}
                 </h1>
               </div>
               <p className="font-body text-body text-white">
