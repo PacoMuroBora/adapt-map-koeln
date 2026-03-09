@@ -40,7 +40,12 @@ export const ContentBlock: React.FC<ContentBlockProps & { isLandingLayout?: bool
   const tag = headlineTag ?? 'h2'
 
   return (
-    <div className={cn('container my-20', { 'py-4 md:py-8 lg:py-16': cardLayout })}>
+    <div
+      className={cn(
+        'my-20',
+        cardLayout ? 'px-4 container-card py-4 md:py-8 lg:py-16' : 'container',
+      )}
+    >
       <div
         className={cn('inner-container', {
           'relative rounded-3xl overflow-hidden': cardLayout,
