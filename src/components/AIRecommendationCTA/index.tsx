@@ -63,35 +63,40 @@ export function AIRecommendationCTA() {
   // If AI results already exist, show them
   if (state.aiSummary && state.aiRecommendations) {
     return (
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-semibold">KI-Empfehlung</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">{state.aiSummary}</p>
-          {state.aiRecommendations && state.aiRecommendations.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Empfehlungen:</h4>
-              <ul className="space-y-2 text-sm">
-                {state.aiRecommendations.map((rec: any, index: number) => (
-                  <li key={index} className="rounded bg-muted p-3">
-                    <div className="font-medium">{rec.title || `Empfehlung ${index + 1}`}</div>
+      <div className="space-y-2 py-12">
+        <p className="text-body-lg text-muted-foreground">{state.aiSummary}</p>
+        {state.aiRecommendations && state.aiRecommendations.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="font-mono uppercase tracking-wide text-body font-normal text-muted pt-12">
+              Empfehlungen
+            </h4>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
+              {state.aiRecommendations.map((rec: any, index: number) => {
+                const num = String(index + 1).padStart(2, '0')
+                return (
+                  <li key={index} className="rounded-3xl border border-border p-4 lg:p-8 space-y-4">
+                    <div className="flex items-center gap-2 mb-4 text-muted">
+                      <div className="size-1.5 border border-muted rounded-full" />
+                      <p className="text-body-sm font-mono font-normal">{num}</p>
+                    </div>
+                    <h6 className="text-h6 font-sans font-normal uppercase">
+                      {rec.title || `Empfehlung ${num}`}
+                    </h6>
                     {rec.description && (
-                      <div className="mt-1 text-muted-foreground">{rec.description}</div>
+                      <p className="mt-1 text-body text-muted-foreground">{rec.description}</p>
                     )}
                   </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {state.aiGeneratedAt && (
-            <p className="text-xs text-muted-foreground">
-              Generiert am: {new Date(state.aiGeneratedAt).toLocaleString('de-DE')}
-            </p>
-          )}
-        </div>
-      </Card>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+        {state.aiGeneratedAt && (
+          <p className="px-4 text-xs text-muted">
+            Generiert am: {new Date(state.aiGeneratedAt).toLocaleString('de-DE')}
+          </p>
+        )}
+      </div>
     )
   }
 
