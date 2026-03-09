@@ -16,7 +16,7 @@ const CURVE_STRENGTH_MOBILE = 4
 const CURVE_STRENGTH_DESKTOP = 2.5
 const CURVE_BREAKPOINT = 768
 
-const HEIGHT = 300
+const HEIGHT = 260
 
 export type AgeWheelProps = {
   value: number

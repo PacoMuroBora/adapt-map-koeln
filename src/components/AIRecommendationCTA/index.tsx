@@ -4,12 +4,61 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useSubmission } from '@/providers/Submission'
 import { Loader2, Sparkles } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 export function AIRecommendationCTA() {
   const { state, updateAIResults } = useSubmission()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const hasAutoFetched = useRef(false)
+
+  const fetchRecommendations = React.useCallback(async () => {
+    if (!state.submissionId) {
+      setError('Keine Submission-ID gefunden. Bitte starte die Umfrage erneut.')
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/ai/recommendation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId: state.submissionId }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Fehler bei der Generierung der KI-Empfehlung')
+      }
+
+      const data = await response.json()
+
+      updateAIResults({
+        aiSummary: data.ai_summary_de,
+        aiRecommendations: data.ai_recommendations_de || [],
+        aiGeneratedAt: data.ai_generated_at || new Date().toISOString(),
+      })
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Fehler bei der Generierung der KI-Empfehlung')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [state.submissionId, updateAIResults])
+
+  // Generate AI recommendations automatically once when we have a submission and no results yet
+  useEffect(() => {
+    if (
+      state.submissionId &&
+      !state.aiSummary &&
+      !state.aiRecommendations &&
+      !hasAutoFetched.current
+    ) {
+      hasAutoFetched.current = true
+      fetchRecommendations()
+    }
+  }, [state.submissionId, state.aiSummary, state.aiRecommendations, fetchRecommendations])
 
   // If AI results already exist, show them
   if (state.aiSummary && state.aiRecommendations) {
@@ -46,69 +95,23 @@ export function AIRecommendationCTA() {
     )
   }
 
-  const handleGenerate = async () => {
-    if (!state.submissionId) {
-      setError('Keine Submission-ID gefunden. Bitte starte die Umfrage erneut.')
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/ai/recommendation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId: state.submissionId }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Fehler bei der Generierung der KI-Empfehlung')
-      }
-
-      const data = await response.json()
-
-      updateAIResults({
-        aiSummary: data.ai_summary_de,
-        aiRecommendations: data.ai_recommendations_de || [],
-        aiGeneratedAt: data.ai_generated_at || new Date().toISOString(),
-      })
-    } catch (err: any) {
-      setError(err.message || 'Fehler bei der Generierung der KI-Empfehlung')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  // Loading or error state: show loading indicator, or error with retry button
   return (
-    <Card className="p-6">
-      <div className="space-y-4 text-center">
-        <div className="flex justify-center">
-          <Sparkles className="h-8 w-8 text-primary" />
+    <div className="space-y-4 my-12">
+      {isLoading && (
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>KI-Empfehlung wird generiert...</span>
         </div>
-        <div>
-          <h3 className="mb-2 text-lg font-semibold">KI-Empfehlung erhalten</h3>
-          <p className="text-sm text-muted-foreground">
-            Basierend auf Deinen Antworten erstellt unsere KI personalisierte Empfehlungen für Deine
-            Situation.
-          </p>
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button onClick={handleGenerate} disabled={isLoading} className="w-full sm:w-auto">
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              KI-Empfehlung wird generiert...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              KI-Empfehlung erhalten
-            </>
-          )}
-        </Button>
-      </div>
-    </Card>
+      )}
+      {error && (
+        <>
+          <p className="text-sm text-destructive">{error}</p>
+          <Button onClick={fetchRecommendations} className="w-full sm:w-auto">
+            Erneut versuchen
+          </Button>
+        </>
+      )}
+    </div>
   )
 }
