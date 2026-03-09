@@ -12,7 +12,7 @@ export const CallToActionBlock: React.FC<CTABlockProps & { isLandingLayout?: boo
   richText,
 }) => {
   return (
-    <div className="container pt-4 md:py-8 lg:py-16">
+    <div className="container-card pt-4 md:py-8 lg:py-16">
       <Card
         variant="primary"
         className="inner-container h-screen md:h-auto flex flex-col justify-center py-8 md:py-12 lg:py-20 rounded-none md:rounded-3xl"
