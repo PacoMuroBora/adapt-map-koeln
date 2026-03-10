@@ -23,6 +23,9 @@ export type SectionCoverViewProps = {
   sectionsProgress?: { stepsCount: number; progressColor?: string }[]
   currentSectionIndex?: number
   sectionFigure?: 'shape01' | 'shape02'
+  /** When set, used for next/prev instead of router (single-route mode). */
+  onNext?: () => void
+  onPrev?: () => void
 }
 
 export default function SectionCoverView({
@@ -37,22 +40,24 @@ export default function SectionCoverView({
   sectionsProgress,
   currentSectionIndex = 0,
   sectionFigure = 'shape01',
+  onNext: onNextProp,
+  onPrev: onPrevProp,
 }: SectionCoverViewProps) {
   const router = useRouter()
   const { handleAbortQuestionnaire, showAbortDialog, setShowAbortDialog, handleConfirmAbort } =
     useQuestionnaireNavigation(questionnaireName, { mode: 'start' })
 
-  const handleNext = () => {
-    router.push(`/questionnaire/${questionnaireName}/${stepNumber + 1}`)
-  }
-
-  const handlePrevious = () => {
-    if (stepNumber <= 1) {
-      router.push(`/questionnaire/${questionnaireName}`)
-    } else {
-      router.push(`/questionnaire/${questionnaireName}/${stepNumber - 1}`)
-    }
-  }
+  const handleNext =
+    onNextProp ?? (() => router.push(`/questionnaire/${questionnaireName}/${stepNumber + 1}`))
+  const handlePrevious =
+    onPrevProp ??
+    (() => {
+      if (stepNumber <= 1) {
+        router.push(`/questionnaire/${questionnaireName}`)
+      } else {
+        router.push(`/questionnaire/${questionnaireName}/${stepNumber - 1}`)
+      }
+    })
 
   const figureColor = {
     colorSection: {
@@ -81,7 +86,7 @@ export default function SectionCoverView({
   return (
     <div className="relative flex min-h-[calc(100vh-3.5rem)] h-full w-full flex-col overflow-hidden px-4 pt-4 pb-28">
       {/* Background grid */}
-      <div className="fixed -left-2 -top-2 z-0 h-[110vh] w-[110vw] background-grid" />
+      <div className="fixed -left-2 -top-2 z-0 h-[110vh] w-[110vw] background-grid-dark" />
 
       {/* Section figure, default shape 01 */}
       {sectionFigure === 'shape02' ? (

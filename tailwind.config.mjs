@@ -1,5 +1,4 @@
 import tailwindcssAnimate from 'tailwindcss-animate'
-import typography from '@tailwindcss/typography'
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -9,9 +8,11 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  plugins: [tailwindcssAnimate, typography],
+  plugins: [tailwindcssAnimate],
   prefix: '',
   safelist: [
+    'tracking-title',
+    'tracking-label',
     'lg:col-span-4',
     'lg:col-span-6',
     'lg:col-span-8',
@@ -37,23 +38,11 @@ const config = {
     'text-body-sm',
   ],
   theme: {
+    // No responsive max-widths for .container; layout uses custom .container in globals.css
     container: {
-      center: true,
-      padding: {
-        DEFAULT: '1rem',
-        sm: '1rem',
-        md: '2rem',
-        lg: '2rem',
-        xl: '2rem',
-        '2xl': '2rem',
-      },
-      screens: {
-        sm: '100%',
-        md: '100%',
-        lg: '100%',
-        xl: '100%',
-        '2xl': '100%',
-      },
+      center: false,
+      padding: '0',
+      screens: {},
     },
     extend: {
       animation: {
@@ -166,14 +155,16 @@ const config = {
           'clamp(1.5rem, calc(1.5rem + (28 - 24) * (100vw - 320px) / 1120), 1.75rem)',
           { lineHeight: '120%', letterSpacing: '-0.00893em', fontWeight: 600 },
         ],
+        // deco: 56px at 320vw → 120px at 1440vw; uses px so size is independent of root font-size
         deco: [
-          'clamp(3rem, calc(3rem + (64 - 42) * (100vw - 320px) / 1120), 5rem)',
+          'clamp(56px, calc(56px + (120 - 56) * (100vw - 320px) / 1120), 120px)',
           { lineHeight: '105%', fontWeight: 600 },
         ],
         // Design system body: fixed sizes, lineHeight as %
-        'body-lg': ['1.125rem', { lineHeight: '135%' }],
-        body: ['1rem', { lineHeight: '130%' }],
-        'body-sm': ['0.875rem', { lineHeight: '115%' }],
+        'body-lg': ['1.1875rem', { lineHeight: '140%' }],
+        body: ['1.0625rem', { lineHeight: '140%' }],
+        'body-md': ['1rem', { lineHeight: '130%' }],
+        'body-sm': ['0.875rem', { lineHeight: '120%' }],
       },
       spacing: {
         // Design System Spacing
@@ -183,6 +174,10 @@ const config = {
         xl: 'var(--spacing-xl)',
         '2xl': 'var(--spacing-2xl)',
         '5xl': 'var(--spacing-5xl)',
+      },
+      letterSpacing: {
+        title: '0.12em',
+        label: '0.1em',
       },
       keyframes: {
         'accordion-down': {

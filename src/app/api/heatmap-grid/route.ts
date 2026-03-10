@@ -10,6 +10,7 @@ const CACHE_TTL = 300 // 5 minutes in seconds
 
 type TileData = {
   totalProblemIndex: number
+  totalHotDaysPerYear: number
   totalCount: number
   valueCounts: Record<number, number>
   tileX: number
@@ -27,6 +28,7 @@ type GeoJSONFeature = {
     tileY: number
     tileSizeMeters: number
     averageProblemIndex: number
+    averageHotDaysPerYear: number
     totalCount: number
     valueCounts: Record<number, number>
     value: number // Normalized 0-1 for color mapping
@@ -67,6 +69,14 @@ function getTileKey(
   }
 }
 
+const HEAT_FREQUENCY_DAY_ESTIMATES: Record<Submission['heatFrequency'], number> = {
+  '1-3': 2,
+  '4-10': 7,
+  '11-20': 15.5,
+  '21-40': 30.5,
+  '>40': 45,
+}
+
 async function calculateTiles(tileSizeMeters: number): Promise<GeoJSONResponse> {
   const payload = await getPayloadClient()
 
@@ -77,6 +87,7 @@ async function calculateTiles(tileSizeMeters: number): Promise<GeoJSONResponse> 
     select: {
       location: true,
       problem_index: true,
+      heatFrequency: true,
     },
     overrideAccess: true,
   })
@@ -96,6 +107,7 @@ async function calculateTiles(tileSizeMeters: number): Promise<GeoJSONResponse> 
     if (!t) {
       t = {
         totalProblemIndex: 0,
+        totalHotDaysPerYear: 0,
         totalCount: 0,
         valueCounts: {},
         tileX,
@@ -106,6 +118,7 @@ async function calculateTiles(tileSizeMeters: number): Promise<GeoJSONResponse> 
 
     t.totalCount += 1
     t.totalProblemIndex += pi
+    t.totalHotDaysPerYear += HEAT_FREQUENCY_DAY_ESTIMATES[s.heatFrequency]
     const bin = Math.round(pi)
     t.valueCounts[bin] = (t.valueCounts[bin] ?? 0) + 1
   }
@@ -120,6 +133,7 @@ async function calculateTiles(tileSizeMeters: number): Promise<GeoJSONResponse> 
     const { lng: centerLng, lat: centerLat } = mercatorToLngLat(centerX, centerY)
 
     const avg = t.totalProblemIndex / t.totalCount
+    const avgHotDaysPerYear = t.totalHotDaysPerYear / t.totalCount
     const value = Math.max(0, Math.min(1, avg / 100))
 
     features.push({
@@ -133,6 +147,7 @@ async function calculateTiles(tileSizeMeters: number): Promise<GeoJSONResponse> 
         tileY: t.tileY,
         tileSizeMeters,
         averageProblemIndex: Math.round(avg * 100) / 100,
+        averageHotDaysPerYear: Math.round(avgHotDaysPerYear * 100) / 100,
         totalCount: t.totalCount,
         valueCounts: t.valueCounts,
         value: Math.round(value * 1000) / 1000,

@@ -44,9 +44,6 @@ export async function triggerKBSync(
   const responseText = await response.text()
 
   if (!response.ok) {
-    payload.logger.error(
-      `Failed to trigger KB sync for ${kbItemId}: ${response.status} ${response.statusText}`,
-    )
     throw new Error(`KB sync failed: ${response.status} ${response.statusText} - ${responseText}`)
   }
 
@@ -55,7 +52,6 @@ export async function triggerKBSync(
   try {
     responseData = JSON.parse(responseText)
   } catch (parseError) {
-    payload.logger.error(`KB sync response parsing failed for ${kbItemId}`)
     throw new Error(
       `KB sync response parsing failed: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`,
     )
@@ -63,13 +59,12 @@ export async function triggerKBSync(
 
   // Check if workflow run was successful
   if (!responseData.success) {
-    payload.logger.error(
-      `KB sync workflow failed for ${kbItemId}: ${responseData.message || 'Unknown error'}`,
-    )
     throw new Error(`KB sync workflow failed: ${responseData.message || 'Unknown error'}`)
   }
 
-  // Update embedding metadata if present and updateMetadata is enabled
+  // Update embedding metadata if present and updateMetadata is enabled.
+  // Defer the write so it runs after the triggering save commits, avoiding MongoDB
+  // "Write conflict during plan execution" when the hook runs inside payload.update().
   if (shouldUpdateMetadata && responseData.embeddingMetadata) {
     const metadataToUpdate = {
       embedding_id: responseData.embeddingMetadata.embedding_id || undefined,
@@ -78,17 +73,30 @@ export async function triggerKBSync(
       last_synced: responseData.embeddingMetadata.last_synced || undefined,
     }
 
-    await payload.update({
-      collection: 'knowledge-base-items',
-      id: kbItemId,
-      data: {
-        embeddingMetadata: metadataToUpdate,
-      },
-      overrideAccess: true, // System operation
-      context: { skipKBSync: true }, // Prevent infinite loop
-    })
+    const doMetadataUpdate = (retryCount = 0) => {
+      payload
+        .update({
+          collection: 'knowledge-base-items',
+          id: kbItemId,
+          data: { embeddingMetadata: metadataToUpdate },
+          overrideAccess: true,
+          context: { skipKBSync: true },
+        })
+        .catch((metaErr: unknown) => {
+          const isWriteConflict =
+            metaErr &&
+            typeof metaErr === 'object' &&
+            'message' in metaErr &&
+            typeof (metaErr as Error).message === 'string' &&
+            ((metaErr as Error).message.includes('Write conflict') ||
+              (metaErr as Error).message.includes('yielding'))
+          if (isWriteConflict && retryCount < 2) {
+            setTimeout(() => doMetadataUpdate(retryCount + 1), 150 * (retryCount + 1))
+          }
+        })
+    }
 
-    payload.logger.info(`KB sync completed and metadata updated for ${kbItemId} (${action})`)
+    setImmediate(doMetadataUpdate)
 
     return {
       success: true,

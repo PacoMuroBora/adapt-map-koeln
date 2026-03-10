@@ -1,10 +1,9 @@
 'use client'
 
-import { X } from 'lucide-react'
 import type React from 'react'
 import { createContext, useCallback, useContext, useState } from 'react'
 
-type CloseContextValue = {
+export type CloseContextValue = {
   onAbort: (() => void) | null
   registerClose: (onAbort: () => void) => () => void
 }
@@ -15,35 +14,25 @@ export function useQuestionnaireClose() {
   return useContext(CloseContext)
 }
 
-function CloseButton() {
-  const ctx = useQuestionnaireClose()
-  if (ctx?.onAbort == null) return null
-  return (
-    <button
-      type="button"
-      onClick={ctx.onAbort}
-      className="fixed top-4 right-4 z-20"
-      aria-label="Fragebogen schließen"
-    >
-      <X className="size-5 text-white" />
-    </button>
-  )
-}
-
-export default function QuestionnaireLayoutClient({ children }: { children: React.ReactNode }) {
+/** Provider for questionnaire close (used in root layout so Header can call onAbort). */
+export function QuestionnaireCloseProvider({ children }: { children: React.ReactNode }) {
   const [onAbort, setOnAbort] = useState<(() => void) | null>(null)
   const registerClose = useCallback((handler: () => void) => {
     setOnAbort(() => handler)
     return () => setOnAbort(null)
   }, [])
-
   return (
-    <CloseContext.Provider value={{ onAbort, registerClose }}>
+    <CloseContext.Provider value={{ onAbort, registerClose }}>{children}</CloseContext.Provider>
+  )
+}
+
+export default function QuestionnaireLayoutClient({ children }: { children: React.ReactNode }) {
+  return (
+    <>
       <div className="fixed inset-0 z-0 bg-black" aria-hidden />
-      <div className="relative flex h-[calc(100vh-3.5rem)] min-h-[calc(100vh-3.5rem)] flex-col bg-black md:h-auto md:min-h-[calc(100vh-3.5rem)] md:justify-center">
+      <div className="relative flex h-full flex-col bg-black md:h-auto md:min-h-[calc(100vh-3.5rem)] md:justify-center">
         {children}
       </div>
-      <CloseButton />
-    </CloseContext.Provider>
+    </>
   )
 }

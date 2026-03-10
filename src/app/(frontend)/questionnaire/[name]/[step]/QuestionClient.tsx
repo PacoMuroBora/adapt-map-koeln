@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Question } from '../../questions'
+import type { LocalNavigationConfig } from '../../useQuestionnaireNavigation'
 import { Card, type CardProps } from '@/components/ui/card'
 import { QuestionCaseInput, type QuestionCaseInputContext } from './QuestionCaseInput'
 import {
@@ -29,7 +30,7 @@ import {
 } from '../../QuestionnaireProgressContext'
 
 export type ConditionalStepConfig = {
-  parentQuestionKey: string
+  parentQuestionId: string
   conditions: { showWhenAnswerValue: string; question: Question }[]
 }
 
@@ -56,6 +57,14 @@ type QuestionClientProps = {
   currentSectionIndex?: number
   /** When set, this step shows the conditional question that matches the parent step answer; question list is resolved on client. */
   conditionalStepConfig?: ConditionalStepConfig
+  /** Single-route mode: required when used from QuestionnaireRuntimeClient. */
+  localNavigation: {
+    setCurrentIndex: (step: number) => void
+    currentStep: number
+    totalSteps: number
+    allStepQuestionTypes: Question['type'][][]
+    goToFeedback: () => void
+  }
 }
 
 export default function QuestionClient({
@@ -73,6 +82,7 @@ export default function QuestionClient({
   sectionsProgress,
   currentSectionIndex,
   conditionalStepConfig,
+  localNavigation,
 }: QuestionClientProps) {
   const router = useRouter()
   const {
@@ -87,7 +97,7 @@ export default function QuestionClient({
 
   const resolvedConditionalQuestions = useMemo(() => {
     if (!conditionalStepConfig) return null
-    const parentAnswer = state.answers[conditionalStepConfig.parentQuestionKey]
+    const parentAnswer = state.answers[conditionalStepConfig.parentQuestionId]
     const value = parentAnswer != null ? String(parentAnswer) : ''
     const match = conditionalStepConfig.conditions.find((c) => c.showWhenAnswerValue === value)
     return match ? [match.question] : []
@@ -122,30 +132,27 @@ export default function QuestionClient({
   const setQuestionnaireError = useQuestionnaireProgress()?.setQuestionnaireError ?? (() => {})
   const [isExiting, setIsExiting] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const pendingPathRef = useRef<string | null>(null)
   const [isGpsLoading, setIsGpsLoading] = useState(false)
   const isLastStepWithConsent =
     stepNumber === totalSteps && effectiveQuestions.some((q) => q.type === 'consent')
+
+  // In single-route mode the component does not remount between steps.
+  // Ensure exit state is cleared whenever the visible step changes.
+  useEffect(() => {
+    setIsExiting(false)
+  }, [stepNumber])
 
   // When conditional step has no matching condition, skip to next step
   useEffect(() => {
     if (!conditionalStepConfig) return
     if ((resolvedConditionalQuestions?.length ?? 0) > 0) return
-    const nextPath =
-      stepNumber < totalSteps
-        ? `/questionnaire/${questionnaireName}/${stepNumber + 1}`
-        : '/feedback'
-    router.replace(nextPath)
-  }, [
-    conditionalStepConfig,
-    resolvedConditionalQuestions?.length,
-    stepNumber,
-    totalSteps,
-    questionnaireName,
-    router,
-  ])
+    if (stepNumber < localNavigation.totalSteps) {
+      localNavigation.setCurrentIndex(stepNumber + 1)
+    } else {
+      localNavigation.goToFeedback()
+    }
+  }, [conditionalStepConfig, resolvedConditionalQuestions?.length, stepNumber, localNavigation])
   const resultsRoute = '/results'
-  const feedbackRoute = '/feedback'
 
   const onStepClickSection = useCallback(
     (step: number) => {
@@ -153,10 +160,10 @@ export default function QuestionClient({
         sectionStepsTotal != null && sectionStepNumber != null
           ? stepNumber - sectionStepNumber + step
           : step
-      pendingPathRef.current = `/questionnaire/${questionnaireName}/${targetFlat}`
       setIsExiting(true)
+      setTimeout(() => localNavigation.setCurrentIndex(targetFlat), 220)
     },
-    [questionnaireName, stepNumber, sectionStepNumber, sectionStepsTotal],
+    [stepNumber, sectionStepNumber, sectionStepsTotal, localNavigation],
   )
 
   const isSkippableStep =
@@ -199,30 +206,40 @@ export default function QuestionClient({
       setQuestionnaireError(null)
       const mergedAnswers = mergedAnswersOverride ?? { ...state.answers, ...stepAnswers }
       const locationAnswer = mergedAnswers.location || {}
+      const mergedUniverse = { ...state.answers, ...mergedAnswers }
+      const isAddressLike = (
+        value: unknown,
+      ): value is { street?: string; housenumber?: string; postal_code?: string; city?: string } =>
+        Boolean(
+          value &&
+          typeof value === 'object' &&
+          ('street' in value ||
+            'housenumber' in value ||
+            'postal_code' in value ||
+            'city' in value),
+        )
+      const findAddressLike = (
+        source: unknown,
+      ): { street?: string; housenumber?: string; postal_code?: string; city?: string } | null => {
+        if (!source || typeof source !== 'object') return null
+        if (isAddressLike(source)) return source
+        for (const nested of Object.values(source as Record<string, unknown>)) {
+          const match = findAddressLike(nested)
+          if (match) return match
+        }
+        return null
+      }
 
-      // Resolve address object: may be under "location" or under the address question's key (only known on address step)
+      // Resolve address object from explicit location answer, top-level answers, or nested group answers.
       const addressData =
-        typeof locationAnswer === 'object' && locationAnswer !== null && 'street' in locationAnswer
-          ? locationAnswer
-          : (() => {
-              for (const v of Object.values(mergedAnswers)) {
-                if (
-                  v &&
-                  typeof v === 'object' &&
-                  'street' in v &&
-                  (typeof (v as any).postal_code === 'string' ||
-                    typeof (v as any).city === 'string')
-                ) {
-                  return v as {
-                    street?: string
-                    housenumber?: string
-                    postal_code?: string
-                    city?: string
-                  }
-                }
-              }
-              return null
-            })()
+        (isAddressLike(locationAnswer) ? locationAnswer : null) ??
+        findAddressLike(mergedUniverse) ??
+        null
+
+      const addressStreet = String(addressData?.street ?? '').trim()
+      const addressHouseNumber = String(addressData?.housenumber ?? '').trim()
+      const addressPostalCode = String(addressData?.postal_code ?? '').trim()
+      const addressCity = String(addressData?.city ?? '').trim()
 
       let mergedLocation: {
         lat: number
@@ -231,59 +248,60 @@ export default function QuestionClient({
         city?: string
         street?: string
       } | null = state.location
-        ? {
-            lat: state.location.lat,
-            lng: state.location.lng,
-            postal_code: state.location.postal_code!,
-            city: state.location.city || (addressData?.city as string | undefined) || undefined,
-            street:
-              (addressData?.street as string | undefined) ||
-              (state.location.street && state.location.housenumber
-                ? `${state.location.street} ${state.location.housenumber}`.trim()
-                : state.location.street) ||
-              undefined,
-          }
+        ? state.location.postal_code
+          ? {
+              lat: state.location.lat,
+              lng: state.location.lng,
+              postal_code: addressPostalCode || state.location.postal_code,
+              city: addressCity || state.location.city || undefined,
+              street:
+                [addressStreet, addressHouseNumber].filter(Boolean).join(' ').trim() ||
+                (state.location.street && state.location.housenumber
+                  ? `${state.location.street} ${state.location.housenumber}`.trim()
+                  : state.location.street) ||
+                undefined,
+            }
+          : null
         : null
 
-      if (!mergedLocation && addressData) {
-        const street = addressData.street ?? ''
-        const housenumber = addressData.housenumber ?? ''
-        const postal_code = addressData.postal_code ?? ''
-        const city = addressData.city ?? ''
-        if (street?.trim() && (postal_code?.trim() || city?.trim())) {
-          try {
-            const geocodeRes = await fetch('/api/geocode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                street: street.trim(),
-                housenumber: (housenumber ?? '').trim() || undefined,
-                postalcode: (postal_code ?? '').trim() || undefined,
-                city: (city ?? '').trim() || undefined,
-              }),
-            })
-            if (geocodeRes.ok) {
-              const data = await geocodeRes.json()
-              const pc = data.postal_code ?? postal_code ?? ''
-              if (pc) {
-                mergedLocation = {
-                  lat: data.lat,
-                  lng: data.lng,
-                  postal_code: pc,
-                  city: data.city ?? city ?? undefined,
-                  street: [street, housenumber].filter(Boolean).join(' ').trim() || data.address,
-                }
+      const shouldGeocodeAddress =
+        addressStreet.length > 0 && (addressPostalCode.length > 0 || addressCity.length > 0)
+
+      if ((!mergedLocation || shouldGeocodeAddress) && shouldGeocodeAddress) {
+        try {
+          const geocodeRes = await fetch('/api/geocode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              street: addressStreet,
+              housenumber: addressHouseNumber || undefined,
+              postalcode: addressPostalCode || undefined,
+              city: addressCity || undefined,
+            }),
+          })
+          if (geocodeRes.ok) {
+            const data = await geocodeRes.json()
+            const pc = data.postal_code ?? addressPostalCode ?? ''
+            if (pc) {
+              mergedLocation = {
+                lat: data.lat,
+                lng: data.lng,
+                postal_code: pc,
+                city: data.city ?? (addressCity || undefined),
+                street:
+                  [addressStreet, addressHouseNumber].filter(Boolean).join(' ').trim() ||
+                  data.address,
               }
             }
-          } catch {
-            // leave mergedLocation null so we throw Standort fehlt below
           }
+        } catch {
+          // keep best-effort mergedLocation and let mandatory postal code validation fail if needed
         }
       }
 
       const freeTextQuestion = effectiveQuestions.find((q) => q.type === 'textarea')
       const freeText = freeTextQuestion
-        ? String(mergedAnswers[freeTextQuestion.key] ?? '').trim() || undefined
+        ? String(mergedAnswers[freeTextQuestion.id] ?? '').trim() || undefined
         : state.userText || undefined
       const personalFields = {
         ...state.personalFields,
@@ -368,7 +386,7 @@ export default function QuestionClient({
       locationQuestion &&
       !resolvedAddress &&
       state.location?.postal_code &&
-      state.answers[locationQuestion.key] === 'gps'
+      state.answers[locationQuestion.id] === 'gps'
     ) {
       const loc = state.location
       setResolvedAddress({
@@ -378,7 +396,7 @@ export default function QuestionClient({
         house_number: null,
       })
     }
-  }, [locationQuestion?.key, state.location, state.answers, resolvedAddress])
+  }, [locationQuestion?.id, state.location, state.answers, resolvedAddress])
 
   // Skip plz/address when user already used GPS (whole step is skippable). Skip all consecutive skippable steps in one go when we have allStepQuestionTypes.
   useEffect(() => {
@@ -389,11 +407,12 @@ export default function QuestionClient({
       )
     )
       return
+    const steps = allStepQuestionTypes ?? []
     let targetStep = stepNumber + 1
-    if (allStepQuestionTypes && allStepQuestionTypes.length >= totalSteps) {
+    if (steps.length >= totalSteps) {
       while (
         targetStep <= totalSteps &&
-        (allStepQuestionTypes[targetStep - 1] ?? []).every((t) =>
+        (steps[targetStep - 1] ?? []).every((t) =>
           STEPS_TO_SKIP_WHEN_GPS.includes(t as (typeof STEPS_TO_SKIP_WHEN_GPS)[number]),
         )
       ) {
@@ -401,18 +420,17 @@ export default function QuestionClient({
       }
     }
     if (targetStep <= totalSteps) {
-      router.replace(`/questionnaire/${questionnaireName}/${targetStep}`)
+      localNavigation.setCurrentIndex(targetStep)
     } else {
-      router.replace('/feedback')
+      localNavigation.goToFeedback()
     }
   }, [
-    questionnaireName,
     stepNumber,
     totalSteps,
     effectiveQuestions,
     state.location?.postal_code,
-    router,
     allStepQuestionTypes,
+    localNavigation,
   ])
 
   // Initialize slider default for any slider question in step
@@ -421,30 +439,30 @@ export default function QuestionClient({
       if (
         q.type === 'slider' &&
         q.required &&
-        (getAnswer(q.key) === null || getAnswer(q.key) === undefined)
+        (getAnswer(q.id) === null || getAnswer(q.id) === undefined)
       ) {
         const min = q.sliderConfig?.min ?? 0
-        setAnswer(q.key, min)
+        setAnswer(q.id, min)
       }
       if (
         q.type === 'sliderHorizontalRange' &&
         q.required &&
-        (getAnswer(q.key) === null || getAnswer(q.key) === undefined)
+        (getAnswer(q.id) === null || getAnswer(q.id) === undefined)
       ) {
         const min = q.sliderConfig?.min ?? 0
         const max = q.sliderConfig?.max ?? 100
-        setAnswer(q.key, [min, max])
+        setAnswer(q.id, [min, max])
       }
       if (
         q.type === 'sliderVertical' &&
         q.required &&
-        (getAnswer(q.key) === null || getAnswer(q.key) === undefined)
+        (getAnswer(q.id) === null || getAnswer(q.id) === undefined)
       ) {
         const min = q.sliderVerticalConfig?.min ?? 0
         const max = q.sliderVerticalConfig?.max ?? 10
         const step = q.sliderVerticalConfig?.step ?? 1
         const middle = min + Math.round((max - min) / (2 * step)) * step
-        setAnswer(q.key, middle)
+        setAnswer(q.id, middle)
       }
     }
   }, [])
@@ -458,6 +476,37 @@ export default function QuestionClient({
     return true
   }
 
+  const wrappedSetCurrentIndex = useCallback(
+    (step: number) => {
+      setIsExiting(true)
+      setTimeout(() => localNavigation.setCurrentIndex(step), 220)
+    },
+    [localNavigation],
+  )
+
+  const navConfig: LocalNavigationConfig = {
+    mode: 'local',
+    currentStep: localNavigation.currentStep,
+    setCurrentIndex: wrappedSetCurrentIndex,
+    totalSteps: localNavigation.totalSteps,
+    questionTypes: effectiveQuestionTypes,
+    allStepQuestionTypes: localNavigation.allStepQuestionTypes,
+    questions: effectiveQuestions,
+    stepAnswers,
+    state,
+    updateAnswer,
+    updateCurrentStep,
+    validateAnswer,
+    goToFeedback: () => {
+      if (isLastStepWithConsent) {
+        const merged = { ...state.answers, ...stepAnswers }
+        submitFromLastStep(merged)
+      } else {
+        localNavigation.goToFeedback()
+      }
+    },
+  }
+
   const {
     handleNext,
     handlePrevious,
@@ -465,44 +514,7 @@ export default function QuestionClient({
     handleConfirmAbort,
     showAbortDialog,
     setShowAbortDialog,
-  } = useQuestionnaireNavigation(questionnaireName, {
-    mode: 'step',
-    stepNumber,
-    totalSteps,
-    questionTypes: effectiveQuestionTypes,
-    allStepQuestionTypes,
-    questions: effectiveQuestions,
-    stepAnswers,
-    state,
-    updateAnswer,
-    updateCurrentStep,
-    validateAnswer,
-    onBeforeNextNavigate: (path) => {
-      if (path === feedbackRoute && isLastStepWithConsent) {
-        const merged = { ...state.answers, ...stepAnswers }
-        submitFromLastStep(merged)
-        return
-      }
-      pendingPathRef.current = path
-      setIsExiting(true)
-      setTimeout(() => {
-        if (pendingPathRef.current) {
-          router.push(pendingPathRef.current)
-          pendingPathRef.current = null
-        }
-      }, 220)
-    },
-    onBeforePrevNavigate: (path) => {
-      pendingPathRef.current = path
-      setIsExiting(true)
-      setTimeout(() => {
-        if (pendingPathRef.current) {
-          router.push(pendingPathRef.current)
-          pendingPathRef.current = null
-        }
-      }, 220)
-    },
-  })
+  } = useQuestionnaireNavigation(questionnaireName, navConfig)
 
   const handleGPSLocation = async () => {
     setIsGpsLoading(true)
@@ -537,7 +549,7 @@ export default function QuestionClient({
                 city: data.city,
                 street: streetWithNumber || undefined,
               })
-              if (locationQuestion) updateAnswer(locationQuestion.key, 'gps')
+              if (locationQuestion) updateAnswer(locationQuestion.id, 'gps')
               setResolvedAddress({
                 postal_code: data.postal_code,
                 city: data.city,
@@ -631,7 +643,7 @@ export default function QuestionClient({
         city: data.city,
         street: streetWithNumber || undefined,
       })
-      if (locationQuestion) updateAnswer(locationQuestion.key, 'gps')
+      if (locationQuestion) updateAnswer(locationQuestion.id, 'gps')
       setResolvedAddress({
         postal_code: data.postal_code,
         city: data.city,
@@ -670,14 +682,14 @@ export default function QuestionClient({
 
   const handleManualAddress = () => {
     if (locationQuestion) {
-      updateAnswer(locationQuestion.key, 'manual')
+      updateAnswer(locationQuestion.id, 'manual')
     }
     updateLocation({ lat: 0, lng: 0, postal_code: null, city: null })
     updateCurrentStep('questionnaire')
-    if (stepNumber < totalSteps) {
-      router.push(`/questionnaire/${questionnaireName}/${stepNumber + 1}`)
+    if (stepNumber < localNavigation.totalSteps) {
+      localNavigation.setCurrentIndex(stepNumber + 1)
     } else {
-      router.push('/feedback')
+      localNavigation.goToFeedback()
     }
   }
 
@@ -699,21 +711,17 @@ export default function QuestionClient({
   }
 
   if (conditionalStepConfig && effectiveQuestions.length === 0) {
-    return null
+    return (
+      <div className="flex min-h-0 h-full max-h-full flex-col items-center justify-center text-muted-foreground text-sm">
+        Weiterleitung…
+      </div>
+    )
   }
 
   return (
     <>
-      <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 py-8 pb-28 md:px-4 md:py-16 md:pb-28">
-        <AnimatePresence
-          mode="wait"
-          onExitComplete={() => {
-            if (pendingPathRef.current) {
-              router.push(pendingPathRef.current)
-              pendingPathRef.current = null
-            }
-          }}
-        >
+      <div className="flex min-h-0 h-full max-h-full flex-col mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg pl-4 pr-10 pt-24 pb-28 md:px-4 md:pt-16 md:pb-28">
+        <AnimatePresence mode="wait">
           {!isExiting && !isSkippableStep ? (
             <motion.div
               key={stepNumber}
@@ -725,20 +733,20 @@ export default function QuestionClient({
             >
               <Card
                 variant={(colorSection ?? 'purple') as CardProps['variant']}
-                className="flex min-h-0 h-[70vh] flex-col overflow-hidden"
+                className="flex min-h-0 h-[70vh] max-h-[640px] flex-col overflow-hidden"
               >
                 <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
                   <div className="flex min-h-0 flex-1 flex-col overflow-auto">
                     <div
                       className={cn(
-                        'space-y-8 px-6 py-8',
+                        'space-y-8 px-6 pt-8 pb-6',
                         effectiveQuestions.some((q) => q.type === 'textarea') &&
                           'flex min-h-full flex-1 flex-col',
                       )}
                     >
                       {effectiveQuestions[0]?.title != null && (
                         <div>
-                          <h1 className="mb-2 text-h5 font-headings font-semibold uppercase">
+                          <h1 className="mb-2 text-h5 font-headings font-semibold uppercase hyphens-auto">
                             {effectiveQuestions[0].title}
                           </h1>
                           {effectiveQuestions[0].description != null && (
@@ -765,18 +773,18 @@ export default function QuestionClient({
                             )}
                           >
                             <QuestionCaseInput
-                            question={q}
-                            answer={getAnswer(q.key)}
-                            setAnswer={(v) => setAnswer(q.key, v)}
-                            context={questionInputContext}
-                            color={
-                              (colorSection ?? 'purple') as
-                                | 'purple'
-                                | 'orange'
-                                | 'green'
-                                | 'pink'
-                                | 'turquoise'
-                            }
+                              question={q}
+                              answer={getAnswer(q.id)}
+                              setAnswer={(v) => setAnswer(q.id, v)}
+                              context={questionInputContext}
+                              color={
+                                (colorSection ?? 'purple') as
+                                  | 'purple'
+                                  | 'orange'
+                                  | 'green'
+                                  | 'pink'
+                                  | 'turquoise'
+                              }
                             />
                           </div>
                         </div>
@@ -817,8 +825,8 @@ export default function QuestionClient({
                 sectionStepsTotal != null && sectionStepNumber != null
                   ? stepNumber - sectionStepNumber + step
                   : step
-              pendingPathRef.current = `/questionnaire/${questionnaireName}/${targetFlat}`
               setIsExiting(true)
+              setTimeout(() => localNavigation.setCurrentIndex(targetFlat), 220)
             }}
           />
         </div>

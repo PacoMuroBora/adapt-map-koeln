@@ -3,6 +3,10 @@ import type { CollectionConfig } from 'payload'
 import { adminOnly } from '../../access/adminOnly'
 import { anyone } from '../../access/anyone'
 import {
+  revalidateDashboardCacheAfterChange,
+  revalidateDashboardCacheAfterDelete,
+} from './hooks/revalidateDashboardCache'
+import {
   revalidateHeatmapAfterChange,
   revalidateHeatmapAfterDelete,
 } from './hooks/revalidateHeatmap'
@@ -153,7 +157,7 @@ export const Submissions: CollectionConfig = {
       type: 'number',
       required: true,
       min: 0,
-      max: 9,
+      max: 10,
       admin: {
         description: 'Intensity of heat (0-9 slider value)',
       },
@@ -178,14 +182,18 @@ export const Submissions: CollectionConfig = {
         {
           name: 'greenNeighborhood',
           type: 'select',
-          required: true,
+          hasMany: true,
           options: [
-            { label: 'Ja', value: 'yes' },
-            { label: 'Nein', value: 'no' },
-            { label: 'Weiß nicht', value: 'unsure' },
+            { label: 'Offene Straßen', value: 'open_streets' },
+            { label: 'Viel begrünt', value: 'greenery' },
+            { label: 'Hauptstraße', value: 'main_road' },
+            { label: 'Parknähe', value: 'park' },
+            { label: 'Keine Begrünung', value: 'no_greenery' },
+            { label: 'Flussnähe', value: 'river' },
+            { label: 'Versiegelte Flächen', value: 'closed_surfaces' },
           ],
           admin: {
-            description: 'Is the neighborhood open and green?',
+            description: 'Neighborhood characteristics (multi-select)',
           },
         },
         {
@@ -236,14 +244,11 @@ export const Submissions: CollectionConfig = {
           type: 'select',
           required: true,
           options: [
-            { label: 'Begrünung', value: 'greening' },
-            { label: 'Wasser', value: 'water' },
-            { label: 'Schatten', value: 'shadow' },
-            { label: 'Verschattung', value: 'shading' },
-            { label: 'Kühlung', value: 'cooling' },
-            { label: 'Dachbegrünung', value: 'roof_greening' },
-            { label: 'Fassadenbegrünung', value: 'facade_greening' },
-            { label: 'Wasserspender', value: 'water_fountain' },
+            { label: 'Verschattung', value: 'schatten' },
+            { label: 'Schatten kreieren', value: 'cooling' },
+            { label: 'Dachbegrünung anlegen', value: 'dachbegruenung' },
+            { label: 'Straßenbegrünung anlegen', value: 'strassenbegruenung' },
+            { label: 'Wasserstellen anlegen', value: 'wasserstellen' },
           ],
         },
       ],
@@ -269,17 +274,18 @@ export const Submissions: CollectionConfig = {
       },
     },
     {
+      name: 'consent',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'User consented to data collection and processing',
+      },
+    },
+    {
       name: 'user_text',
       type: 'textarea',
       admin: {
         description: 'Free text input from user',
-      },
-    },
-    {
-      name: 'dynamicAnswers',
-      type: 'json',
-      admin: {
-        description: 'Answers that do not map to specific submission fields (question key -> value)',
       },
     },
     {
@@ -305,16 +311,12 @@ export const Submissions: CollectionConfig = {
         },
         {
           name: 'ai_referenced_kb_ids',
-          type: 'array',
+          type: 'relationship',
+          relationTo: 'knowledge-base-items',
+          hasMany: true,
           admin: {
-            description: 'IDs of referenced knowledge base items',
+            description: 'Referenced knowledge base items from AI recommendations',
           },
-          fields: [
-            {
-              name: 'kb_id',
-              type: 'text',
-            },
-          ],
         },
         {
           name: 'ai_model_metadata',
@@ -337,8 +339,8 @@ export const Submissions: CollectionConfig = {
     },
   ],
   hooks: {
-    afterChange: [revalidateHeatmapAfterChange],
-    afterDelete: [revalidateHeatmapAfterDelete],
+    afterChange: [revalidateHeatmapAfterChange, revalidateDashboardCacheAfterChange],
+    afterDelete: [revalidateHeatmapAfterDelete, revalidateDashboardCacheAfterDelete],
   },
   timestamps: true,
 }

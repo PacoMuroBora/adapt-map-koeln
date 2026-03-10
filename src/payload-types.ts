@@ -68,18 +68,16 @@ export interface Config {
   blocks: {};
   collections: {
     pages: Page;
-    posts: Post;
     media: Media;
-    categories: Category;
     users: User;
     questions: Question;
     questionnaires: Questionnaire;
     submissions: Submission;
     'knowledge-base-items': KnowledgeBaseItem;
+    'knowledge-base-recommendation-events': KnowledgeBaseRecommendationEvent;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
-    search: Search;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-folders': FolderInterface;
@@ -94,18 +92,16 @@ export interface Config {
   };
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
-    posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     questions: QuestionsSelect<false> | QuestionsSelect<true>;
     questionnaires: QuestionnairesSelect<false> | QuestionnairesSelect<true>;
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     'knowledge-base-items': KnowledgeBaseItemsSelect<false> | KnowledgeBaseItemsSelect<true>;
+    'knowledge-base-recommendation-events': KnowledgeBaseRecommendationEventsSelect<false> | KnowledgeBaseRecommendationEventsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
-    search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>;
@@ -169,94 +165,7 @@ export interface UserAuthOperations {
 export interface Page {
   id: string;
   title: string;
-  hero: {
-    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
-    richText?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    links?:
-      | {
-          link: {
-            type?: ('reference' | 'custom') | null;
-            newTab?: boolean | null;
-            reference?:
-              | ({
-                  relationTo: 'pages';
-                  value: string | Page;
-                } | null)
-              | ({
-                  relationTo: 'posts';
-                  value: string | Post;
-                } | null)
-              | ({
-                  relationTo: 'questionnaires';
-                  value: string | Questionnaire;
-                } | null);
-            url?: string | null;
-            label: string;
-            /**
-             * Choose how the link should be rendered (Button variant).
-             */
-            appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
-            /**
-             * Button size.
-             */
-            size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
-            /**
-             * Icon before the label.
-             */
-            iconBefore?:
-              | (
-                  | ''
-                  | 'arrow-right'
-                  | 'arrow-up'
-                  | 'arrow-down'
-                  | 'arrow-up-right'
-                  | 'external-link'
-                  | 'chevron-left'
-                  | 'chevron-right'
-                  | 'check'
-                  | 'plus'
-                  | 'close'
-                )
-              | null;
-            /**
-             * Icon after the label.
-             */
-            iconAfter?:
-              | (
-                  | ''
-                  | 'arrow-right'
-                  | 'arrow-up'
-                  | 'arrow-down'
-                  | 'arrow-up-right'
-                  | 'external-link'
-                  | 'chevron-left'
-                  | 'chevron-right'
-                  | 'check'
-                  | 'plus'
-                  | 'close'
-                )
-              | null;
-          };
-          id?: string | null;
-        }[]
-      | null;
-    media?: (string | null) | Media;
-  };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  contentBlocks: (HeroBlock | CallToActionBlock | ContentBlock | HeatmapBlock | MediaBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -277,13 +186,14 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
+ * via the `definition` "HeroBlock".
  */
-export interface Post {
-  id: string;
-  title: string;
-  heroImage?: (string | null) | Media;
-  content: {
+export interface HeroBlock {
+  headline: string;
+  headlineSize?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  headlineTag?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  overline?: string | null;
+  richText?: {
     root: {
       type: string;
       children: {
@@ -297,163 +207,80 @@ export interface Post {
       version: number;
     };
     [k: string]: unknown;
-  };
-  relatedPosts?: (string | Post)[] | null;
-  categories?: (string | Category)[] | null;
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  authors?: (string | User)[] | null;
-  populatedAuthors?:
+  } | null;
+  buttons?:
     | {
-        id?: string | null;
-        name?: string | null;
-      }[]
-    | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: string;
-  alt?: string | null;
-  folder?: (string | null) | FolderInterface;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    square?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    medium?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    xlarge?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-folders".
- */
-export interface FolderInterface {
-  id: string;
-  name: string;
-  folder?: (string | null) | FolderInterface;
-  documentsAndFolders?: {
-    docs?: (
-      | {
-          relationTo?: 'payload-folders';
-          value: string | FolderInterface;
-        }
-      | {
-          relationTo?: 'media';
-          value: string | Media;
-        }
-    )[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  folderType?: 'media'[] | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
- */
-export interface Category {
-  id: string;
-  title: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  parent?: (string | null) | Category;
-  breadcrumbs?:
-    | {
-        doc?: (string | null) | Category;
-        url?: string | null;
-        label?: string | null;
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered (Button variant).
+           */
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-left'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-left'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
+            | null;
+        };
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: string;
-  name?: string | null;
-  roles: 'user' | 'editor' | 'admin';
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -568,10 +395,6 @@ export interface Questionnaire {
  */
 export interface Question {
   id: string;
-  /**
-   * Unique identifier for the question (e.g., "q1", "heat_comfort")
-   */
-  key: string;
   /**
    * Question title in German
    */
@@ -699,6 +522,45 @@ export interface Question {
     startValue: number;
   };
   /**
+   * Maps this question answer to a specific submission field. If not set, answer is logged but not persisted.
+   */
+  submissionBinding: {
+    /**
+     * "Submission Field" writes directly to a typed Submissions field. "Custom Key" is for navigation/meta answers that are only logged.
+     */
+    mode: 'explicitField' | 'customKey';
+    /**
+     * Target field path in the Submissions collection
+     */
+    fieldPath?:
+      | (
+          | 'heatFrequency'
+          | 'heatIntensity'
+          | 'user_text'
+          | 'location'
+          | 'location.postal_code'
+          | 'location.city'
+          | 'location.street'
+          | 'location.lat'
+          | 'location.lng'
+          | 'personalFields.age'
+          | 'personalFields.gender'
+          | 'personalFields.householdSize'
+          | 'livingSituation.housingType'
+          | 'livingSituation.greenNeighborhood'
+          | 'livingSituation.cityArea'
+          | 'climateAdaptationKnowledge.knowsTerm'
+          | 'climateAdaptationKnowledge.description'
+          | 'consent'
+          | 'desiredChanges'
+        )
+      | null;
+    /**
+     * Custom identifier for this answer. Not persisted in submission – used for logging/debugging only.
+     */
+    customKey?: string | null;
+  };
+  /**
    * Whether this question must be answered. If yes button says "Weiter", if no button says "Überspringen".
    */
   required?: boolean | null;
@@ -706,19 +568,6 @@ export interface Question {
    * Category for grouping questions (e.g., "comfort", "health", "infrastructure")
    */
   category?: string | null;
-  /**
-   * Fields editable by editors (not admins only)
-   */
-  editorFields?: {
-    /**
-     * Order in which this question appears
-     */
-    displayOrder?: number | null;
-    /**
-     * Additional help text for users
-     */
-    helpText?: string | null;
-  };
   /**
    * Scoring configuration (admin only)
    */
@@ -783,14 +632,14 @@ export interface CallToActionBlock {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
                 value: string | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: string | Post;
               } | null)
             | ({
                 relationTo: 'questionnaires';
@@ -810,13 +659,33 @@ export interface CallToActionBlock {
            * Icon before the label.
            */
           iconBefore?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-left'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'plus'
+                | 'close'
+              )
             | null;
           /**
            * Icon after the label.
            */
           iconAfter?:
-            | ('' | 'arrow-right' | 'arrow-up' | 'arrow-down' | 'arrow-up-right' | 'external-link' | 'plus' | 'close')
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-left'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'plus'
+                | 'close'
+              )
             | null;
         };
         id?: string | null;
@@ -831,6 +700,20 @@ export interface CallToActionBlock {
  * via the `definition` "ContentBlock".
  */
 export interface ContentBlock {
+  /**
+   * Use a purple card layout for this block.
+   */
+  cardLayout?: boolean | null;
+  /**
+   * Optional small label above the headline.
+   */
+  overline?: string | null;
+  /**
+   * Optional headline above the columns.
+   */
+  headline?: string | null;
+  headlineSize?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  headlineTag?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
   columns?:
     | {
         size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
@@ -853,14 +736,14 @@ export interface ContentBlock {
         link?: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
                 value: string | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: string | Post;
               } | null)
             | ({
                 relationTo: 'questionnaires';
@@ -883,6 +766,7 @@ export interface ContentBlock {
             | (
                 | ''
                 | 'arrow-right'
+                | 'arrow-left'
                 | 'arrow-up'
                 | 'arrow-down'
                 | 'arrow-up-right'
@@ -901,6 +785,80 @@ export interface ContentBlock {
             | (
                 | ''
                 | 'arrow-right'
+                | 'arrow-left'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
+            | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional button below the columns.
+   */
+  buttons?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered (Button variant).
+           */
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
+          /**
+           * Button size.
+           */
+          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
+          /**
+           * Icon before the label.
+           */
+          iconBefore?:
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-left'
+                | 'arrow-up'
+                | 'arrow-down'
+                | 'arrow-up-right'
+                | 'external-link'
+                | 'chevron-left'
+                | 'chevron-right'
+                | 'check'
+                | 'plus'
+                | 'close'
+              )
+            | null;
+          /**
+           * Icon after the label.
+           */
+          iconAfter?:
+            | (
+                | ''
+                | 'arrow-right'
+                | 'arrow-left'
                 | 'arrow-up'
                 | 'arrow-down'
                 | 'arrow-up-right'
@@ -922,247 +880,156 @@ export interface ContentBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeatmapBlock".
+ */
+export interface HeatmapBlock {
+  /**
+   * Headline displayed above the heatmap.
+   */
+  headline: string;
+  headlineSize?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  headlineTag?: ('h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') | null;
+  /**
+   * Optional rich text displayed below the heatmap.
+   */
+  richText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'heatmap';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MediaBlock".
  */
 export interface MediaBlock {
   media: string | Media;
+  /**
+   * Display width of the image in the content.
+   */
+  size: 'small' | 'medium' | 'large' | 'full';
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaBlock';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ArchiveBlock".
+ * via the `definition` "media".
  */
-export interface ArchiveBlock {
-  introContent?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  populateBy?: ('collection' | 'selection') | null;
-  relationTo?: 'posts' | null;
-  categories?: (string | Category)[] | null;
-  limit?: number | null;
-  selectedDocs?:
-    | {
-        relationTo: 'posts';
-        value: string | Post;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'archive';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "FormBlock".
- */
-export interface FormBlock {
-  form: string | Form;
-  enableIntro?: boolean | null;
-  introContent?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'formBlock';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "forms".
- */
-export interface Form {
+export interface Media {
   id: string;
-  title: string;
-  fields?:
-    | (
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            defaultValue?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'checkbox';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'country';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'email';
-          }
-        | {
-            message?: {
-              root: {
-                type: string;
-                children: {
-                  type: any;
-                  version: number;
-                  [k: string]: unknown;
-                }[];
-                direction: ('ltr' | 'rtl') | null;
-                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-                indent: number;
-                version: number;
-              };
-              [k: string]: unknown;
-            } | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'message';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'number';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            placeholder?: string | null;
-            options?:
-              | {
-                  label: string;
-                  value: string;
-                  id?: string | null;
-                }[]
-              | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'select';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'state';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'text';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'textarea';
-          }
-      )[]
-    | null;
-  submitButtonLabel?: string | null;
-  /**
-   * Choose whether to display an on-page message or redirect to a different page after they submit the form.
-   */
-  confirmationType?: ('message' | 'redirect') | null;
-  confirmationMessage?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  redirect?: {
-    url: string;
-  };
-  /**
-   * Send custom emails when the form submits. Use comma separated lists to send the same email to multiple recipients. To reference a value from this form, wrap that field's name with double curly brackets, i.e. {{firstName}}. You can use a wildcard {{*}} to output all data and {{*:table}} to format it as an HTML table in the email.
-   */
-  emails?:
-    | {
-        emailTo?: string | null;
-        cc?: string | null;
-        bcc?: string | null;
-        replyTo?: string | null;
-        emailFrom?: string | null;
-        subject: string;
-        /**
-         * Enter the message that should be sent in this email.
-         */
-        message?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        id?: string | null;
-      }[]
-    | null;
+  alt?: string | null;
+  folder?: (string | null) | FolderInterface;
   updatedAt: string;
   createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    square?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    medium?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    xlarge?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-folders".
+ */
+export interface FolderInterface {
+  id: string;
+  name: string;
+  folder?: (string | null) | FolderInterface;
+  documentsAndFolders?: {
+    docs?: (
+      | {
+          relationTo?: 'payload-folders';
+          value: string | FolderInterface;
+        }
+      | {
+          relationTo?: 'media';
+          value: string | Media;
+        }
+    )[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  folderType?: 'media'[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: string;
+  name?: string | null;
+  roles: 'user' | 'editor' | 'admin';
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1231,9 +1098,11 @@ export interface Submission {
      */
     housingType: 'apartment' | 'house';
     /**
-     * Is the neighborhood open and green?
+     * Neighborhood characteristics (multi-select)
      */
-    greenNeighborhood: 'yes' | 'no' | 'unsure';
+    greenNeighborhood?:
+      | ('open_streets' | 'greenery' | 'main_road' | 'park' | 'no_greenery' | 'river' | 'closed_surfaces')[]
+      | null;
     /**
      * Inner city or outer area
      */
@@ -1254,15 +1123,7 @@ export interface Submission {
    */
   desiredChanges?:
     | {
-        icon:
-          | 'greening'
-          | 'water'
-          | 'shadow'
-          | 'shading'
-          | 'cooling'
-          | 'roof_greening'
-          | 'facade_greening'
-          | 'water_fountain';
+        icon: 'schatten' | 'cooling' | 'dachbegruenung' | 'strassenbegruenung' | 'wasserstellen';
         id?: string | null;
       }[]
     | null;
@@ -1283,21 +1144,13 @@ export interface Submission {
     | boolean
     | null;
   /**
+   * User consented to data collection and processing
+   */
+  consent?: boolean | null;
+  /**
    * Free text input from user
    */
   user_text?: string | null;
-  /**
-   * Answers that do not map to specific submission fields (question key -> value)
-   */
-  dynamicAnswers?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
   /**
    * AI-generated recommendations
    */
@@ -1319,14 +1172,9 @@ export interface Submission {
       | boolean
       | null;
     /**
-     * IDs of referenced knowledge base items
+     * Referenced knowledge base items from AI recommendations
      */
-    ai_referenced_kb_ids?:
-      | {
-          kb_id?: string | null;
-          id?: string | null;
-        }[]
-      | null;
+    ai_referenced_kb_ids?: (string | KnowledgeBaseItem)[] | null;
     /**
      * Metadata about the AI model used
      */
@@ -1531,6 +1379,40 @@ export interface KnowledgeBaseItem {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "knowledge-base-recommendation-events".
+ */
+export interface KnowledgeBaseRecommendationEvent {
+  id: string;
+  kbItem: string | KnowledgeBaseItem;
+  submission: string | Submission;
+  source: 'ai-recommendation';
+  recommendedAt: string;
+  /**
+   * Snapshot of KB theme at recommendation time
+   */
+  theme?: string | null;
+  /**
+   * Snapshot of KB solution type at recommendation time
+   */
+  solution_type?: string | null;
+  /**
+   * Snapshot of submission postal code at recommendation time
+   */
+  postal_code?: string | null;
+  /**
+   * Snapshot of KB categories at recommendation time
+   */
+  categories?:
+    | {
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1541,17 +1423,191 @@ export interface Redirect {
   from: string;
   to?: {
     type?: ('reference' | 'custom') | null;
-    reference?:
-      | ({
-          relationTo: 'pages';
-          value: string | Page;
-        } | null)
-      | ({
-          relationTo: 'posts';
-          value: string | Post;
-        } | null);
+    reference?: {
+      relationTo: 'pages';
+      value: string | Page;
+    } | null;
     url?: string | null;
   };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "forms".
+ */
+export interface Form {
+  id: string;
+  title: string;
+  fields?:
+    | (
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            required?: boolean | null;
+            defaultValue?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'checkbox';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'country';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'email';
+          }
+        | {
+            message?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'message';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            defaultValue?: number | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'number';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            defaultValue?: string | null;
+            placeholder?: string | null;
+            options?:
+              | {
+                  label: string;
+                  value: string;
+                  id?: string | null;
+                }[]
+              | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'select';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'state';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            defaultValue?: string | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'text';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            defaultValue?: string | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'textarea';
+          }
+      )[]
+    | null;
+  submitButtonLabel?: string | null;
+  /**
+   * Choose whether to display an on-page message or redirect to a different page after they submit the form.
+   */
+  confirmationType?: ('message' | 'redirect') | null;
+  confirmationMessage?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  redirect?: {
+    type?: ('reference' | 'custom') | null;
+    reference?: {
+      relationTo: 'pages';
+      value: string | Page;
+    } | null;
+    url?: string | null;
+  };
+  /**
+   * Send custom emails when the form submits. Use comma separated lists to send the same email to multiple recipients. To reference a value from this form, wrap that field's name with double curly brackets, i.e. {{firstName}}. You can use a wildcard {{*}} to output all data and {{*:table}} to format it as an HTML table in the email.
+   */
+  emails?:
+    | {
+        emailTo?: string | null;
+        cc?: string | null;
+        bcc?: string | null;
+        replyTo?: string | null;
+        emailFrom?: string | null;
+        subject: string;
+        /**
+         * Enter the message that should be sent in this email.
+         */
+        message?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1566,37 +1622,6 @@ export interface FormSubmission {
     | {
         field: string;
         value: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "search".
- */
-export interface Search {
-  id: string;
-  title?: string | null;
-  priority?: number | null;
-  doc: {
-    relationTo: 'posts';
-    value: string | Post;
-  };
-  slug?: string | null;
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    image?: (string | null) | Media;
-  };
-  categories?:
-    | {
-        relationTo?: string | null;
-        categoryID?: string | null;
-        title?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -1724,16 +1749,8 @@ export interface PayloadLockedDocument {
         value: string | Page;
       } | null)
     | ({
-        relationTo: 'posts';
-        value: string | Post;
-      } | null)
-    | ({
         relationTo: 'media';
         value: string | Media;
-      } | null)
-    | ({
-        relationTo: 'categories';
-        value: string | Category;
       } | null)
     | ({
         relationTo: 'users';
@@ -1756,6 +1773,10 @@ export interface PayloadLockedDocument {
         value: string | KnowledgeBaseItem;
       } | null)
     | ({
+        relationTo: 'knowledge-base-recommendation-events';
+        value: string | KnowledgeBaseRecommendationEvent;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: string | Redirect;
       } | null)
@@ -1766,10 +1787,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'form-submissions';
         value: string | FormSubmission;
-      } | null)
-    | ({
-        relationTo: 'search';
-        value: string | Search;
       } | null)
     | ({
         relationTo: 'payload-folders';
@@ -1823,39 +1840,14 @@ export interface PayloadMigration {
  */
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
-  hero?:
+  contentBlocks?:
     | T
     | {
-        type?: T;
-        richText?: T;
-        links?:
-          | T
-          | {
-              link?:
-                | T
-                | {
-                    type?: T;
-                    newTab?: T;
-                    reference?: T;
-                    url?: T;
-                    label?: T;
-                    appearance?: T;
-                    size?: T;
-                    iconBefore?: T;
-                    iconAfter?: T;
-                  };
-              id?: T;
-            };
-        media?: T;
-      };
-  layout?:
-    | T
-    | {
+        hero?: T | HeroBlockSelect<T>;
         cta?: T | CallToActionBlockSelect<T>;
         content?: T | ContentBlockSelect<T>;
+        heatmap?: T | HeatmapBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
-        archive?: T | ArchiveBlockSelect<T>;
-        formBlock?: T | FormBlockSelect<T>;
       };
   meta?:
     | T
@@ -1873,6 +1865,38 @@ export interface PagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock_select".
+ */
+export interface HeroBlockSelect<T extends boolean = true> {
+  headline?: T;
+  headlineSize?: T;
+  headlineTag?: T;
+  overline?: T;
+  richText?: T;
+  buttons?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              disabled?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CallToActionBlock_select".
  */
 export interface CallToActionBlockSelect<T extends boolean = true> {
@@ -1885,6 +1909,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -1903,6 +1928,11 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
  * via the `definition` "ContentBlock_select".
  */
 export interface ContentBlockSelect<T extends boolean = true> {
+  cardLayout?: T;
+  overline?: T;
+  headline?: T;
+  headlineSize?: T;
+  headlineTag?: T;
   columns?:
     | T
     | {
@@ -1914,6 +1944,26 @@ export interface ContentBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+              size?: T;
+              iconBefore?: T;
+              iconAfter?: T;
+            };
+        id?: T;
+      };
+  buttons?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -1929,68 +1979,25 @@ export interface ContentBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeatmapBlock_select".
+ */
+export interface HeatmapBlockSelect<T extends boolean = true> {
+  headline?: T;
+  headlineSize?: T;
+  headlineTag?: T;
+  richText?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MediaBlock_select".
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
+  size?: T;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ArchiveBlock_select".
- */
-export interface ArchiveBlockSelect<T extends boolean = true> {
-  introContent?: T;
-  populateBy?: T;
-  relationTo?: T;
-  categories?: T;
-  limit?: T;
-  selectedDocs?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "FormBlock_select".
- */
-export interface FormBlockSelect<T extends boolean = true> {
-  form?: T;
-  enableIntro?: T;
-  introContent?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts_select".
- */
-export interface PostsSelect<T extends boolean = true> {
-  title?: T;
-  heroImage?: T;
-  content?: T;
-  relatedPosts?: T;
-  categories?: T;
-  meta?:
-    | T
-    | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  authors?: T;
-  populatedAuthors?:
-    | T
-    | {
-        id?: T;
-        name?: T;
-      };
-  generateSlug?: T;
-  slug?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2057,26 +2064,6 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories_select".
- */
-export interface CategoriesSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  parent?: T;
-  breadcrumbs?:
-    | T
-    | {
-        doc?: T;
-        url?: T;
-        label?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -2104,7 +2091,6 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "questions_select".
  */
 export interface QuestionsSelect<T extends boolean = true> {
-  key?: T;
   title_de?: T;
   description_de?: T;
   type?: T;
@@ -2160,14 +2146,15 @@ export interface QuestionsSelect<T extends boolean = true> {
         max?: T;
         startValue?: T;
       };
-  required?: T;
-  category?: T;
-  editorFields?:
+  submissionBinding?:
     | T
     | {
-        displayOrder?: T;
-        helpText?: T;
+        mode?: T;
+        fieldPath?: T;
+        customKey?: T;
       };
+  required?: T;
+  category?: T;
   adminScoring?:
     | T
     | {
@@ -2292,19 +2279,14 @@ export interface SubmissionsSelect<T extends boolean = true> {
       };
   problem_index?: T;
   sub_scores?: T;
+  consent?: T;
   user_text?: T;
-  dynamicAnswers?: T;
   aiFields?:
     | T
     | {
         ai_summary_de?: T;
         ai_recommendations_de?: T;
-        ai_referenced_kb_ids?:
-          | T
-          | {
-              kb_id?: T;
-              id?: T;
-            };
+        ai_referenced_kb_ids?: T;
         ai_model_metadata?: T;
         ai_generated_at?: T;
       };
@@ -2347,6 +2329,27 @@ export interface KnowledgeBaseItemsSelect<T extends boolean = true> {
         model?: T;
         dimensions?: T;
         last_synced?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "knowledge-base-recommendation-events_select".
+ */
+export interface KnowledgeBaseRecommendationEventsSelect<T extends boolean = true> {
+  kbItem?: T;
+  submission?: T;
+  source?: T;
+  recommendedAt?: T;
+  theme?: T;
+  solution_type?: T;
+  postal_code?: T;
+  categories?:
+    | T
+    | {
+        value?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -2483,6 +2486,8 @@ export interface FormsSelect<T extends boolean = true> {
   redirect?:
     | T
     | {
+        type?: T;
+        reference?: T;
         url?: T;
       };
   emails?:
@@ -2511,33 +2516,6 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
     | {
         field?: T;
         value?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "search_select".
- */
-export interface SearchSelect<T extends boolean = true> {
-  title?: T;
-  priority?: T;
-  doc?: T;
-  slug?: T;
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
-      };
-  categories?:
-    | T
-    | {
-        relationTo?: T;
-        categoryID?: T;
-        title?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -2637,14 +2615,14 @@ export interface Header {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
                 value: string | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: string | Post;
               } | null)
             | ({
                 relationTo: 'questionnaires';
@@ -2652,6 +2630,37 @@ export interface Header {
               } | null);
           url?: string | null;
           label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional CTA button (e.g. "Fragebogen starten"). Shown only in mobile nav.
+   */
+  button?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'questionnaires';
+                value: string | Questionnaire;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered (Button variant).
+           */
+          appearance?: ('default' | 'white' | 'black' | 'outline' | 'destructive' | 'ghost' | 'ghost-muted') | null;
           /**
            * Button size.
            */
@@ -2663,13 +2672,11 @@ export interface Header {
             | (
                 | ''
                 | 'arrow-right'
+                | 'arrow-left'
                 | 'arrow-up'
                 | 'arrow-down'
                 | 'arrow-up-right'
                 | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
                 | 'plus'
                 | 'close'
               )
@@ -2681,13 +2688,11 @@ export interface Header {
             | (
                 | ''
                 | 'arrow-right'
+                | 'arrow-left'
                 | 'arrow-up'
                 | 'arrow-down'
                 | 'arrow-up-right'
                 | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
                 | 'plus'
                 | 'close'
               )
@@ -2705,19 +2710,40 @@ export interface Header {
  */
 export interface Footer {
   id: string;
-  navItems?:
+  /**
+   * Footer address block (e.g. organisation name, street, city).
+   */
+  address?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Links for Imprint, Privacy, Terms, etc.
+   */
+  legalLinks?:
     | {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          /**
+           * When enabled, the button is shown but not clickable.
+           */
+          disabled?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
                 value: string | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: string | Post;
               } | null)
             | ({
                 relationTo: 'questionnaires';
@@ -2726,49 +2752,33 @@ export interface Footer {
           url?: string | null;
           label: string;
           /**
-           * Button size.
+           * Link size.
            */
-          size?: ('default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny') | null;
-          /**
-           * Icon before the label.
-           */
-          iconBefore?:
-            | (
-                | ''
-                | 'arrow-right'
-                | 'arrow-up'
-                | 'arrow-down'
-                | 'arrow-up-right'
-                | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
-                | 'plus'
-                | 'close'
-              )
-            | null;
-          /**
-           * Icon after the label.
-           */
-          iconAfter?:
-            | (
-                | ''
-                | 'arrow-right'
-                | 'arrow-up'
-                | 'arrow-down'
-                | 'arrow-up-right'
-                | 'external-link'
-                | 'chevron-left'
-                | 'chevron-right'
-                | 'check'
-                | 'plus'
-                | 'close'
-              )
-            | null;
+          size?: ('default' | 'sm' | 'lg' | 'mini') | null;
         };
         id?: string | null;
       }[]
     | null;
+  /**
+   * e.g. © 2025 Organisation name
+   */
+  copyrightText?: string | null;
+  /**
+   * Optional short line below copyright (e.g. tagline).
+   */
+  subline?: string | null;
+  logos?: {
+    /**
+     * Small label above the logos (e.g. "Partner", "Gefördert durch").
+     */
+    overline?: string | null;
+    images?:
+      | {
+          image: string | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2847,65 +2857,6 @@ export interface SiteSetting {
    */
   keywords?: string | null;
   /**
-   * Legal content pages (Impressum, Privacy Policy, Terms & Conditions)
-   */
-  legalContent: {
-    /**
-     * Impressum / Legal notice
-     */
-    impressum: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    };
-    /**
-     * Privacy policy / Datenschutzerklärung
-     */
-    privacyPolicy: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    };
-    /**
-     * Terms and conditions / AGB
-     */
-    termsAndConditions: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    };
-  };
-  /**
    * Cookie consent banner configuration
    */
   cookieBanner: {
@@ -2940,36 +2891,11 @@ export interface SiteSetting {
 export interface UiCopy {
   id: string;
   /**
-   * Landing page text
-   */
-  landingPage: {
-    title: string;
-    description?: string | null;
-    ctaButton?: string | null;
-  };
-  /**
-   * Consent screen text
-   */
-  consent: {
-    title: string;
-    message: string;
-    acceptButton?: string | null;
-    declineButton?: string | null;
-  };
-  /**
-   * Questionnaire flow text
+   * Questionnaire flow button labels (used in questionnaire steps).
    */
   questionnaire?: {
     nextButton?: string | null;
     previousButton?: string | null;
-    submitButton?: string | null;
-  };
-  /**
-   * Results page text
-   */
-  results?: {
-    title?: string | null;
-    aiRecommendationCta?: string | null;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2987,9 +2913,26 @@ export interface HeaderSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
+            };
+        id?: T;
+      };
+  button?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              disabled?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
               size?: T;
               iconBefore?: T;
               iconAfter?: T;
@@ -3005,7 +2948,8 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
-  navItems?:
+  address?: T;
+  legalLinks?:
     | T
     | {
         link?:
@@ -3013,14 +2957,26 @@ export interface FooterSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              disabled?: T;
               reference?: T;
               url?: T;
               label?: T;
               size?: T;
-              iconBefore?: T;
-              iconAfter?: T;
             };
         id?: T;
+      };
+  copyrightText?: T;
+  subline?: T;
+  logos?:
+    | T
+    | {
+        overline?: T;
+        images?:
+          | T
+          | {
+              image?: T;
+              id?: T;
+            };
       };
   updatedAt?: T;
   createdAt?: T;
@@ -3055,13 +3011,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   ogImage?: T;
   twitterHandle?: T;
   keywords?: T;
-  legalContent?:
-    | T
-    | {
-        impressum?: T;
-        privacyPolicy?: T;
-        termsAndConditions?: T;
-      };
   cookieBanner?:
     | T
     | {
@@ -3080,33 +3029,11 @@ export interface SiteSettingsSelect<T extends boolean = true> {
  * via the `definition` "ui-copy_select".
  */
 export interface UiCopySelect<T extends boolean = true> {
-  landingPage?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        ctaButton?: T;
-      };
-  consent?:
-    | T
-    | {
-        title?: T;
-        message?: T;
-        acceptButton?: T;
-        declineButton?: T;
-      };
   questionnaire?:
     | T
     | {
         nextButton?: T;
         previousButton?: T;
-        submitButton?: T;
-      };
-  results?:
-    | T
-    | {
-        title?: T;
-        aiRecommendationCta?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -3120,55 +3047,14 @@ export interface TaskSchedulePublish {
   input: {
     type?: ('publish' | 'unpublish') | null;
     locale?: string | null;
-    doc?:
-      | ({
-          relationTo: 'pages';
-          value: string | Page;
-        } | null)
-      | ({
-          relationTo: 'posts';
-          value: string | Post;
-        } | null);
+    doc?: {
+      relationTo: 'pages';
+      value: string | Page;
+    } | null;
     global?: string | null;
     user?: (string | null) | User;
   };
   output?: unknown;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "BannerBlock".
- */
-export interface BannerBlock {
-  style: 'info' | 'warning' | 'error' | 'success';
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'banner';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CodeBlock".
- */
-export interface CodeBlock {
-  language?: ('typescript' | 'javascript' | 'css') | null;
-  code: string;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'code';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

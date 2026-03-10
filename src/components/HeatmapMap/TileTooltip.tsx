@@ -1,10 +1,13 @@
 'use client'
 
+import { COLOR_STOPS } from './GridTileLayer'
+
 type ValueCounts = Record<number, number>
 
 type TileTooltipProps = {
   totalCount: number
   averageProblemIndex: number
+  averageHotDaysPerYear: number
   valueCounts: ValueCounts
   x: number
   y: number
@@ -14,35 +17,59 @@ type TileTooltipProps = {
 export function TileTooltip({
   totalCount,
   averageProblemIndex,
+  averageHotDaysPerYear,
   valueCounts,
   x,
   y,
   className = '',
 }: TileTooltipProps) {
-  const entries = Object.entries(valueCounts)
-    .map(([k, v]) => [Number(k), v] as const)
-    .sort((a, b) => a[0] - b[0])
+  // Clamp for slider position (0–100)
+  const clampedIndex = Math.max(0, Math.min(100, averageProblemIndex))
 
   return (
     <div
-      className={`absolute z-50 max-w-[260px] rounded-lg border border-border/50 bg-white p-3 shadow-lg ${className}`}
-      style={{ left: x, top: y, pointerEvents: 'none' }}
+      className={`pointer-events-none absolute z-50 rounded-[8px] bg-[rgba(241,241,241,0.88)] p-[12px] shadow-[6px_6px_24px_rgba(0,0,0,0.16)] backdrop-blur-[8px] ${className}`}
+      style={{ left: x, top: y }}
     >
-      <h4 className="mb-1.5 text-xs font-bold text-gray-900 sm:text-sm">Kachel-Statistik</h4>
-      <p className="text-[11px] text-gray-700 sm:text-xs">
-        <span className="font-medium">Einträge gesamt:</span> {totalCount}
-      </p>
-      <p className="mb-2 text-[11px] text-gray-700 sm:text-xs">
-        <span className="font-medium">Ø Problem-Index:</span> {averageProblemIndex.toFixed(1)}
-      </p>
-      <h5 className="mb-1 text-[10px] font-semibold text-gray-800 sm:text-xs">Verteilung</h5>
-      <ul className="max-h-32 list-inside list-disc overflow-y-auto text-[10px] text-gray-600 sm:text-[11px]">
-        {entries.map(([idx, count]) => (
-          <li key={idx}>
-            Index {idx}: {count} {count === 1 ? 'Eintrag' : 'Einträge'}
-          </li>
-        ))}
-      </ul>
+      <div className="flex flex-col gap-[12px]">
+        {/* Row 1: Gefühlte Hitze with gradient slider */}
+        <div className="flex items-center justify-between gap-3">
+          <p className="w-[90px] text-xs font-mono uppercase tracking-wide text-am-darker">
+            <span className="block">gefühlte</span>
+            <span className="block">hitze ⌀</span>
+          </p>
+          <div className="flex h-[15px] w-[56px] shrink-0 items-center justify-center">
+            <div
+              className="relative h-[6px] w-full rounded-full"
+              style={{
+                background: `linear-gradient(to right, ${COLOR_STOPS.join(', ')})`,
+              }}
+            >
+              <div
+                className="absolute top-[-4px] h-[14px] w-[1px] bg-[rgba(20,20,24,0.9)]"
+                style={{ left: `${clampedIndex}%`, transform: 'translateX(-50%)' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Heisse Tage im Jahr with numeric value */}
+        <div className="flex items-center justify-between gap-3 text-am-darker">
+          <p className="w-[90px] text-xs font-mono uppercase tracking-wide">
+            <span className="block">heisse tage</span>
+            <span className="block">im jahr ⌀</span>
+          </p>
+          <p className="shrink-0 text-xl font-mono tracking-[0.01em]">
+            {Math.round(averageHotDaysPerYear)}
+          </p>
+        </div>
+
+        {/* Row 3: Einträge count */}
+        <div className="flex items-center justify-between gap-3 text-am-darker">
+          <p className="w-[90px] text-xs font-mono uppercase tracking-wide">einträge</p>
+          <p className="shrink-0 text-xl font-mono tracking-[0.01em]">{totalCount}</p>
+        </div>
+      </div>
     </div>
   )
 }

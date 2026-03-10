@@ -4,6 +4,7 @@ import { cn } from '@/utilities/ui'
 import React from 'react'
 
 import { Header } from '@/Header/Component'
+import { QuestionnaireCloseProvider } from '@/app/(frontend)/questionnaire/QuestionnaireLayoutClient'
 import { Providers } from '@/providers'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { getCachedGlobal } from '@/utilities/getGlobals'
@@ -29,12 +30,39 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="de" suppressHydrationWarning className={GeistMono.variable}>
       <head>
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
-        <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+        <link
+          href="/favicon-light.svg"
+          rel="icon"
+          type="image/svg+xml"
+          media="(prefers-color-scheme: light)"
+        />
+        <link
+          href="/favicon-dark.svg"
+          rel="icon"
+          type="image/svg+xml"
+          media="(prefers-color-scheme: dark)"
+        />
+        <link href="/favicon-light.svg" rel="icon" type="image/svg+xml" />
+        <link
+          href="/favicon-light.svg"
+          rel="apple-touch-icon"
+          sizes="180x180"
+          media="(prefers-color-scheme: light)"
+        />
+        <link
+          href="/favicon-dark.svg"
+          rel="apple-touch-icon"
+          sizes="180x180"
+          media="(prefers-color-scheme: dark)"
+        />
+        <link href="/favicon-light.svg" rel="apple-touch-icon" sizes="180x180" />
       </head>
       <body>
         <Providers>
-          <Header />
-          {children}
+          <QuestionnaireCloseProvider>
+            <Header />
+            {children}
+          </QuestionnaireCloseProvider>
           <CookieBanner cookieBanner={siteSettings?.cookieBanner} />
         </Providers>
       </body>

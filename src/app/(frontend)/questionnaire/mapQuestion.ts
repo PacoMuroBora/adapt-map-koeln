@@ -28,9 +28,15 @@ const BE_TYPE_TO_FRONTEND: Record<PayloadQuestion['type'], Question['type']> = {
 export function mapPayloadQuestionToFrontend(p: PayloadQuestion): Question {
   return {
     id: p.id,
-    key: p.key,
+    submissionBinding: p.submissionBinding
+      ? {
+          mode: p.submissionBinding.mode ?? null,
+          fieldPath: p.submissionBinding.fieldPath ?? null,
+          customKey: p.submissionBinding.customKey ?? null,
+        }
+      : undefined,
     title: p.title_de,
-    description: p.description_de ?? p.editorFields?.helpText ?? undefined,
+    description: p.description_de ?? undefined,
     type: BE_TYPE_TO_FRONTEND[p.type] ?? 'text',
     required: p.required ?? false,
     options: p.options?.map((o) => ({ value: o.value, label: o.label })) ?? undefined,

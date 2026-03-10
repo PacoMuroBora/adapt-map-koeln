@@ -60,17 +60,14 @@ export function AddressSearchInput({
   const [isLoading, setIsLoading] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const [houseNumberMode, setHouseNumberMode] = useState<string | null>(null)
-  const debouncedQuery = useDebounce(query, 150)
+  const debouncedQuery = useDebounce(query, 1000)
   const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const justSelectedRef = useRef(false)
   const houseNumbersCacheRef = useRef<Map<string, AddressSuggestion[]>>(new Map())
 
-  // Restore street display when navigating back with saved value
-  React.useEffect(() => {
-    if (streetFromValue && query !== streetFromValue) {
-      setQuery(streetFromValue)
-    }
-  }, [streetFromValue])
+  // Restore search box from saved value only when user focuses the search and it's empty (e.g. navigated back).
+  // Do NOT sync when street changes from the manual field — that would overwrite the search input.
 
   // Parse "Mozartstraße 1" → { street: "Mozartstraße", numberPrefix: "1" }
   const parsedStreetNumber = React.useMemo(() => {
@@ -270,6 +267,7 @@ export function AddressSearchInput({
     setShowSuggestions(false)
     setHouseNumberMode(null)
     onError?.(null)
+    inputRef.current?.blur()
   }
 
   return (
@@ -282,8 +280,10 @@ export function AddressSearchInput({
       >
         <div className="relative">
           <input
+            ref={inputRef}
             type="text"
-            autoComplete="off"
+            name="street-search-query"
+            autoComplete="nope"
             value={query}
             onChange={(e) => {
               const v = e.target.value
@@ -295,6 +295,8 @@ export function AddressSearchInput({
               onError?.(null)
             }}
             onFocus={() => {
+              // Restore search display from saved value only when box is empty (e.g. navigated back)
+              if (query === '' && streetFromValue) setQuery(streetFromValue)
               if (suggestions.length > 0) setShowSuggestions(true)
               else if (
                 query.trim().length >= 2 &&

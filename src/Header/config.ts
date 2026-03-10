@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { link } from '@/fields/link'
+import { linkGroup } from '@/fields/linkGroup'
 import { revalidateHeader } from './hooks/revalidateHeader'
 
 export const Header: GlobalConfig = {
@@ -15,6 +16,9 @@ export const Header: GlobalConfig = {
       fields: [
         link({
           appearances: false,
+          sizes: false,
+          iconBefore: false,
+          iconAfter: false,
         }),
       ],
       maxRows: 6,
@@ -25,6 +29,35 @@ export const Header: GlobalConfig = {
         },
       },
     },
+    linkGroup({
+      iconBefore: [
+        'arrow-right',
+        'arrow-left',
+        'arrow-up',
+        'arrow-down',
+        'arrow-up-right',
+        'external-link',
+        'plus',
+        'close',
+      ],
+      iconAfter: [
+        'arrow-right',
+        'arrow-left',
+        'arrow-up',
+        'arrow-down',
+        'arrow-up-right',
+        'external-link',
+        'plus',
+        'close',
+      ],
+      overrides: {
+        name: 'button',
+        maxRows: 1,
+        admin: {
+          description: 'Optional CTA button (e.g. "Fragebogen starten"). Shown only in mobile nav.',
+        },
+      },
+    }),
   ],
   hooks: {
     afterChange: [revalidateHeader],

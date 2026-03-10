@@ -8,8 +8,9 @@ import type { MapRef } from 'react-map-gl/maplibre'
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
+import { Button } from '@/components/ui/button'
 import type { Location } from '@/providers/Submission/types'
-import { GridTileLayer } from './GridTileLayer'
+import { COLOR_STOPS, GridTileLayer } from './GridTileLayer'
 import { TileTooltip } from './TileTooltip'
 
 const EARTH_RADIUS = 6378137
@@ -32,6 +33,14 @@ function mercatorToLngLat(x: number, y: number): { lng: number; lat: number } {
   return { lng, lat: clampLat(lat) }
 }
 
+function distanceMetersBetween(lng1: number, lat1: number, lng2: number, lat2: number): number {
+  const a = lngLatToMercator(lng1, lat1)
+  const b = lngLatToMercator(lng2, lat2)
+  const dx = a.x - b.x
+  const dy = a.y - b.y
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
 type GridFeature = {
   type: 'Feature'
   geometry: { type: 'Point'; coordinates: [number, number] }
@@ -40,6 +49,7 @@ type GridFeature = {
     tileY: number
     tileSizeMeters: number
     averageProblemIndex: number
+    averageHotDaysPerYear: number
     totalCount: number
     valueCounts: Record<number, number>
     value: number
@@ -57,20 +67,9 @@ type HeatmapMapProps = {
   dataUrl?: string
   /** Draw magenta lines on tile limits (same as colored square). Overridden by ?debugTileBounds=1 in URL. */
   debugTileBounds?: boolean
+  /** When true, the interaction guard overlay is disabled and the map starts fully interactive. */
+  interactionGuardDisabled?: boolean
 }
-
-const COLOR_STOPS = [
-  '#1a5f5f',
-  '#1e3a5f',
-  '#2e5a8a',
-  '#4a90c2',
-  '#87ceeb',
-  '#fffacd',
-  '#ffd700',
-  '#ffb347',
-  '#cd853f',
-  '#8b4513',
-]
 
 const DEFAULT_CENTER = { longitude: 6.9603, latitude: 50.9375, zoom: 6 }
 
@@ -101,6 +100,7 @@ export function HeatmapMap({
   className,
   dataUrl = '/api/heatmap-grid',
   debugTileBounds: debugTileBoundsProp,
+  interactionGuardDisabled = false,
 }: HeatmapMapProps) {
   const [debugFromUrl, setDebugFromUrl] = useState(false)
   const [debugRects, setDebugRects] = useState<
@@ -118,7 +118,7 @@ export function HeatmapMap({
     zoom: userLocation ? 10 : DEFAULT_CENTER.zoom,
   })
   const [tileSizeMeters, setTileSizeMeters] = useState(500)
-  const [tileOpacity, setTileOpacity] = useState(0.35)
+  const [tileOpacity, setTileOpacity] = useState(0.42)
   const [gridData, setGridData] = useState<GridData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -127,6 +127,29 @@ export function HeatmapMap({
   const mapRef = useRef<MapRef>(null)
   const layerRef = useRef<GridTileLayer | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isInteractive, setIsInteractive] = useState<boolean>(interactionGuardDisabled)
+  const homeViewRef = useRef<{ longitude: number; latitude: number; zoom: number } | null>({
+    longitude: DEFAULT_CENTER.longitude,
+    latitude: DEFAULT_CENTER.latitude,
+    zoom: DEFAULT_CENTER.zoom,
+  })
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (interactionGuardDisabled) return
+    const el = containerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          setIsInteractive(false)
+        }
+      },
+      { threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [interactionGuardDisabled, isLoading, error])
 
   // Fetch tile size and map center from settings
   useEffect(() => {
@@ -155,6 +178,11 @@ export function HeatmapMap({
           if (!userLocation && d?.mapCenter) {
             const { lat, lng, zoom } = d.mapCenter
             if (typeof lat === 'number' && typeof lng === 'number' && typeof zoom === 'number') {
+              homeViewRef.current = {
+                longitude: lng,
+                latitude: lat,
+                zoom,
+              }
               console.log('[HeatmapMap] Setting initial view from SiteSettings:', {
                 lat,
                 lng,
@@ -214,6 +242,8 @@ export function HeatmapMap({
     }
   }, [userLocation])
 
+  const LAYER_ID = 'grid-tile-layer'
+
   const setupLayer = useCallback(() => {
     if (!mapRef.current || !gridData) return
     const map = mapRef.current.getMap() as MapLibreMap
@@ -221,8 +251,9 @@ export function HeatmapMap({
       if (map.getLayer(layerRef.current.id)) map.removeLayer(layerRef.current.id)
       layerRef.current = null
     }
+    if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID)
     const layer = new GridTileLayer({
-      id: 'grid-tile-layer',
+      id: LAYER_ID,
       data: gridData,
       tileSizeMeters,
       opacity: tileOpacity,
@@ -256,21 +287,26 @@ export function HeatmapMap({
 
   const pickAndShow = useCallback(
     (evt: MapLayerMouseEvent, fromClick: boolean) => {
+      if (!isInteractive) return
       const map = mapRef.current?.getMap() as MapLibreMap | undefined
       if (!map || !gridData?.features.length) return
       const { x, y } = evt.point
       const t = getTileAtPoint(x, y, gridData.features, map, tileSizeMeters)
       setHoveredTile(t)
-      setTooltipPos(t ? { x: x + 12, y: y + 12 } : null)
-      
+      if (t) {
+        const [lng, lat] = t.geometry.coordinates
+        const pt = map.project([lng, lat])
+        // Tooltip's top-left corner is anchored to tile center
+        setTooltipPos({ x: pt.x, y: pt.y })
+      } else {
+        setTooltipPos(null)
+      }
+
       // Update layer animation
       if (layerRef.current) {
-        layerRef.current.setHoveredTile(
-          t?.properties.tileX ?? null,
-          t?.properties.tileY ?? null,
-        )
+        layerRef.current.setHoveredTile(t?.properties.tileX ?? null, t?.properties.tileY ?? null)
       }
-      
+
       if (hideTimerRef.current) {
         clearTimeout(hideTimerRef.current)
         hideTimerRef.current = null
@@ -286,7 +322,7 @@ export function HeatmapMap({
         }, 2500)
       }
     },
-    [gridData, tileSizeMeters],
+    [gridData, tileSizeMeters, isInteractive],
   )
 
   const onMouseMove = useCallback(
@@ -329,6 +365,7 @@ export function HeatmapMap({
   )
 
   const onMouseLeave = useCallback(() => {
+    if (!isInteractive) return
     setHoveredTile(null)
     setTooltipPos(null)
     if (layerRef.current) {
@@ -338,7 +375,7 @@ export function HeatmapMap({
       clearTimeout(hideTimerRef.current)
       hideTimerRef.current = null
     }
-  }, [])
+  }, [isInteractive])
 
   const onClick = useCallback(
     (evt: MapLayerMouseEvent) => {
@@ -351,7 +388,7 @@ export function HeatmapMap({
     return (
       <div className={`flex h-full items-center justify-center ${className ?? ''}`}>
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-black border-t-transparent" />
           <p className="text-muted-foreground">Heatmap wird geladen...</p>
         </div>
       </div>
@@ -374,8 +411,24 @@ export function HeatmapMap({
     )
   }
 
+  const homeView = homeViewRef.current
+  const distanceToHome =
+    homeView != null
+      ? distanceMetersBetween(
+          viewState.longitude,
+          viewState.latitude,
+          homeView.longitude,
+          homeView.latitude,
+        )
+      : 0
+  const zoomDiff = homeView != null ? Math.abs(viewState.zoom - homeView.zoom) : 0
+  const showHomeButton =
+    isInteractive &&
+    homeView != null &&
+    (distanceToHome > 15000 || (distanceToHome > 5000 && zoomDiff > 1.5))
+
   return (
-    <div className={`relative h-full w-full ${className ?? ''}`}>
+    <div ref={containerRef} className={`relative h-full w-full ${className ?? ''}`}>
       <Map
         ref={mapRef}
         {...viewState}
@@ -384,6 +437,12 @@ export function HeatmapMap({
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
         onClick={onClick}
+        scrollZoom={isInteractive}
+        dragPan={isInteractive}
+        dragRotate={isInteractive}
+        doubleClickZoom={isInteractive}
+        touchZoomRotate={isInteractive}
+        keyboard={isInteractive}
         mapStyle={
           process.env.NEXT_PUBLIC_MAPTILER_API_KEY
             ? `https://api.maptiler.com/maps/basic-v2/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}&lang=de`
@@ -392,10 +451,42 @@ export function HeatmapMap({
         style={{ width: '100%', height: '100%' }}
         reuseMaps={true}
       />
+      {!isInteractive && !interactionGuardDisabled && (
+        <div
+          className="absolute inset-0 z-20 flex items-end justify-start bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Karte aktivieren, um Interaktionen zu erlauben"
+        >
+          <div
+            className="m-4 max-w-sm rounded-2xl bg-am-white p-4 shadow-lg sm:p-6"
+            onClick={(evt) => evt.stopPropagation()}
+          >
+            <h2 className="text-body font-mono uppercase tracking-wide">Interaktive Karte</h2>
+            <p className="mt-2 text-sm">
+              Um versehentliches Zoomen beim Scrollen zu vermeiden, ist die Karte zunächst gesperrt.
+              Aktiviere sie, um hinein- und herauszuzoomen oder sie zu verschieben.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button
+                type="button"
+                size="default"
+                shape="round"
+                variant="default"
+                iconAfter="locate"
+                onClick={() => setIsInteractive(true)}
+              >
+                Karte aktivieren
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {hoveredTile && tooltipPos && (
         <TileTooltip
           totalCount={hoveredTile.properties.totalCount}
           averageProblemIndex={hoveredTile.properties.averageProblemIndex}
+          averageHotDaysPerYear={hoveredTile.properties.averageHotDaysPerYear}
           valueCounts={hoveredTile.properties.valueCounts}
           x={tooltipPos.x}
           y={tooltipPos.y}
@@ -414,8 +505,8 @@ export function HeatmapMap({
 
       {/* Debug info overlay */}
       {debugTileBounds && (
-        <div className="absolute top-2 left-2 rounded-lg border border-yellow-500 bg-black/80 p-2 text-white text-xs font-mono pointer-events-none max-w-xs">
-          <p className="font-bold text-yellow-300 mb-1">DEBUG MODE</p>
+        <div className="absolute top-2 left-2 max-w-xs rounded-lg border border-yellow-500 bg-black/80 p-2 text-xs font-mono text-white pointer-events-none">
+          <p className="mb-1 font-bold text-yellow-300">DEBUG MODE</p>
           <p>Tile Size: {tileSizeMeters}m (from CMS)</p>
           <p>Zoom: {viewState.zoom.toFixed(2)}</p>
           <p className="mt-1 text-yellow-200">🟪 Magenta = WebGL drawn tile</p>
@@ -428,21 +519,45 @@ export function HeatmapMap({
         </div>
       )}
 
-      <div className="absolute bottom-2 left-2 rounded-lg border border-border/50 bg-white p-2 shadow-lg sm:bottom-4 sm:left-4 sm:p-3">
-        <h3 className="mb-1.5 text-xs font-bold text-gray-900 sm:mb-2 sm:text-sm">Legende</h3>
-        <div className="mb-2 h-3 w-full overflow-hidden rounded border border-gray-300 sm:mb-2.5 sm:h-4">
-          <div
-            className="h-full w-full"
-            style={{ background: `linear-gradient(to right, ${COLOR_STOPS.join(', ')})` }}
-          />
+      <div className="absolute bottom-2 left-2 z-10 flex flex-col gap-2 sm:bottom-4 sm:left-4">
+        {showHomeButton && (
+          <Button
+            type="button"
+            size="mini"
+            shape="round"
+            variant="white"
+            onClick={() => {
+              if (!homeView) return
+              const map = mapRef.current?.getMap() as MapLibreMap | undefined
+              if (!map) return
+              map.flyTo({
+                center: [homeView.longitude, homeView.latitude],
+                zoom: homeView.zoom,
+                essential: true,
+                duration: 1200,
+              })
+            }}
+            className="self-start bg-white/90 text-black hover:bg-white"
+          >
+            Nach Köln
+          </Button>
+        )}
+
+        <div className="rounded-lg bg-white p-2 shadow-lg sm:p-3">
+          <h3 className="mb-1.5 text-xs font-mono tracking-wide uppercase text-muted-foreground sm:mb-2 sm:text-sm">
+            Hitzeskala
+          </h3>
+          <div className="mb-2 h-2 w-full overflow-hidden rounded-full sm:mb-2.5 sm:h-3">
+            <div
+              className="h-full w-full"
+              style={{ background: `linear-gradient(to right, ${COLOR_STOPS.join(', ')})` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-gray-600 sm:text-xs">
+            <span>Niedrig</span>
+            <span>Hoch</span>
+          </div>
         </div>
-        <div className="flex justify-between text-[10px] text-gray-600 sm:text-xs">
-          <span>Niedrig (0)</span>
-          <span>Hoch (100)</span>
-        </div>
-        <p className="mt-1 text-[9px] text-gray-500 sm:text-[10px]">
-          Problem-Index (durchschnittlich)
-        </p>
       </div>
     </div>
   )

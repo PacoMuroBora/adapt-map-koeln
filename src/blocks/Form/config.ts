@@ -9,12 +9,12 @@ import {
 
 export const FormBlock: Block = {
   slug: 'formBlock',
-  interfaceName: 'FormBlock',
+  interfaceName: 'Form',
   fields: [
     {
       name: 'form',
       type: 'relationship',
-      relationTo: 'forms',
+      relationTo: 'forms' as any,
       required: true,
     },
     {

@@ -1,7 +1,10 @@
-import { getPayloadClient } from '@/lib/payload'
+import { getCachedQuestionnaire } from '@/utilities/getQuestionnaire'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import { notFound, redirect } from 'next/navigation'
-import { getQuestionnaireTotalPages, hasSections } from '../getQuestionnairePageByIndex'
-import QuestionnaireStartView from './QuestionnaireStartView'
+import { hasSections } from '../getQuestionnairePageByIndex'
+import { buildQuestionnaireRuntime } from '../buildQuestionnaireRuntime'
+import QuestionnaireRuntimeClient from '../QuestionnaireRuntimeClient'
+import type { UiCopy } from '@/payload-types'
 
 export const revalidate = 600
 
@@ -12,17 +15,7 @@ type Args = {
 export default async function QuestionnaireStartPage({ params: paramsPromise }: Args) {
   const { name: nameParam } = await paramsPromise
 
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: 'questionnaires',
-    where:
-      nameParam === 'current'
-        ? { isCurrent: { equals: true } }
-        : { name: { equals: nameParam } },
-    limit: 1,
-    depth: 0,
-  })
-  const questionnaire = docs[0]
+  const questionnaire = await getCachedQuestionnaire(nameParam, 2)()
   if (!questionnaire) {
     notFound()
   }
@@ -32,30 +25,19 @@ export default async function QuestionnaireStartPage({ params: paramsPromise }: 
     redirect(`/questionnaire/${questionnaireName}`)
   }
 
-  const useSections = hasSections(questionnaire)
-  const totalSteps = useSections
-    ? getQuestionnaireTotalPages(questionnaire)
-    : Array.isArray(questionnaire.steps) && questionnaire.steps.length > 0
-      ? questionnaire.steps.length
-      : Array.isArray(questionnaire.questions)
-        ? questionnaire.questions.length
-        : 0
+  const uiCopy = (await getCachedGlobal('ui-copy', 0)()) as UiCopy
+  const nextButtonText = uiCopy?.questionnaire?.nextButton ?? 'Weiter'
+  const previousButtonText = uiCopy?.questionnaire?.previousButton ?? 'Zurück'
 
-  const instructionItems =
-    Array.isArray(questionnaire.instructionItems) &&
-    questionnaire.instructionItems.length > 0
-      ? questionnaire.instructionItems.map((i) => (i && typeof i === 'object' ? i.item : '')).filter(Boolean)
-      : []
-
-  return (
-    <QuestionnaireStartView
-      questionnaireName={questionnaireName}
-      instructionTitle={questionnaire.instructionTitle ?? undefined}
-      instructionItems={instructionItems}
-      overline={questionnaire.overline ?? undefined}
-      title={questionnaire.title ?? undefined}
-      totalSteps={totalSteps}
-      useInstructionScreen={useSections && Boolean(questionnaire.instructionTitle != null)}
-    />
+  const runtime = buildQuestionnaireRuntime(
+    questionnaire,
+    questionnaireName,
+    nextButtonText,
+    previousButtonText,
   )
+  if (!runtime) {
+    notFound()
+  }
+
+  return <QuestionnaireRuntimeClient runtime={runtime} />
 }

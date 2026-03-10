@@ -19,11 +19,11 @@ export function getInitialStepAnswers(
     if (q.type === 'group' && q.groupFields) {
       const groupAnswer: Record<string, unknown> = {}
       for (const subQ of q.groupFields) {
-        groupAnswer[subQ.key] = stateAnswers[subQ.key] ?? null
+        groupAnswer[subQ.id] = stateAnswers[subQ.id] ?? null
       }
-      out[q.key] = groupAnswer
+      out[q.id] = groupAnswer
     } else {
-      out[q.key] = stateAnswers[q.key] ?? null
+      out[q.id] = stateAnswers[q.id] ?? null
     }
   }
   return out
@@ -73,7 +73,7 @@ export function isQuestionDisabled(
   if (question.type === 'group' && question.groupFields) {
     for (const subQ of question.groupFields) {
       if (subQ.required && subQ.type === 'plz') {
-        const plz = String((answer as Record<string, unknown>)?.[subQ.key] ?? '').trim()
+        const plz = String((answer as Record<string, unknown>)?.[subQ.id] ?? '').trim()
         if (plz.length !== 5 || !isValidColognePlz(plz)) return true
       }
     }
@@ -88,7 +88,7 @@ export function isWeiterDisabled(
 ): boolean {
   for (const q of questions) {
     const ans =
-      q.type === 'group' && q.groupFields ? stepAnswers[q.key] : (stepAnswers[q.key] ?? null)
+      q.type === 'group' && q.groupFields ? stepAnswers[q.id] : (stepAnswers[q.id] ?? null)
     if (q.required && isQuestionDisabled(q, ans, resolvedAddress)) return true
   }
   return false
@@ -99,7 +99,7 @@ function isAnswerFilled(question: Question, answer: unknown): boolean {
   if (answer == null || answer === '') return false
   if (question.type === 'group' && question.groupFields) {
     const group = answer as Record<string, unknown>
-    return question.groupFields.some((subQ) => isAnswerFilled(subQ, group[subQ.key]))
+    return question.groupFields.some((subQ) => isAnswerFilled(subQ, group[subQ.id]))
   }
   if (question.type === 'text' || question.type === 'textarea')
     return String(answer).trim().length > 0
@@ -147,7 +147,7 @@ export function hasAnyFilledAnswer(
 ): boolean {
   for (const q of questions) {
     const ans =
-      q.type === 'group' && q.groupFields ? stepAnswers[q.key] : stepAnswers[q.key] ?? null
+      q.type === 'group' && q.groupFields ? stepAnswers[q.id] : stepAnswers[q.id] ?? null
     if (isAnswerFilled(q, ans)) return true
   }
   return false
@@ -165,7 +165,7 @@ export function validateOneQuestion(
     if (!question.groupFields) return { valid: true }
     for (const subQ of question.groupFields) {
       if (subQ.required) {
-        const subAnswer = (answer as Record<string, unknown>)?.[subQ.key]
+        const subAnswer = (answer as Record<string, unknown>)?.[subQ.id]
         if (subQ.type === 'text') {
           if (!subAnswer || String(subAnswer).trim() === '') {
             return { valid: false, error: `Bitte beantworte: ${subQ.title}` }
@@ -277,7 +277,7 @@ export function validateAllQuestions(
   stateLocation: { postal_code?: string | null } | null,
 ): ValidationResult {
   for (const q of questions) {
-    const ans = stepAnswers[q.key] ?? null
+    const ans = stepAnswers[q.id] ?? null
     const result = validateOneQuestion(q, ans, { stateLocation })
     if (!result.valid) return result
   }

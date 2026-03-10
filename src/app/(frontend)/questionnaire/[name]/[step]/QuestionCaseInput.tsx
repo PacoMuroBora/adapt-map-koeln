@@ -21,7 +21,6 @@ import HorizontalRangeSlider from '@/components/questionnaire/HorizontalRangeSli
 import VerticalSlider from '@/components/questionnaire/VerticalSlider'
 import IconSelection from '@/components/questionnaire/IconSelection'
 import AgeWheel from '@/components/questionnaire/AgeWheel'
-import { AddressSearchInput } from '@/components/questionnaire/AddressSearchInput'
 import { AudioTranscribeButton } from '@/components/questionnaire/AudioTranscribeButton'
 import { LinkButton } from '@/components/ui/link-button'
 import { Loader2 } from 'lucide-react'
@@ -101,7 +100,7 @@ export function QuestionCaseInput({
               <div className="w-full">
                 <p className="text-body-sm uppercase font-mono text-muted">Dein Standort</p>
                 <div className="rounded-2xl bg-white px-4 py-3 mt-2">
-                  <p className="mt-1 font-medium">{formatDisplayAddress(resolvedAddress)}</p>
+                  <p className="mt-1">{formatDisplayAddress(resolvedAddress)}</p>
                 </div>
               </div>
               <Button
@@ -226,59 +225,100 @@ export function QuestionCaseInput({
       }
       return (
         <div className="space-y-6">
-          <div className="space-y-1">
-            <Label htmlFor={`${question.key}-street`} className="text-[12px] uppercase">
-              Straße
-            </Label>
-            <AddressSearchInput
-              value={addressAnswer}
-              onChange={setAddress}
-              onError={setError}
-              placeholder="STRASSE SUCHEN"
-              postalCode={postalCodeForFilter}
-              disableHouseNumberSearch
-            />
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label
+                htmlFor={`${question.id}-street-manual`}
+                className="font-sm font-mono uppercase tracking-wide"
+              >
+                Straße
+              </Label>
+              <Input
+                id={`${question.id}-street-manual`}
+                type="text"
+                shape="round"
+                size="lg"
+                inputMode="text"
+                autoComplete="address-line1"
+                placeholder="z.B. Venloer Straße"
+                value={addressAnswer.street}
+                onChange={(e) => setAddress({ street: e.target.value.trim() })}
+                className="font-body text-body-lg placeholder:text-muted-foreground"
+              />
+            </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`${question.key}-housenumber`} className="text-[12px] uppercase">
+            <Label
+              htmlFor={`${question.id}-housenumber`}
+              className="font-sm font-mono uppercase tracking-wide"
+            >
               Hausnummer
             </Label>
             <Input
-              id={`${question.key}-housenumber`}
-              type="number"
+              id={`${question.id}-housenumber`}
+              type="text"
               shape="round"
               size="lg"
               inputMode="text"
-              autoComplete="off"
+              autoComplete="address-line2"
               placeholder="z.B. 12"
               value={addressAnswer.housenumber}
               onChange={(e) => setAddress({ housenumber: e.target.value.trim() || '' })}
-              className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+              className="font-body text-body-lg placeholder:text-muted-foreground"
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`${question.key}-plz`} className="text-[12px] uppercase">
+            <Label
+              htmlFor={`${question.id}-plz`}
+              className="font-sm font-mono uppercase tracking-wide"
+            >
               Postleitzahl
             </Label>
-            <InputOTP
-              length={5}
-              value={addressAnswer.postal_code ?? ''}
-              onChange={(val) => {
-                setAddress({ postal_code: val })
-                if (val.length === 5) {
-                  setError(
-                    isValidColognePlz(val)
-                      ? null
-                      : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
-                  )
-                } else {
-                  setError(null)
-                }
-              }}
-              variant="plz"
-              placeholderChar="0"
-              shape="round"
-            />
+            <div className="relative">
+              {/* Hidden input for browser autofill (postal-code); value syncs into the 5-digit OTP below */}
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={5}
+                tabIndex={-1}
+                aria-hidden
+                className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                value={addressAnswer.postal_code ?? ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 5)
+                  setAddress({ postal_code: digits })
+                  if (digits.length === 5) {
+                    setError(
+                      isValidColognePlz(digits)
+                        ? null
+                        : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
+                    )
+                  } else {
+                    setError(null)
+                  }
+                }}
+              />
+              <InputOTP
+                length={5}
+                value={addressAnswer.postal_code ?? ''}
+                onChange={(val) => {
+                  setAddress({ postal_code: val })
+                  if (val.length === 5) {
+                    setError(
+                      isValidColognePlz(val)
+                        ? null
+                        : 'Bitte gib eine gültige Postleitzahl von Köln ein.',
+                    )
+                  } else {
+                    setError(null)
+                  }
+                }}
+                variant="plz"
+                placeholderChar="0"
+                shape="round"
+              />
+            </div>
           </div>
         </div>
       )
@@ -293,7 +333,7 @@ export function QuestionCaseInput({
             setAnswerForQ(value)
             setError(null)
           }}
-          name={question.key}
+          name={question.id}
           className="grid grid-cols-2 gap-2"
         >
           {question.options.map((option, index) => {
@@ -314,7 +354,7 @@ export function QuestionCaseInput({
             setAnswerForQ(value)
             setError(null)
           }}
-          name={question.key}
+          name={question.id}
           className="grid grid-cols-2 gap-2"
         >
           {question.options.map((option, index) => {
@@ -357,7 +397,7 @@ export function QuestionCaseInput({
             setAnswerForQ(value)
             setError(null)
           }}
-          name={question.key}
+          name={question.id}
           className="space-y-3"
         >
           {question.options.map((option, index) => (
@@ -574,8 +614,8 @@ export function QuestionCaseInput({
       const rows = taConfig?.rows ?? 4
       const len = String(answer ?? '').length
       return (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-2 overflow-auto">
+        <div className="flex flex-col h-full gap-2">
+          <div className="space-y-2 overflow-auto h-full">
             <Textarea
               value={answer || ''}
               onChange={(e) => {
@@ -586,19 +626,14 @@ export function QuestionCaseInput({
               placeholder="Schreib etwas..."
               rows={rows}
               color={color}
-              className="resize-none"
             />
             <div className="flex justify-end px-2">
-              <span
-                className={
-                  len >= maxLen ? 'text-sm text-destructive' : 'text-sm text-muted'
-                }
-              >
+              <span className={len >= maxLen ? 'text-sm text-destructive' : 'text-sm text-muted'}>
                 {maxLen - len} verbleibend
               </span>
             </div>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-end">
+          <div className="flex flex-col items-center justify-end">
             <AudioTranscribeButton
               color={color}
               onTranscript={(text) => {
@@ -618,8 +653,8 @@ export function QuestionCaseInput({
         consentConfig?.consentText ?? 'Ich stimme der Erhebung und Verarbeitung meiner Daten zu.'
       return (
         <div className="flex items-start space-x-3">
-          <Checkbox
-            id={`consent-${question.key}`}
+            <Checkbox
+              id={`consent-${question.id}`}
             checked={answer === true}
             onCheckedChange={(checked) => {
               setAnswerForQ(checked === true)
@@ -628,13 +663,13 @@ export function QuestionCaseInput({
             className="mt-1"
           />
           <div className="space-y-1">
-            <Label
-              htmlFor={`consent-${question.key}`}
-              className="text-base font-medium leading-none cursor-pointer"
+            <label
+              htmlFor={`consent-${question.id}`}
+              className="block text-body-md cursor-pointer font-sans text-foreground"
             >
               {consentText}
-              {question.required && <span className="text-destructive ml-1">*</span>}
-            </Label>
+              {question.required && <span className="ml-1 text-destructive">*</span>}
+            </label>
           </div>
         </div>
       )
@@ -659,7 +694,7 @@ export function QuestionCaseInput({
       return (
         <div className="space-y-6">
           {question.groupFields.map((subQ) => {
-            const subAnswer = answer[subQ.key] || null
+            const subAnswer = answer[subQ.id] || null
 
             return (
               <div key={subQ.id} className="space-y-3">
@@ -675,10 +710,10 @@ export function QuestionCaseInput({
                   <RadioGroup
                     value={subAnswer || ''}
                     onValueChange={(value) => {
-                      setAnswerForQ({ ...answer, [subQ.key]: value })
+                      setAnswerForQ({ ...answer, [subQ.id]: value })
                       setError(null)
                     }}
-                    name={subQ.key}
+                    name={subQ.id}
                     className="space-y-2"
                   >
                     {subQ.options.map((option, idx) => (
@@ -686,7 +721,7 @@ export function QuestionCaseInput({
                         key={idx}
                         className="flex cursor-pointer items-center space-x-3 rounded-lg border bg-card p-3 hover:bg-muted"
                         onClick={() => {
-                          setAnswerForQ({ ...answer, [subQ.key]: option.value })
+                          setAnswerForQ({ ...answer, [subQ.id]: option.value })
                           setError(null)
                         }}
                       >
@@ -701,7 +736,7 @@ export function QuestionCaseInput({
                   <Textarea
                     value={subAnswer || ''}
                     onChange={(e) => {
-                      setAnswerForQ({ ...answer, [subQ.key]: e.target.value })
+                      setAnswerForQ({ ...answer, [subQ.id]: e.target.value })
                       setError(null)
                     }}
                     color={color}
@@ -715,7 +750,7 @@ export function QuestionCaseInput({
                     length={5}
                     value={subAnswer || ''}
                     onChange={(val) => {
-                      setAnswerForQ({ ...answer, [subQ.key]: val })
+                      setAnswerForQ({ ...answer, [subQ.id]: val })
                       if (val.length === 5) {
                         setError(
                           isValidColognePlz(val)
@@ -748,40 +783,50 @@ export function QuestionCaseInput({
                     }
                     const plzFromGroup = question.groupFields?.find((f) => f.type === 'plz')
                     const groupPostalCode = plzFromGroup
-                      ? String(answer[plzFromGroup.key] ?? '').trim()
+                      ? String(answer[plzFromGroup.id] ?? '').trim()
                       : undefined
                     const postalCodeForFilter =
                       state.location?.postal_code ?? (groupPostalCode || addrAnswer.postal_code)
                     const setAddr = (val: Partial<typeof addrAnswer>) => {
-                      setAnswerForQ({ ...answer, [subQ.key]: { ...addrAnswer, ...val } })
+                      setAnswerForQ({ ...answer, [subQ.id]: { ...addrAnswer, ...val } })
                       setError(null)
                     }
                     return (
                       <div className="space-y-4">
-                        <AddressSearchInput
-                          value={addrAnswer}
-                          onChange={(val) => setAddr(val)}
-                          onError={setError}
-                          placeholder="STRASSE SUCHEN"
-                          postalCode={postalCodeForFilter || undefined}
-                          disableHouseNumberSearch
-                        />
                         <div className="space-y-2">
                           <Label
-                            htmlFor={`${question.key}-${subQ.key}-housenumber`}
+                            htmlFor={`${question.id}-${subQ.id}-street-manual`}
+                            className="text-body-sm uppercase"
+                          >
+                            Straße
+                          </Label>
+                          <Input
+                            id={`${question.id}-${subQ.id}-street-manual`}
+                            type="text"
+                            inputMode="text"
+                            autoComplete="address-line1"
+                            placeholder="z.B. Venloer Straße"
+                            value={addrAnswer.street}
+                            onChange={(e) => setAddr({ street: e.target.value.trim() })}
+                            className="font-body text-body-lg placeholder:text-muted-foreground"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor={`${question.id}-${subQ.id}-housenumber`}
                             className="text-body-sm uppercase"
                           >
                             Hausnummer
                           </Label>
                           <Input
-                            id={`${question.key}-${subQ.key}-housenumber`}
+                            id={`${question.id}-${subQ.id}-housenumber`}
                             type="text"
                             inputMode="text"
-                            autoComplete="off"
+                            autoComplete="address-line2"
                             placeholder="z.B. 12"
                             value={addrAnswer.housenumber}
                             onChange={(e) => setAddr({ housenumber: e.target.value.trim() || '' })}
-                            className="font-body text-body-lg font-normal placeholder:text-muted-foreground"
+                            className="font-body text-body-lg placeholder:text-muted-foreground"
                           />
                         </div>
                       </div>

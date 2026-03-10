@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowUpRight,
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -26,6 +27,7 @@ const buttonIconMap: Record<
   React.ComponentType<{ size?: number; className?: string }>
 > = {
   'arrow-right': ArrowRight,
+  'arrow-left': ArrowLeft,
   'arrow-up': ArrowUp,
   'arrow-down': ArrowDown,
   'arrow-up-right': ArrowUpRight,
@@ -39,7 +41,7 @@ const buttonIconMap: Record<
 }
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center whitespace-nowrap font-body ring-offset-background transition-colors duration-300 ease-in-out focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(0,0,0,0.1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none [&.hover-label-disabled]:pointer-events-auto',
   {
     defaultVariants: {
       size: 'default',
@@ -57,23 +59,21 @@ const buttonVariants = cva(
       },
       variant: {
         default:
-          'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-primary text-primary-foreground hover:bg-primary-hover border border-primary active:bg-hover',
+        /** Like default but uses outline instead of border to avoid layout shift in pill/toggle groups */
+        pill: 'bg-primary text-primary-foreground hover:bg-primary-hover outline outline-2 outline-primary outline-offset-0 active:bg-hover',
         white:
-          'bg-white text-white-foreground hover:bg-primary active:bg-primary disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-white text-white-foreground hover:bg-white/40 border border-white active:bg-primary',
         black:
-          'bg-black text-black-foreground border border-black hover:bg-white hover:text-black active:bg-black disabled:bg-gray-300 disabled:text-gray-500',
+          'bg-black text-black-foreground border border-black hover:bg-white hover:text-black active:bg-black',
         outline:
-          'border border-black text-black hover:bg-black hover:text-white active:bg-black/20 active:text-black disabled:border disabled:bg-gray-100 disabled:text-gray-400',
+          'border border-black text-black hover:bg-black hover:text-white active:bg-black/20 active:text-black',
         'outline-white':
-          'border border-white/30 bg-white/5 text-white hover:bg-white hover:text-black active:bg-white/40 disabled:border disabled:bg-gray-100 disabled:text-gray-400',
-        destructive:
-          'bg-[#ff8429] text-black hover:bg-[#e6731f] active:bg-[#d4661a] disabled:bg-orange-200 disabled:text-orange-400',
-        ghost:
-          'bg-transparent text-foreground hover:bg-muted/50 active:bg-muted/70 disabled:text-gray-400',
-        'ghost-muted':
-          'bg-transparent text-muted-foreground hover:bg-muted/30 active:bg-muted/50 disabled:text-gray-400',
-        muted:
-          'bg-muted text-muted-foreground/50 hover:bg-muted/30 active:bg-muted/50 disabled:opacity-20 disabled:text-gray-300',
+          'border border-white/30 bg-white/5 text-white hover:bg-white hover:text-black active:bg-white/40',
+        destructive: 'bg-[#ff8429] text-black hover:bg-[#e6731f] active:bg-[#d4661a]',
+        ghost: 'bg-transparent text-foreground hover:bg-muted/50 active:bg-muted/70',
+        'ghost-muted': 'bg-transparent text-muted-foreground hover:bg-muted/30 active:bg-muted/50',
+        muted: 'bg-muted text-muted-foreground/50 hover:bg-muted/30 active:bg-muted/50',
       },
       shape: {
         default: 'rounded-lg',
@@ -85,6 +85,7 @@ const buttonVariants = cva(
 
 export type ButtonVariant =
   | 'default'
+  | 'pill'
   | 'white'
   | 'black'
   | 'outline'
@@ -96,8 +97,7 @@ export type ButtonVariant =
 export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon' | 'mini' | 'tiny'
 export type ButtonShape = 'default' | 'round'
 
-export interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
+export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
   variant?: ButtonVariant
   size?: ButtonSize
   shape?: ButtonShape
@@ -110,11 +110,14 @@ export interface ButtonProps
   iconBefore?: LinkIconOption | null
   /** Icon after the text (Payload link icon option). When size is "lg", wrapped in a bordered div. */
   iconAfter?: LinkIconOption | null
+  /** When set and button is disabled, hover slides the label up and reveals this text (e.g. "verfügbar ab 9.3."). */
+  disabledHoverLabel?: string | null
 }
 
-const iconSlotClasses = (shape: 'default' | 'round') =>
+const iconSlotClasses = (shape: 'default' | 'round', hasLabelContent: boolean) =>
   cn(
-    'inline-flex shrink-0 items-center justify-center border border-current p-0.5 h-full aspect-square',
+    'inline-flex shrink-0 items-center justify-center p-0.5 h-full aspect-square',
+    hasLabelContent ? 'border border-current' : '',
     shape === 'round' ? 'rounded-full' : 'rounded-[0.25rem]',
   )
 
@@ -126,6 +129,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size,
       shape,
       asChild = false,
+      disabledHoverLabel,
       href,
       newTab,
       iconBefore,
@@ -136,9 +140,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const isLarge = size === 'lg'
+    const hasText = React.Children.count(children) > 0
     const wrapIcon = (node: React.ReactNode) =>
       node != null && isLarge ? (
-        <div className={iconSlotClasses(shape ?? 'default')}>{node}</div>
+        <div className={iconSlotClasses(shape ?? 'default', hasText)}>{node}</div>
       ) : (
         node
       )
@@ -150,17 +155,32 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
     const iconBeforeSlot = renderIcon(iconBefore)
     const iconAfterSlot = renderIcon(iconAfter)
-    const hasText = React.Children.count(children) > 0
     const hasIcon = iconBeforeSlot !== null || iconAfterSlot !== null
     const isIconOnly = !hasText && hasIcon && !(iconBefore && iconAfter)
+    const showDisabledHover =
+      props.disabled && disabledHoverLabel && typeof disabledHoverLabel === 'string'
+    const labelContent = showDisabledHover ? (
+      <span className="inline-block h-[1.2em] overflow-hidden leading-tight">
+        <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
+          <span className="flex h-[1.2em] min-h-[1.2em] items-center justify-center">
+            {children}
+          </span>
+          <span className="flex h-[1.2em] min-h-[1.2em] items-center justify-center">
+            {disabledHoverLabel}
+          </span>
+        </span>
+      </span>
+    ) : (
+      children
+    )
     const content = (
       <>
         {iconBeforeSlot}
-        <span
-          className={cn('flex items-center justify-center', isLarge && 'px-2')}
-        >
-          {children}
-        </span>
+        {labelContent && (
+          <span className={cn('flex items-center justify-center', isLarge && 'px-2')}>
+            {labelContent}
+          </span>
+        )}
         {iconAfterSlot}
       </>
     )
@@ -168,13 +188,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       buttonVariants({ variant, size, shape, className }),
       hasIcon && hasText && 'gap-2',
       isIconOnly && 'aspect-square p-0',
+      showDisabledHover && 'group hover-label-disabled !pointer-events-auto',
     )
 
-    // Render as Link when href is provided
+    // Render as Link when href is provided; pass disabled onto anchor so [&[disabled]] styles apply
     if (href) {
       const linkProps = newTab ? { target: '_blank' as const, rel: 'noopener noreferrer' } : {}
       return (
-        <Link href={href} className={classes} {...linkProps}>
+        <Link
+          href={href}
+          className={classes}
+          {...(props.disabled && { disabled: true })}
+          {...linkProps}
+        >
           {content}
         </Link>
       )

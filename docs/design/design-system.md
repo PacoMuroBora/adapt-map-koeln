@@ -30,6 +30,10 @@ This document outlines the design system rules and component specifications for 
    - [Skeleton](./components/skeleton.md)
    - [Pagination](./components/pagination.md)
    - [Stateful Info Box](./components/stateful-info-box.md)
+3. [Page & Layout Patterns](#page--layout-patterns)
+   - [Landing Page](#landing-page)
+   - [Header / Desktop Navigation](#header--desktop-navigation)
+   - [Questionnaire Flow](#questionnaire-flow)
 
 ---
 
@@ -274,6 +278,177 @@ Each component has its own documentation file in the `components/` directory. Cl
 - **[Stateful Info Box](./components/stateful-info-box.md)** - Configurable list item with optional icons, text lines, and action buttons
 
 ---
+
+## Page & Layout Patterns
+
+This section documents how the design tokens and components above are actually composed on key pages (`Landing`, `Header`, `Questionnaire`). Treat these as **canonical blueprints** when building new pages and flows.
+
+### Landing Page
+
+The landing page (`home` slug in Payload, rendered via `RenderBlocks`) is a **CMS-driven layout**. The design system expectations are:
+
+- **Content Wrapper**
+  - Fallback/empty state uses:
+    - `container mx-auto max-w-6xl px-4 py-16 text-center`
+    - `text-muted-foreground` for explanatory copy
+  - **Guideline**: For new marketing/landing sections, prefer:
+    - `container mx-auto max-w-6xl px-4 md:px-8`
+    - Vertical rhythm via `py-12 md:py-16` or design-system spacing tokens (`py-xl`, `py-2xl` if using custom utilities).
+
+- **Typography**
+  - Hero titles: `text-h1` / `text-h2` with `font-headings` and `font-semibold`.
+  - Section headings: `text-h3`–`text-h5` with `font-headings`.
+  - Body copy: `text-body` or `text-body-lg` with `font-body`.
+  - Muted/meta text: `text-body-sm text-muted-foreground`.
+
+- **Components**
+  - Buttons and CTAs use the shared `Button` / `LinkButton` components with `variant="default"` (green) or `variant="outline"` depending on emphasis.
+  - Cards use `Card` with `variant="white"` (on light background) or one of the colored variants (see Questionnaire below) when highlighting sections.
+
+When adding new landing content blocks, **reuse these typography utilities and container patterns** rather than hard‑coding font sizes or widths.
+
+### Header / Desktop Navigation
+
+The desktop navigation (`HeaderDesktopNav`) implements the canonical header pattern:
+
+- **Structure**
+  - Horizontal flex row: `flex items-center gap-8`.
+  - Nav items come from the Header global (`data.navItems`).
+  - Optional single CTA defined as `buttonLink`.
+
+- **Nav Items**
+  - Implemented via `LinkButton`:
+    - `size="lg"` for all desktop nav entries.
+    - `className={inverted ? 'text-white' : undefined}` for light-on-dark contexts.
+  - **Guideline**: When adding top-level navigation on new pages, always use `LinkButton` with `size="lg"` to keep typography and hit area consistent.
+
+- **CTA Button**
+  - Implemented via `CMSLink` with:
+    - `size={scrolled ? 'default' : 'lg'}`
+    - `appearance={scrolled ? 'default' : 'white'}`
+    - Smooth transition: `className="duration-500 transition-all ease-in-out"`
+  - **Behavior**
+    - On hero/top of page (`scrolled = false`): larger white CTA on darker background.
+    - After scroll (`scrolled = true`): compact default (green) CTA for calmer presence.
+  - **Guideline**: When you need a header CTA on new layouts, follow the same pattern:
+    - Use the Header global’s `button` configuration.
+    - Drive color/size via `scrolled` and `inverted` props, not ad‑hoc classes.
+
+- **Inverted Mode**
+  - `inverted` is used on dark surfaces (e.g. the questionnaire hero over `bg-black`):
+    - Nav links: `text-white`.
+    - Background typically uses `bg-black` / `bg-am-dark`.
+  - **Guideline**: For any header placed on dark imagery or questionnaire backgrounds, pass `inverted` and avoid manually overriding colors per link.
+
+### Questionnaire Flow
+
+The questionnaire uses a **dark, immersive layout** plus colored section theming. Core pieces:
+
+#### Layout Shell
+
+- Root layout (`QuestionnaireLayoutClient`):
+  - Background overlay: `fixed inset-0 z-0 bg-black` (brand dark, via Tailwind `black` color).
+  - Content container:
+    - `relative flex h-[calc(100vh-3.5rem)] min-h-[calc(100vh-3.5rem)] flex-col bg-black`
+    - On `md+` screens: center vertically via `md:justify-center`.
+- **Guideline**:
+  - For any new full‑screen questionnaire pages, keep this shell:
+    - Dark canvas (`bg-black` / `bg-am.dark`).
+    - Fixed background layer + inner flex container with the same height calculations to avoid header overlap.
+
+#### Question Card & Typography
+
+- Main question layout (`QuestionClient`):
+  - Outer container: centered column with constrained width:
+    - `mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg`
+    - Padding: `pl-4 pr-10 pt-24 pb-28 md:px-4 md:pt-16 md:pb-28`
+  - Animated content wrapper: `motion.div` with entrance/exit transitions.
+  - Question card:
+    - `Card variant={colorSection ?? 'purple'}`
+    - Card sizing: `className="flex min-h-0 h-[70vh] max-h-[640px] flex-col overflow-hidden"`
+
+- Inside the card:
+  - Scrollable content column: `flex min-h-0 flex-1 flex-col overflow-auto`.
+  - Question stack wrapper:
+    - Base: `space-y-8 px-6 py-8`
+    - Adds `flex min-h-full flex-1 flex-col` when a `textarea` question is present.
+  - Primary question title (first question’s `title`):
+    - `h1` with `className="mb-2 text-h5 font-headings font-semibold uppercase"`.
+    - **Guideline**: Use `text-h5 font-headings font-semibold uppercase` for question step titles across all new questionnaire screens.
+  - Description:
+    - `p` with `className="text-body-sm text-muted-foreground"`.
+    - **Guideline**: Use `text-body-sm` + `text-muted-foreground` for helper or explainer copy.
+  - Individual question blocks:
+    - Wrapper: `space-y-3`.
+    - Special cases:
+      - `sliderHorizontalRange`: `flex flex-col min-h-[55lvh]`.
+      - `textarea`: `flex min-h-0 flex-1 flex-col`.
+    - Input renderer: `QuestionCaseInput` with a `color` prop aligned to the section variant.
+
+#### Section Colors & Brand Tokens
+
+- `Card` variants map directly to brand tokens:
+  - `purple` → `bg-am-purple`
+  - `orange` → `bg-am-orange`
+  - `green` → `bg-am-green`
+  - `pink` → `bg-am-pink`
+  - `turquoise` → `bg-am-turquoise`
+  - `white` → `bg-am-white`
+- Progress indicator (`PaginationSteps`) uses matching brand tokens:
+  - Past steps: `bg-am-<color>/20` with `border-am-<color>-alt`.
+  - Active step: `bg-am-<color>-alt` with `border-am-<color>-alt`.
+  - Future steps: neutral `bg-white/10 border-white/40` on dark background.
+- Section progress is configured via `sectionsProgress` + `currentSectionIndex` + `colorSection` in `QuestionClient`.
+- **Guideline**:
+  - When introducing new questionnaire sections, pick from the existing variants:
+    - `'purple' | 'orange' | 'green' | 'pink' | 'turquoise'`
+  - Pass the same variant name to:
+    - `Card variant`
+    - `PaginationSteps variant`
+    - `QuestionCaseInput color`
+  - Do **not** introduce ad‑hoc hard‑coded colors; extend the `am.*` tokens and variants first if a new color is truly required.
+
+#### Navigation (Bottom Bar)
+
+- `QuestionnaireNav` is the canonical navigation component:
+  - Container: fixed bottom bar:
+    - `fixed bottom-8 left-0 right-0 z-10 flex h-20 items-center justify-center px-4`
+  - Previous button:
+    - Only when `!isFirstPage`.
+    - Animated in with `translate-y` + opacity transition.
+    - Uses `Button variant="outline-white"` with `iconBefore="arrow-up"`.
+  - Next/primary CTA:
+    - `Button` with:
+      - `type="button"`, `size="lg"`, `shape="round"`.
+      - `variant={nextButtonVariant}` where:
+        - `'white'`: white CTA on dark background (start/welcome screens).
+        - `'default'`: green primary CTA (normal steps / form completion).
+      - Icon: `iconAfter={nextIcon}`, typically `'arrow-down'` or `'check'`.
+      - Positioned centered with `className="absolute left-1/2 -translate-x-1/2"`.
+      - Disabled state visually indicated via `opacity-20`.
+  - Abort dialog (confirm exit):
+    - Implemented via `AlertDialog` with localized copy.
+    - `useQuestionnaireClose` allows header or external controls to trigger `onAbort`.
+
+- **Guidelines for new questionnaire UIs**:
+  - Always use `QuestionnaireNav` for bottom navigation; avoid custom standalone “Next/Back” buttons.
+  - Wire `nextButtonVariant` to the design intent:
+    - Use `'white'` on darker hero/welcome backgrounds.
+    - Use `'default'` for regular progression steps.
+  - Use `isFirstPage` to hide the previous button where appropriate.
+  - If you inline a CTA inside the card, set `hideNextButton` and keep the layout bar for consistency.
+
+#### Keyboard / Form Behavior
+
+Within `QuestionClient`, the design system enforces:
+
+- Default values for `slider`, `sliderHorizontalRange`, `sliderVertical` when required, so users always see a valid position.
+- Validations via `validateAllQuestions`, surfaced through a shared error channel (`setQuestionnaireError`), which should be used for any new question types as well.
+- GPS/manual address flows that share UI patterns:
+  - GPS: `handleGPSLocation` updates `state.location` and uses `/api/reverse-geocode`.
+  - Manual: `handleManualAddress` transitions to a follow-up address step.
+
+When adding new question types or steps, **plug into these existing patterns** (error handling, location resolution, progress updates) instead of implementing divergent UX flows.
 
 ## Global Variables Reference
 

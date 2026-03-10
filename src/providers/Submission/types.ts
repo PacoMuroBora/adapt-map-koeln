@@ -34,8 +34,8 @@ export interface SubmissionState {
   personalFields: PersonalFields
 
   // Questionnaire data
-  questionnaireVersion: string | null // Defaults to 'v1.0' for hardcoded questions
-  answers: Record<string, any> // Keyed by question key (location, heatFrequency, heatIntensity, housingType, greenNeighborhood, cityArea, knowsTerm, description, desiredChanges)
+  questionnaireVersion: string | null
+  answers: Record<string, any>
 
   // Free text
   userText: string
@@ -79,7 +79,7 @@ export const initialSubmissionState: SubmissionState = {
   consent: null,
   location: null,
   personalFields: {},
-  questionnaireVersion: 'v1.0', // Default version for hardcoded questions
+  questionnaireVersion: 'v1.0',
   answers: {},
   userText: '',
   submissionId: null,

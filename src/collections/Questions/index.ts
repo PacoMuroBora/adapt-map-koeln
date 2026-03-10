@@ -18,16 +18,6 @@ export const Questions: CollectionConfig = {
   },
   fields: [
     {
-      name: 'key',
-      type: 'text',
-      required: true,
-      unique: true,
-      index: true,
-      admin: {
-        description: 'Unique identifier for the question (e.g., "q1", "heat_comfort")',
-      },
-    },
-    {
       name: 'title_de',
       type: 'text',
       required: true,
@@ -247,6 +237,95 @@ export const Questions: CollectionConfig = {
       ],
     },
     {
+      name: 'submissionBinding',
+      type: 'group',
+      admin: {
+        description:
+          'Maps this question answer to a specific submission field. If not set, answer is logged but not persisted.',
+      },
+      fields: [
+        {
+          name: 'mode',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Submission Field', value: 'explicitField' },
+            { label: 'Custom Key (not persisted)', value: 'customKey' },
+          ],
+          defaultValue: 'explicitField',
+          admin: {
+            description:
+              '"Submission Field" writes directly to a typed Submissions field. "Custom Key" is for navigation/meta answers that are only logged.',
+          },
+        },
+        {
+          name: 'fieldPath',
+          type: 'select',
+          validate: (value: unknown, { siblingData }: { siblingData: any }) => {
+            if (siblingData?.mode === 'explicitField' && !value) {
+              return 'Field path is required when mode is "Submission Field"'
+            }
+            return true
+          },
+          options: [
+            { label: 'Hitzetage pro Jahr (heatFrequency)', value: 'heatFrequency' },
+            { label: 'Hitze-Intensität (heatIntensity)', value: 'heatIntensity' },
+            { label: 'Freitext (user_text)', value: 'user_text' },
+            { label: 'Standort – Adresse komplett (location)', value: 'location' },
+            { label: 'PLZ (location.postal_code)', value: 'location.postal_code' },
+            { label: 'Stadt (location.city)', value: 'location.city' },
+            { label: 'Straße (location.street)', value: 'location.street' },
+            { label: 'Breitengrad (location.lat)', value: 'location.lat' },
+            { label: 'Längengrad (location.lng)', value: 'location.lng' },
+            { label: 'Alter (personalFields.age)', value: 'personalFields.age' },
+            { label: 'Geschlecht (personalFields.gender)', value: 'personalFields.gender' },
+            {
+              label: 'Haushaltsgröße (personalFields.householdSize)',
+              value: 'personalFields.householdSize',
+            },
+            {
+              label: 'Wohnform (livingSituation.housingType)',
+              value: 'livingSituation.housingType',
+            },
+            {
+              label: 'Grünes Umfeld (livingSituation.greenNeighborhood)',
+              value: 'livingSituation.greenNeighborhood',
+            },
+            { label: 'Stadtlage (livingSituation.cityArea)', value: 'livingSituation.cityArea' },
+            {
+              label: 'Begriff bekannt (climateAdaptationKnowledge.knowsTerm)',
+              value: 'climateAdaptationKnowledge.knowsTerm',
+            },
+            {
+              label: 'Klima-Beschreibung (climateAdaptationKnowledge.description)',
+              value: 'climateAdaptationKnowledge.description',
+            },
+            { label: 'Einwilligung (consent)', value: 'consent' },
+            { label: 'Gewünschte Veränderungen (desiredChanges)', value: 'desiredChanges' },
+          ],
+          admin: {
+            condition: (_data, siblingData) => siblingData?.mode === 'explicitField',
+            description: 'Target field path in the Submissions collection',
+          },
+        },
+        {
+          name: 'customKey',
+          type: 'text',
+          validate: (value: unknown, { siblingData }: { siblingData: any }) => {
+            if (siblingData?.mode === 'customKey' && !value) {
+              return 'Custom key is required when mode is "Custom Key"'
+            }
+            return true
+          },
+          admin: {
+            condition: (_data, siblingData) => siblingData?.mode === 'customKey',
+            description:
+              'Custom identifier for this answer. Not persisted in submission – used for logging/debugging only.',
+          },
+        },
+      ],
+    },
+    {
       name: 'required',
       type: 'checkbox',
       defaultValue: false,
@@ -262,36 +341,6 @@ export const Questions: CollectionConfig = {
         description:
           'Category for grouping questions (e.g., "comfort", "health", "infrastructure")',
       },
-    },
-    {
-      name: 'editorFields',
-      type: 'group',
-      admin: {
-        description: 'Fields editable by editors (not admins only)',
-      },
-      access: {
-        read: () => true,
-        update: ({ req: { user } }) => {
-          const roles = (user as any)?.roles
-          return roles === 'admin' || roles === 'editor'
-        },
-      },
-      fields: [
-        {
-          name: 'displayOrder',
-          type: 'number',
-          admin: {
-            description: 'Order in which this question appears',
-          },
-        },
-        {
-          name: 'helpText',
-          type: 'textarea',
-          admin: {
-            description: 'Additional help text for users',
-          },
-        },
-      ],
     },
     {
       name: 'adminScoring',

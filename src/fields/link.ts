@@ -34,9 +34,18 @@ export const sizeOptions: { label: string; value: LinkSizes }[] = [
   { label: 'Tiny', value: 'tiny' },
 ]
 
+/** Matches LinkButton size (no icon/tiny). */
+export const linkButtonSizeOptions: { label: string; value: 'default' | 'sm' | 'lg' | 'mini' }[] = [
+  { label: 'Default', value: 'default' },
+  { label: 'Small', value: 'sm' },
+  { label: 'Large', value: 'lg' },
+  { label: 'Mini', value: 'mini' },
+]
+
 /** Icon options for iconBefore / iconAfter (display labels for CMS). */
 export type LinkIconOption =
   | 'arrow-right'
+  | 'arrow-left'
   | 'arrow-up'
   | 'arrow-down'
   | 'arrow-up-right'
@@ -50,6 +59,7 @@ export type LinkIconOption =
 
 export const linkIconOptions: { label: string; value: LinkIconOption }[] = [
   { label: 'Arrow Right', value: 'arrow-right' },
+  { label: 'Arrow Left', value: 'arrow-left' },
   { label: 'Arrow Up', value: 'arrow-up' },
   { label: 'Arrow Down', value: 'arrow-down' },
   { label: 'Arrow Up Right', value: 'arrow-up-right' },
@@ -67,6 +77,8 @@ type LinkType = (options?: {
   iconBefore?: LinkIconOption[] | false
   iconAfter?: LinkIconOption[] | false
   disableLabel?: boolean
+  /** Custom description for the size field (e.g. "Link size" for LinkButton usage). */
+  sizeDescription?: string
   overrides?: Partial<GroupField>
 }) => Field
 
@@ -76,6 +88,7 @@ export const link: LinkType = ({
   iconBefore: iconBeforeOpt,
   iconAfter: iconAfterOpt,
   disableLabel = false,
+  sizeDescription,
   overrides = {},
 } = {}) => {
   const linkResult: GroupField = {
@@ -120,6 +133,21 @@ export const link: LinkType = ({
           },
         ],
       },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'disabled',
+            type: 'checkbox',
+            defaultValue: false,
+            admin: {
+              width: '50%',
+              description: 'When enabled, the button is shown but not clickable.',
+            },
+            label: 'Disabled',
+          },
+        ],
+      },
     ],
   }
 
@@ -131,7 +159,7 @@ export const link: LinkType = ({
         condition: (_, siblingData) => siblingData?.type === 'reference',
       },
       label: 'Document to link to',
-      relationTo: ['pages', 'posts', 'questionnaires'],
+      relationTo: ['pages', 'questionnaires'],
       required: true,
     },
     {
@@ -195,7 +223,7 @@ export const link: LinkType = ({
           name: 'size',
           type: 'select',
           admin: {
-            description: 'Button size.',
+            description: sizeDescription ?? 'Button size.',
             width: '50%',
           },
           defaultValue: 'default',

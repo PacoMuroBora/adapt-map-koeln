@@ -4,14 +4,13 @@ import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
-import { Categories } from './collections/Categories'
 import { KnowledgeBaseItems } from './collections/KnowledgeBaseItems'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
-import { Posts } from './collections/Posts'
 import { Questions } from './collections/Questions'
 import { Questionnaires } from './collections/Questionnaires'
 import { Submissions } from './collections/Submissions'
+import { KnowledgeBaseRecommendationEvents } from './collections/KnowledgeBaseRecommendationEvents'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
@@ -75,14 +74,13 @@ export default buildConfig({
   }),
   collections: [
     Pages,
-    Posts,
     Media,
-    Categories,
     Users,
     Questions,
     Questionnaires,
     Submissions,
     KnowledgeBaseItems,
+    KnowledgeBaseRecommendationEvents,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer, SiteSettings, UICopy],

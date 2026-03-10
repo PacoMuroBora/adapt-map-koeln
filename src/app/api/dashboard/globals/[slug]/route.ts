@@ -1,0 +1,94 @@
+import { revalidateTag } from 'next/cache'
+import { NextResponse, type NextRequest } from 'next/server'
+import type { PayloadRequest } from 'payload'
+
+import { DASHBOARD_CACHE_TAGS, getCachedGlobal } from '@/lib/dashboard-cache'
+import { getPayloadClient } from '@/lib/payload'
+
+type RouteParams = {
+  params: Promise<{
+    slug: string
+  }>
+}
+
+const ALLOWED_SLUGS = new Set(['site-settings', 'ui-copy'] as const)
+
+function assertAllowed(slug: string): asserts slug is 'site-settings' | 'ui-copy' {
+  if (!ALLOWED_SLUGS.has(slug as any)) {
+    throw new Error('Unsupported global slug')
+  }
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { slug } = await params
+    assertAllowed(slug)
+
+    const payload = await getPayloadClient()
+
+    const authResult = await payload.auth({
+      headers: request.headers,
+    } as PayloadRequest)
+
+    const user = authResult.user as any
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const roles = user.roles
+    if (roles !== 'admin' && roles !== 'editor') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const doc = await getCachedGlobal(slug)
+
+    return NextResponse.json({ doc })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message ?? 'Failed to load global' },
+      { status: 500 },
+    )
+  }
+}
+
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { slug } = await params
+    assertAllowed(slug)
+
+    const body = await request.json()
+
+    const payload = await getPayloadClient()
+
+    const authResult = await payload.auth({
+      headers: request.headers,
+    } as PayloadRequest)
+
+    const user = authResult.user as any
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const roles = user.roles
+    if (roles !== 'admin' && roles !== 'editor') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const updated = await payload.updateGlobal({
+      slug,
+      data: body,
+      overrideAccess: true,
+    })
+
+    revalidateTag(DASHBOARD_CACHE_TAGS.global(slug))
+    return NextResponse.json({ doc: updated })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message ?? 'Failed to update global' },
+      { status: 500 },
+    )
+  }
+}
+
