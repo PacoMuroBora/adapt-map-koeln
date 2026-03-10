@@ -14,7 +14,12 @@ export function navHref(link: {
   ) {
     const ref = link.reference as { relationTo: string; value: { slug?: string } }
     const slug = ref.value?.slug
-    if (slug) return `${ref.relationTo !== 'pages' ? `/${ref.relationTo}` : ''}/${slug}`
+    if (!slug) return '/'
+    if (ref.relationTo === 'pages') {
+      if (slug === '/') return '/'
+      return `/${slug}`
+    }
+    return `/${ref.relationTo}/${slug}`
   }
   return link.url ?? '#'
 }

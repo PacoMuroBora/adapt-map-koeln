@@ -14,13 +14,13 @@ export const revalidate = 600
 
 export default async function HomePage() {
   const { isEnabled: draft } = await draftMode()
-  const page = await getPageBySlug('home')
+  const page = await getPageBySlug('/')
 
   if (!page) {
     return (
       <article className="container mx-auto max-w-6xl px-4 py-16 text-center">
         <p className="text-muted-foreground">
-          No homepage content yet. Create a page with slug <strong>home</strong> in Payload →
+          No homepage content yet. Create a page with slug <strong>/</strong> in Payload →
           Pages to display content here.
         </p>
       </article>
@@ -41,6 +41,6 @@ export default async function HomePage() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getPageBySlug('home')
+  const page = await getPageBySlug('/')
   return generateMeta({ doc: page })
 }
