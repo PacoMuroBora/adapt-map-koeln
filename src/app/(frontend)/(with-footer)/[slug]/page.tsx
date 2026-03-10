@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { PayloadRedirects } from '@/components/PayloadRedirects'
 import { getPayloadClient } from '@/lib/payload'
 import { draftMode } from 'next/headers'
+import { redirect } from 'next/navigation'
 import React from 'react'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
@@ -25,7 +26,7 @@ export async function generateStaticParams() {
   })
 
   const params = pages.docs
-    ?.filter((doc) => doc.slug !== 'home')
+    ?.filter((doc) => doc.slug && doc.slug !== '/')
     .map(({ slug }) => ({ slug })) ?? []
 
   return params
@@ -37,7 +38,8 @@ type Args = {
 
 export default async function Page({ params: paramsPromise }: Args) {
   const { isEnabled: draft } = await draftMode()
-  const { slug = 'home' } = await paramsPromise
+  const { slug } = await paramsPromise
+  if (!slug) redirect('/')
   const decodedSlug = decodeURIComponent(slug)
   const url = '/' + decodedSlug
   const page = await getPageBySlug(decodedSlug)
@@ -62,7 +64,8 @@ export default async function Page({ params: paramsPromise }: Args) {
 }
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
-  const { slug = 'home' } = await paramsPromise
+  const { slug } = await paramsPromise
+  if (!slug) return {}
   const decodedSlug = decodeURIComponent(slug)
   const page = await getPageBySlug(decodedSlug)
   return generateMeta({ doc: page })

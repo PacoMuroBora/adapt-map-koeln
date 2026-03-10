@@ -17,9 +17,11 @@ function getLinkHref(link: NonNullable<Footer['legalLinks']>[number]['link']): s
     }
     if (ref && typeof (ref as { slug?: string }).slug === 'string') {
       const slug = (ref as { slug: string }).slug
-      return link.reference.relationTo === 'pages'
-        ? `/${slug}`
-        : `/${link.reference.relationTo}/${slug}`
+      if (link.reference.relationTo === 'pages') {
+        if (!slug || slug === '/') return '/'
+        return `/${slug}`
+      }
+      return `/${link.reference.relationTo}/${slug}`
     }
   }
   return null
